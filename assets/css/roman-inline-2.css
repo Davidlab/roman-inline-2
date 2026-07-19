@@ -1,0 +1,375 @@
+/**
+ * Roman Inline 2 — front-end editor styles.
+ */
+
+:root {
+	--ri2-accent: #6d4aff;
+	--ri2-accent-dark: #5638d6;
+	--ri2-bg: #1e1e2e;
+	--ri2-ok: #1db954;
+	--ri2-err: #e5484d;
+}
+
+/* Hover affordance on editable widgets while editing is active. */
+.ri2-active .elementor-widget[data-id],
+.ri2-active [data-e-type][data-id]:not([data-e-type="e-flexbox"]):not([data-e-type="e-div-block"]) {
+	cursor: text;
+}
+
+/* Let clicks pass through container background overlays to text widgets inside. */
+.ri2-active .e-con::before {
+	pointer-events: none;
+}
+.ri2-active .e-con > .e-con-inner {
+	position: relative;
+	z-index: 1;
+}
+
+.ri2-active .elementor-widget[data-id]:hover,
+.ri2-active [data-e-type][data-id]:not([data-e-type="e-flexbox"]):not([data-e-type="e-div-block"]):hover {
+	outline: 1px dashed rgba( 109, 74, 255, 0.6 );
+	outline-offset: 2px;
+}
+
+.ri2-active [contenteditable="true"].ri2-editing {
+	outline: 2px solid var(--ri2-accent) !important;
+	outline-offset: 2px;
+	border-radius: 2px;
+	cursor: text;
+	min-width: 8px;
+	min-height: 1em;
+}
+
+/* Image hover affordance */
+.ri2-active img {
+	cursor: pointer;
+}
+
+/* Floating image button — positioned at top-left of hovered image */
+.ri2-imgbtn {
+	position: fixed !important;
+	z-index: 99989 !important;
+	display: none;
+	align-items: center !important;
+	gap: 6px !important;
+	padding: 6px 12px !important;
+	background: var(--ri2-accent) !important;
+	color: #fff !important;
+	border: 0 !important;
+	border-radius: 4px !important;
+	cursor: pointer !important;
+	font: 600 12px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+	box-shadow: 0 2px 8px rgba( 0, 0, 0, 0.3 ) !important;
+	white-space: nowrap !important;
+	margin: 0 !important;
+	line-height: 1.2 !important;
+	text-decoration: none !important;
+}
+.ri2-imgbtn.is-visible {
+	display: inline-flex;
+}
+.ri2-imgbtn:hover {
+	background: var(--ri2-accent-dark);
+}
+.ri2-imgbtn .dashicons {
+	font-size: 14px;
+	width: 14px;
+	height: 14px;
+}
+
+/* ------------------------------------------------------------------ */
+/* Control bar                                                         */
+/* ------------------------------------------------------------------ */
+
+.ri2-bar {
+	position: fixed !important;
+	left: 50% !important;
+	bottom: 24px !important;
+	transform: translateX( -50% ) translateY( 200% );
+	display: flex !important;
+	align-items: center !important;
+	gap: 14px !important;
+	padding: 8px 10px 8px 16px !important;
+	background: var(--ri2-bg) !important;
+	color: #fff !important;
+	border: 0 !important;
+	border-radius: 999px !important;
+	box-shadow: 0 8px 30px rgba( 0, 0, 0, 0.35 ) !important;
+	z-index: 99980 !important;
+	font: 13px/1.4 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+	transition: transform 0.25s ease;
+	margin: 0 !important;
+	line-height: 1.4 !important;
+	text-decoration: none !important;
+}
+.ri2-bar.is-visible { transform: translateX( -50% ) translateY( 0 ); }
+.ri2-bar__label { display: flex !important; align-items: center !important; gap: 6px !important; font-weight: 600 !important; margin: 0 !important; padding: 0 !important; }
+.ri2-bar__label .dashicons { font-size: 18px !important; width: 18px !important; height: 18px !important; line-height: 18px !important; }
+
+.ri2-bar__toast { min-width: 0; opacity: 0; transition: opacity 0.2s; color: #c9c9e3 !important; margin: 0 !important; padding: 0 !important; }
+.ri2-bar__toast.is-visible { opacity: 1; }
+.ri2-bar__toast.is-ok { color: #5ce58f; }
+.ri2-bar__toast.is-error { color: #ff8a8d; }
+.ri2-bar__toast.is-saving { color: #c9c9e3; }
+
+.ri2-bar__exit {
+	border: 0 !important;
+	background: rgba( 255, 255, 255, 0.12 ) !important;
+	color: #fff !important;
+	padding: 6px 14px !important;
+	border-radius: 999px !important;
+	cursor: pointer !important;
+	font-weight: 600 !important;
+	font-size: 13px !important;
+	line-height: 1 !important;
+	margin: 0 !important;
+	text-decoration: none !important;
+	display: inline-block !important;
+}
+.ri2-bar__exit:hover { background: rgba( 255, 255, 255, 0.22 ); }
+
+/* ------------------------------------------------------------------ */
+/* Floating text toolbar                                              */
+/* ------------------------------------------------------------------ */
+
+.ri2-toolbar {
+	position: fixed !important;
+	z-index: 99990 !important;
+	display: flex !important;
+	align-items: center !important;
+	gap: 2px !important;
+	padding: 4px !important;
+	background: var(--ri2-bg) !important;
+	border: 0 !important;
+	border-radius: 8px !important;
+	box-shadow: 0 6px 24px rgba( 0, 0, 0, 0.3 ) !important;
+	margin: 0 !important;
+}
+.ri2-toolbar__btn {
+	border: 0 !important;
+	background: transparent !important;
+	color: #fff !important;
+	width: 30px !important;
+	height: 30px !important;
+	border-radius: 6px !important;
+	cursor: pointer !important;
+	display: inline-flex !important;
+	align-items: center !important;
+	justify-content: center !important;
+	padding: 0 !important;
+	margin: 0 !important;
+	line-height: 1 !important;
+}
+.ri2-toolbar__btn:hover { background: rgba( 255, 255, 255, 0.15 ); }
+.ri2-toolbar__btn .dashicons { font-size: 18px; width: 18px; height: 18px; }
+.ri2-toolbar__done {
+	border: 0 !important;
+	background: var(--ri2-accent) !important;
+	color: #fff !important;
+	padding: 0 12px !important;
+	height: 30px !important;
+	border-radius: 6px !important;
+	cursor: pointer !important;
+	font-weight: 600 !important;
+	margin-left: 4px !important;
+	font-size: 13px !important;
+	line-height: 1 !important;
+	display: inline-block !important;
+	text-decoration: none !important;
+}
+.ri2-toolbar__done:hover { background: var(--ri2-accent-dark); }
+
+/* ------------------------------------------------------------------ */
+/* Link popover                                                       */
+/* ------------------------------------------------------------------ */
+
+.ri2-linkpop {
+	position: fixed !important;
+	z-index: 99991 !important;
+	display: flex !important;
+	align-items: center !important;
+	gap: 8px !important;
+	padding: 8px !important;
+	background: #fff !important;
+	border: 0 !important;
+	border-radius: 8px !important;
+	box-shadow: 0 6px 24px rgba( 0, 0, 0, 0.25 ) !important;
+	font: 13px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+	margin: 0 !important;
+}
+.ri2-linkpop__url {
+	width: 240px !important;
+	padding: 6px 8px !important;
+	border: 1px solid #d0d0e0 !important;
+	border-radius: 6px !important;
+	margin: 0 !important;
+	font-size: 13px !important;
+	background: #fff !important;
+	color: #333 !important;
+}
+.ri2-linkpop__check { display: flex; align-items: center; gap: 4px; white-space: nowrap; color: #333; }
+.ri2-linkpop__apply {
+	border: 0 !important;
+	background: var(--ri2-accent) !important;
+	color: #fff !important;
+	padding: 6px 12px !important;
+	border-radius: 6px !important;
+	cursor: pointer !important;
+	font-weight: 600 !important;
+	font-size: 13px !important;
+	margin: 0 !important;
+	text-decoration: none !important;
+	display: inline-block !important;
+}
+
+/* ------------------------------------------------------------------ */
+/* Floating button (image replace, etc.)                              */
+/* ------------------------------------------------------------------ */
+
+.ri2-floatbtn {
+	position: fixed !important;
+	z-index: 99990 !important;
+	display: none;
+	align-items: center !important;
+	gap: 6px !important;
+	padding: 6px 12px !important;
+	background: var(--ri2-accent) !important;
+	color: #fff !important;
+	border: 0 !important;
+	border-radius: 999px !important;
+	cursor: pointer !important;
+	font: 600 12px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+	box-shadow: 0 4px 16px rgba( 0, 0, 0, 0.3 ) !important;
+	margin: 0 !important;
+	line-height: 1.2 !important;
+	text-decoration: none !important;
+}
+.ri2-floatbtn.is-visible { display: inline-flex; }
+.ri2-floatbtn:hover { background: var(--ri2-accent-dark); }
+.ri2-floatbtn .dashicons { font-size: 16px; width: 16px; height: 16px; }
+
+/* ------------------------------------------------------------------ */
+/* Video floating button                                              */
+/* ------------------------------------------------------------------ */
+
+.ri2-vidbtn {
+	position: fixed !important;
+	z-index: 99989 !important;
+	display: none;
+	align-items: center !important;
+	gap: 6px !important;
+	padding: 6px 12px !important;
+	background: var(--ri2-accent) !important;
+	color: #fff !important;
+	border: 0 !important;
+	border-radius: 4px !important;
+	cursor: pointer !important;
+	font: 600 12px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+	box-shadow: 0 2px 8px rgba( 0, 0, 0, 0.3 ) !important;
+	white-space: nowrap !important;
+	margin: 0 !important;
+	line-height: 1.2 !important;
+	text-decoration: none !important;
+}
+.ri2-vidbtn.is-visible { display: inline-flex; }
+.ri2-vidbtn:hover { background: var(--ri2-accent-dark); }
+.ri2-vidbtn .dashicons { font-size: 14px; width: 14px; height: 14px; }
+
+/* ------------------------------------------------------------------ */
+/* Video URL popover                                                  */
+/* ------------------------------------------------------------------ */
+
+.ri2-vidpop {
+	position: fixed !important;
+	z-index: 99991 !important;
+	top: 50% !important;
+	left: 50% !important;
+	transform: translate( -50%, -50% );
+	background: #fff !important;
+	border: 0 !important;
+	border-radius: 10px !important;
+	box-shadow: 0 12px 40px rgba( 0, 0, 0, 0.3 ) !important;
+	font: 14px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+	margin: 0 !important;
+	padding: 0 !important;
+}
+.ri2-vidpop__inner { padding: 20px 24px !important; min-width: 340px; }
+.ri2-vidpop__title { font-weight: 700 !important; margin-bottom: 12px !important; color: #333 !important; font-size: 15px !important; }
+.ri2-vidpop__row { margin-bottom: 16px !important; }
+.ri2-vidpop__input {
+	width: 100% !important;
+	padding: 8px 10px !important;
+	border: 1px solid #d0d0e0 !important;
+	border-radius: 6px !important;
+	margin: 0 !important;
+	font-size: 14px !important;
+	background: #fff !important;
+	color: #333 !important;
+	box-sizing: border-box !important;
+}
+.ri2-vidpop__actions { display: flex !important; justify-content: flex-end !important; gap: 8px !important; }
+.ri2-vidpop__cancel {
+	border: 1px solid #d0d0e0 !important;
+	background: #fff !important;
+	color: #666 !important;
+	padding: 8px 16px !important;
+	border-radius: 6px !important;
+	cursor: pointer !important;
+	font-weight: 600 !important;
+	font-size: 13px !important;
+	margin: 0 !important;
+}
+.ri2-vidpop__cancel:hover { background: #f5f5f5; }
+.ri2-vidpop__save {
+	border: 0 !important;
+	background: var(--ri2-accent) !important;
+	color: #fff !important;
+	padding: 8px 16px !important;
+	border-radius: 6px !important;
+	cursor: pointer !important;
+	font-weight: 600 !important;
+	font-size: 13px !important;
+	margin: 0 !important;
+}
+.ri2-vidpop__save:hover { background: var(--ri2-accent-dark); }
+
+/* Keep our UI clickable above Elementor overlays. */
+.ri2-ui { box-sizing: border-box !important; }
+.ri2-ui * { box-sizing: border-box !important; }
+.ri2-ui button { all: revert; }
+.ri2-ui input { all: revert; }
+
+/* Background change floating button (atomic containers) */
+.ri2-bgbtn {
+	position: fixed !important;
+	z-index: 99999 !important;
+	display: none !important;
+	align-items: center !important;
+	justify-content: center !important;
+	width: 28px !important;
+	height: 28px !important;
+	border: 0 !important;
+	border-radius: 4px !important;
+	background: var(--ri2-accent) !important;
+	color: #fff !important;
+	cursor: pointer !important;
+	font-size: 16px !important;
+	line-height: 1 !important;
+	padding: 0 !important;
+	box-shadow: 0 2px 8px rgba(0,0,0,.25) !important;
+	opacity: 0 !important;
+	transition: opacity .15s ease !important;
+}
+.ri2-bgbtn.is-visible {
+	display: flex !important;
+	opacity: 1 !important;
+}
+.ri2-bgbtn:hover {
+	background: var(--ri2-accent-dark) !important;
+}
+.ri2-bgbtn .dashicons {
+	font-family: dashicons !important;
+	font-size: 16px !important;
+	width: 16px !important;
+	height: 16px !important;
+}
