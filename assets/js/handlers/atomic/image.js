@@ -78,6 +78,8 @@
 		if ( 'IMG' !== e.target.tagName ) { return; }
 		var widget = widgetOf( e.target );
 		if ( ! widget ) { return; }
+		// Only show for atomic widgets — classic image widgets have their own handler.
+		if ( ! widget.hasAttribute( 'data-e-type' ) ) { return; }
 		showBtn( e.target );
 	} );
 

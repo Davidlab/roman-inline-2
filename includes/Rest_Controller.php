@@ -8,6 +8,7 @@
  *   POST /link     post_id,element_id,key,url,target_blank
  *   POST /image    post_id,element_id,key,attachment_id
  *   POST /video    post_id,element_id,key,attachment_id|url,source_type
+ *   POST /poster   post_id,element_id,key,attachment_id
  *   POST /background post_id,element_id,attachment_id,style_id,variant_index,overlay_index
  *   GET  /render   ?post_id&element_id     -> freshly rendered widget HTML
  *
@@ -75,6 +76,16 @@ class Rest_Controller {
 			[
 				'methods'             => \WP_REST_Server::CREATABLE,
 				'callback'            => [ __CLASS__, 'save_video' ],
+				'permission_callback' => [ __CLASS__, 'can_edit' ],
+			]
+		);
+
+		register_rest_route(
+			self::NS,
+			'/poster',
+			[
+				'methods'             => \WP_REST_Server::CREATABLE,
+				'callback'            => [ __CLASS__, 'save_poster' ],
 				'permission_callback' => [ __CLASS__, 'can_edit' ],
 			]
 		);
@@ -215,6 +226,21 @@ class Rest_Controller {
 		return is_wp_error( $result ) ? $result : rest_ensure_response( $result );
 	}
 
+	public static function save_poster( $request ) {
+		$post_id       = (int) $request->get_param( 'post_id' );
+		$element_id    = (string) $request->get_param( 'element_id' );
+		$key           = (string) $request->get_param( 'key' );
+		$attachment_id = (int) $request->get_param( 'attachment_id' );
+
+		$field = self::authorize_field( $post_id, $element_id, $key, [ 'poster' ] );
+		if ( is_wp_error( $field ) ) {
+			return $field;
+		}
+
+		$result = Saver::save_poster( $post_id, $element_id, $key, $attachment_id, $field['is_atomic'] );
+		return is_wp_error( $result ) ? $result : rest_ensure_response( $result );
+	}
+
 	public static function save_background( $request ) {
 		$post_id       = (int) $request->get_param( 'post_id' );
 		$element_id    = (string) $request->get_param( 'element_id' );
@@ -239,7 +265,8 @@ class Rest_Controller {
 			return new \WP_Error( 'ri2_no_background', __( 'This element has no editable background image.', 'roman-inline-2' ), [ 'status' => 400 ] );
 		}
 
-		$result = Saver::save_background( $post_id, $element_id, $attachment_id, $style_id, $variant_index, $overlay_index );
+		$is_atomic = ! empty( $resolved['is_atomic'] );
+		$result = Saver::save_background( $post_id, $element_id, $attachment_id, $is_atomic, $style_id, $variant_index, $overlay_index );
 		return is_wp_error( $result ) ? $result : rest_ensure_response( $result );
 	}
 
@@ -253,11 +280,25 @@ class Rest_Controller {
 			return $resolved;
 		}
 
+		// First pass: exact key + kind match.
 		foreach ( $resolved['fields'] as $field ) {
 			if ( $field['key'] === $key && in_array( $field['kind'], $allowed_kinds, true ) ) {
 				return [
 					'is_atomic' => ! empty( $resolved['is_atomic'] ),
 					'kind'      => $field['kind'],
+					'field'     => $field,
+				];
+			}
+		}
+
+		// Second pass: kind-only match (for classic video where the key
+		// may have changed after a source-type switch).
+		foreach ( $resolved['fields'] as $field ) {
+			if ( in_array( $field['kind'], $allowed_kinds, true ) ) {
+				return [
+					'is_atomic' => ! empty( $resolved['is_atomic'] ),
+					'kind'      => $field['kind'],
+					'field'     => $field,
 				];
 			}
 		}

@@ -136,6 +136,45 @@ class Field_Resolver {
 	}
 
 	/**
+	 * Detect background images in classic container and section nodes.
+	 *
+	 * Classic containers/sections store background in settings:
+	 *   background_background = 'classic'
+	 *   background_image      = { id, url, size, alt, source }
+	 *
+	 * @param array  $node
+	 * @param string $type  Node type (elType: 'container' or 'section').
+	 * @return array
+	 */
+	private static function classic_background_fields( array $node, $type ) {
+		if ( ! in_array( $type, [ 'container', 'section' ], true ) ) {
+			return [];
+		}
+
+		$settings = isset( $node['settings'] ) && is_array( $node['settings'] ) ? $node['settings'] : [];
+
+		$bg_image = isset( $settings['background_image'] ) && is_array( $settings['background_image'] )
+			? $settings['background_image']
+			: [];
+
+		$image_id  = isset( $bg_image['id'] ) ? (int) $bg_image['id'] : 0;
+		$image_url = isset( $bg_image['url'] ) && is_string( $bg_image['url'] ) ? $bg_image['url'] : '';
+
+		if ( ! $image_id && ! $image_url ) {
+			return [];
+		}
+
+		return [
+			[
+				'kind'  => 'background',
+				'label' => __( 'Background Image', 'roman-inline-2' ),
+				'value' => $image_id,
+				'key'   => 'background_image',
+			],
+		];
+	}
+
+	/**
 	 * Detect background images in atomic container styles.
 	 *
 	 * Atomic containers (e-flexbox, e-div-block) store background images
@@ -314,8 +353,34 @@ class Field_Resolver {
 	private static function classic_fields( array $node, $type, $instance ) {
 		$fields = self::marker_fields( $node );
 
+		// Detect classic video URL fields early so they aren't also picked up
+		// by text introspection (e.g. youtube_url is a text control).
+		$videos     = self::classic_video_fields( $node, $instance );
+		$video_keys = [];
+		foreach ( $videos as $video ) {
+			$fields[]     = $video;
+			$video_keys[] = $video['key'];
+		}
+
+		// Detect classic poster / image overlay fields.
+		$posters = self::classic_poster_fields( $node, $instance );
+		foreach ( $posters as $poster ) {
+			$fields[] = $poster;
+		}
+
+		// Detect classic container/section background image.
+		$bg_fields = self::classic_background_fields( $node, $type );
+		foreach ( $bg_fields as $bg ) {
+			$fields[] = $bg;
+		}
+
 		if ( empty( $fields ) && $instance ) {
-			$fields = self::introspection_fields( $node, $instance );
+			$fields = self::introspection_fields( $node, $instance, $video_keys );
+		} elseif ( $instance && $video_keys ) {
+			$extra = self::introspection_fields( $node, $instance, $video_keys );
+			foreach ( $extra as $f ) {
+				$fields[] = $f;
+			}
 		}
 
 		$link = self::classic_link( $node );
@@ -323,7 +388,77 @@ class Field_Resolver {
 			$fields[] = $link;
 		}
 
+		// Detect classic image fields (settings with {id, url} shape).
+		$images = self::classic_image_fields( $node );
+		foreach ( $images as $img ) {
+			$fields[] = $img;
+		}
+
 		return array_values( $fields );
+	}
+
+	/**
+	 * Detect classic image references in the settings tree.
+	 *
+	 * Classic Elementor stores images as { id, url, alt, ... } arrays.
+	 * We walk the settings DFS to find each one, returning them in order
+	 * with an ordinal index for the Nth-image addressing scheme.
+	 *
+	 * @param array $node
+	 * @return array
+	 */
+	private static function classic_image_fields( array $node ) {
+		$settings = isset( $node['settings'] ) && is_array( $node['settings'] ) ? $node['settings'] : [];
+		$refs     = [];
+		self::collect_classic_images( $settings, $refs );
+
+		$fields = [];
+		foreach ( $refs as $i => $ref ) {
+			$fields[] = [
+				'key'   => $ref['key'],
+				'kind'  => 'image',
+				'label' => self::humanize( $ref['key'] ),
+				'value' => $ref['id'],
+				'index' => $i,
+			];
+		}
+		return $fields;
+	}
+
+	/**
+	 * Recursively collect classic image references from a settings tree.
+	 *
+	 * @param mixed  $value
+	 * @param array  $out   List of [ 'key' => string, 'id' => int ].
+	 * @param string $parent_key  Key of the parent setting (for labeling).
+	 */
+	private static function collect_classic_images( $value, array &$out, $parent_key = '' ) {
+		if ( ! is_array( $value ) ) {
+			return;
+		}
+
+		// Skip atomic image prop trees.
+		if ( isset( $value['$$type'] ) ) {
+			return;
+		}
+
+		// Detect classic image shape: { id, url } with no $$type.
+		if ( array_key_exists( 'url', $value )
+			&& is_string( $value['url'] )
+			&& array_key_exists( 'id', $value )
+			&& ! isset( $value['$$type'] ) ) {
+			$out[] = [
+				'key' => $parent_key ?: 'image',
+				'id'  => (int) $value['id'],
+			];
+			return;
+		}
+
+		foreach ( $value as $k => $child ) {
+			if ( is_array( $child ) ) {
+				self::collect_classic_images( $child, $out, (string) $k );
+			}
+		}
 	}
 
 	private static function marker_fields( array $node ) {
@@ -405,7 +540,7 @@ class Field_Resolver {
 		return $markers;
 	}
 
-	private static function introspection_fields( array $node, $instance ) {
+	private static function introspection_fields( array $node, $instance, array $exclude_keys = [] ) {
 		$fields   = [];
 		$settings = isset( $node['settings'] ) && is_array( $node['settings'] ) ? $node['settings'] : [];
 
@@ -426,6 +561,11 @@ class Field_Resolver {
 			$name  = isset( $control['name'] ) ? (string) $control['name'] : '';
 			$ctype = isset( $control['type'] ) ? (string) $control['type'] : '';
 			if ( '' === $name ) {
+				continue;
+			}
+
+			// Skip keys already claimed by video detection.
+			if ( in_array( $name, $exclude_keys, true ) ) {
 				continue;
 			}
 
@@ -465,6 +605,218 @@ class Field_Resolver {
 		}
 
 		return null;
+	}
+
+	/* --------------------------------------------------------------------- */
+	/* Classic video detection                                                */
+	/* --------------------------------------------------------------------- */
+
+	/**
+	 * Generic video URL detection for classic/third-party widgets.
+	 *
+	 * Strategy (no widget-specific code):
+	 *   1. If the widget has a `video_type` select control, look for a matching
+	 *      `{type}_url` text control (e.g. youtube_url, vimeo_url). This is the
+	 *      pattern used by Elementor's core Video widget and many 3rd-party ones.
+	 *   2. Otherwise, scan all content-tab text/url controls whose current value
+	 *      looks like a video URL (matches known video host patterns).
+	 *
+	 * @param array       $node
+	 * @param object|null $instance
+	 * @return array
+	 */
+	private static function classic_video_fields( array $node, $instance ) {
+		$settings = isset( $node['settings'] ) && is_array( $node['settings'] ) ? $node['settings'] : [];
+		$fields   = [];
+
+		$controls = [];
+		if ( $instance ) {
+			try {
+				$controls = $instance->get_controls();
+			} catch ( \Throwable $e ) {
+				$controls = [];
+			}
+		}
+
+		// Strategy 1: video_type select + {type}_url pattern.
+		$video_type = isset( $settings['video_type'] ) ? (string) $settings['video_type'] : '';
+		if ( $video_type ) {
+			if ( 'hosted' === $video_type ) {
+				$insert_url = ! empty( $settings['insert_url'] ) && 'yes' === $settings['insert_url'];
+				if ( $insert_url ) {
+					$url = isset( $settings['external_url'] ) ? self::extract_url_value( $settings['external_url'] ) : '';
+					$fields[] = [
+						'key'         => 'external_url',
+						'kind'        => 'video',
+						'label'       => __( 'Video URL', 'roman-inline-2' ),
+						'value'       => $url,
+						'source_type' => 'url',
+						'popover'     => true,
+					];
+					return $fields;
+				} else {
+					$media = isset( $settings['hosted_url'] ) ? $settings['hosted_url'] : [];
+					$url   = is_array( $media ) && isset( $media['url'] ) ? (string) $media['url'] : '';
+					$id    = is_array( $media ) && isset( $media['id'] ) ? (int) $media['id'] : 0;
+					$fields[] = [
+						'key'         => 'hosted_url',
+						'kind'        => 'video',
+						'label'       => __( 'Self Hosted Video', 'roman-inline-2' ),
+						'value'       => $url,
+						'source_type' => 'media',
+						'popover'     => true,
+					];
+					return $fields;
+				}
+			}
+
+			$url_key = $video_type . '_url';
+			if ( isset( $settings[ $url_key ] ) ) {
+				$value = $settings[ $url_key ];
+				$url   = is_string( $value ) ? $value : self::extract_url_value( $value );
+				if ( $url ) {
+					$label = self::humanize( $video_type ) . ' URL';
+					if ( is_array( $controls ) ) {
+						foreach ( $controls as $ctrl ) {
+							if ( isset( $ctrl['name'] ) && $ctrl['name'] === $url_key && ! empty( $ctrl['label'] ) ) {
+								$label = (string) $ctrl['label'];
+								break;
+							}
+						}
+					}
+					$fields[] = [
+						'key'         => $url_key,
+						'kind'        => 'video',
+						'label'       => $label,
+						'value'       => $url,
+						'source_type' => 'url',
+						'popover'     => true,
+					];
+					return $fields;
+				}
+			}
+		}
+
+		// Strategy 2: scan content-tab text controls for video-looking URLs.
+		if ( ! is_array( $controls ) ) {
+			return $fields;
+		}
+
+		$video_patterns = [
+			'youtube\.com',
+			'youtu\.be',
+			'vimeo\.com',
+			'dailymotion\.com',
+			'videopress\.com',
+			'wistia\.com',
+		];
+
+		foreach ( $controls as $control ) {
+			$tab = isset( $control['tab'] ) ? strtolower( (string) $control['tab'] ) : 'content';
+			if ( 'content' !== $tab ) {
+				continue;
+			}
+			$name  = isset( $control['name'] ) ? (string) $control['name'] : '';
+			$ctype = isset( $control['type'] ) ? (string) $control['type'] : '';
+			if ( '' === $name || ! in_array( $ctype, [ 'text', 'url' ], true ) ) {
+				continue;
+			}
+
+			$value = isset( $settings[ $name ] ) ? $settings[ $name ] : '';
+			$url   = is_string( $value ) ? $value : self::extract_url_value( $value );
+			if ( '' === $url ) {
+				continue;
+			}
+
+			$matched = false;
+			foreach ( $video_patterns as $pattern ) {
+				if ( preg_match( '#https?://(?:www\.)?' . $pattern . '#i', $url ) ) {
+					$matched = true;
+					break;
+				}
+			}
+
+			if ( $matched ) {
+				$label = isset( $control['label'] ) ? (string) $control['label'] : self::humanize( $name );
+				$fields[] = [
+					'key'         => $name,
+					'kind'        => 'video',
+					'label'       => $label,
+					'value'       => $url,
+					'source_type' => 'url',
+					'popover'     => true,
+				];
+			}
+		}
+
+		return $fields;
+	}
+
+	/* --------------------------------------------------------------------- */
+	/* Classic poster / overlay image detection                               */
+	/* --------------------------------------------------------------------- */
+
+	/**
+	 * Detect classic poster and image overlay fields.
+	 *
+	 * @param array       $node
+	 * @param object|null $instance
+	 * @return array
+	 */
+	private static function classic_poster_fields( array $node, $instance ) {
+		$settings = isset( $node['settings'] ) && is_array( $node['settings'] ) ? $node['settings'] : [];
+		$fields   = [];
+
+		// Poster (hosted video).
+		if ( isset( $settings['poster'] ) && is_array( $settings['poster'] ) ) {
+			$poster = $settings['poster'];
+			$url    = isset( $poster['url'] ) ? (string) $poster['url'] : '';
+			$id     = isset( $poster['id'] ) ? (int) $poster['id'] : 0;
+			if ( $url || $id ) {
+				$fields[] = [
+					'key'   => 'poster',
+					'kind'  => 'poster',
+					'label' => __( 'Poster Image', 'roman-inline-2' ),
+					'value' => $id,
+				];
+			}
+		}
+
+		// Image overlay (external videos, when show_image_overlay is 'yes').
+		if ( isset( $settings['show_image_overlay'] ) && 'yes' === $settings['show_image_overlay'] ) {
+			if ( isset( $settings['image_overlay'] ) && is_array( $settings['image_overlay'] ) ) {
+				$overlay = $settings['image_overlay'];
+				$url     = isset( $overlay['url'] ) ? (string) $overlay['url'] : '';
+				$id      = isset( $overlay['id'] ) ? (int) $overlay['id'] : 0;
+				if ( $url || $id ) {
+					$fields[] = [
+						'key'   => 'image_overlay',
+						'kind'  => 'poster',
+						'label' => __( 'Overlay Image', 'roman-inline-2' ),
+						'value' => $id,
+					];
+				}
+			}
+		}
+
+		return $fields;
+	}
+
+	/**
+	 * Extract a URL string from a value that may be a plain string or an
+	 * Elementor URL control array ({ url, is_external, nofollow }).
+	 *
+	 * @param mixed $value
+	 * @return string
+	 */
+	private static function extract_url_value( $value ) {
+		if ( is_string( $value ) ) {
+			return $value;
+		}
+		if ( is_array( $value ) && isset( $value['url'] ) && is_string( $value['url'] ) ) {
+			return (string) $value['url'];
+		}
+		return '';
 	}
 
 	/* --------------------------------------------------------------------- */

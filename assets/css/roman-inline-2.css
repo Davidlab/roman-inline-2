@@ -333,6 +333,29 @@
 }
 .ri2-vidpop__save:hover { background: var(--ri2-accent-dark); }
 
+/* Video source-type selection popover */
+.ri2-srcpop__inner { padding: 20px 24px !important; min-width: 260px; }
+.ri2-srcpop__opt {
+	display: flex !important;
+	align-items: center !important;
+	gap: 8px !important;
+	width: 100% !important;
+	padding: 10px 14px !important;
+	border: 1px solid #d0d0e0 !important;
+	background: #fff !important;
+	color: #333 !important;
+	font-size: 14px !important;
+	cursor: pointer !important;
+	margin: 0 0 8px 0 !important;
+	border-radius: 4px !important;
+	text-align: left !important;
+}
+.ri2-srcpop__opt:hover {
+	border-color: var(--ri2-accent) !important;
+	background: #f8f8ff !important;
+}
+.ri2-srcpop__opt .dashicons { font-size: 18px !important; width: 18px !important; height: 18px !important; }
+
 /* Keep our UI clickable above Elementor overlays. */
 .ri2-ui { box-sizing: border-box !important; }
 .ri2-ui * { box-sizing: border-box !important; }

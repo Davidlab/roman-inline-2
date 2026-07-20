@@ -34,14 +34,22 @@ class Plugin {
 		add_filter( 'elementor/widget/render_content', [ $this, 'wrap_atomic_widget' ], 10, 2 );
 
 		// Register built-in atomic (V4) handlers.
-		// Classic widget handlers will be added as separate files when implemented.
-		$this->register_handler( 'e-heading', 'handlers/heading.js' );
-		$this->register_handler( 'e-paragraph', 'handlers/paragraph.js' );
-		$this->register_handler( 'e-image', 'handlers/image.js' );
-		$this->register_handler( 'e-self-hosted-video', 'handlers/video.js' );
-		$this->register_handler( 'e-youtube', 'handlers/youtube.js' );
-		$this->register_handler( 'e-flexbox', 'handlers/background.js' );
-		$this->register_handler( 'e-div-block', 'handlers/background.js' );
+		$this->register_handler( 'e-heading', 'handlers/atomic/heading.js' );
+		$this->register_handler( 'e-paragraph', 'handlers/atomic/paragraph.js' );
+		$this->register_handler( 'e-image', 'handlers/atomic/image.js' );
+		$this->register_handler( 'e-self-hosted-video', 'handlers/atomic/video.js' );
+		$this->register_handler( 'e-youtube', 'handlers/atomic/youtube.js' );
+		$this->register_handler( 'e-flexbox', 'handlers/atomic/background.js' );
+		$this->register_handler( 'e-div-block', 'handlers/atomic/background.js' );
+
+		// Register built-in classic widget handlers.
+		$this->register_handler( 'heading', 'handlers/classic/heading.js' );
+		$this->register_handler( 'image', 'handlers/classic/image.js' );
+		$this->register_handler( 'text-editor', 'handlers/classic/text.js' );
+		$this->register_handler( 'video', 'handlers/classic/video.js' );
+		$this->register_handler( 'google_maps', 'handlers/classic/google-maps.js' );
+		$this->register_handler( 'container', 'handlers/classic/background.js' );
+		$this->register_handler( 'section', 'handlers/classic/background.js' );
 
 		// Allow 3rd-party code to register custom handlers.
 		$this->handlers = apply_filters( 'roman_inline_2_handlers', $this->handlers );
@@ -196,7 +204,7 @@ class Plugin {
 				continue;
 			}
 			$enqueued_paths[ $path ] = true;
-			$handle = 'roman-inline-2-' . sanitize_key( basename( $path, '.js' ) );
+			$handle = 'roman-inline-2-' . sanitize_key( str_replace( [ '/', '\\' ], '-', dirname( $path ) ) . '-' . basename( $path, '.js' ) );
 			wp_enqueue_script(
 				$handle,
 				ROMAN_INLINE_2_URL . 'assets/js/' . $path,
@@ -233,7 +241,8 @@ class Plugin {
 					'chooseVideo'  => __( 'Choose video', 'roman-inline-2' ),
 					'editVideo'    => __( 'Edit video', 'roman-inline-2' ),
 					'changeBg'     => __( 'Change background', 'roman-inline-2' ),
-				],
+					'changeImage'  => __( 'Change Image', 'roman-inline-2' ),
+					],
 			]
 		);
 	}

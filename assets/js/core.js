@@ -102,7 +102,43 @@
 	}
 
 	function isAtomic( widget ) {
-		return widget.hasAttribute( 'data-e-type' );
+		var et = widget.getAttribute( 'data-e-type' ) || '';
+		return et.indexOf( 'e-' ) === 0;
+	}
+
+	/* ----------------------------------------------------------------- */
+	/* Node location (classic widgets)                                    */
+	/* ----------------------------------------------------------------- */
+
+	function buildSelector( match ) {
+		var sel = match.tag || '*';
+		( match.classes || [] ).forEach( function ( c ) { sel += '.' + cssEscape( c ); } );
+		return sel;
+	}
+
+	// If a node's entire content is a single <a> wrapper (e.g. a linked
+	// heading), edit the text inside the link rather than the wrapper itself.
+	function preferTextNode( node ) {
+		if ( ! node ) { return node; }
+		var kids = node.children;
+		if ( 1 === kids.length && 'A' === kids[ 0 ].tagName &&
+			( kids[ 0 ].textContent || '' ).trim() === ( node.textContent || '' ).trim() ) {
+			return kids[ 0 ];
+		}
+		return node;
+	}
+
+	function locateNode( widget, field, clicked ) {
+		if ( field.match ) {
+			var sel = buildSelector( field.match );
+			if ( clicked ) {
+				var near = clicked.closest( sel );
+				if ( near && widget.contains( near ) ) { return near; }
+			}
+			var found = widget.querySelector( sel );
+			if ( found ) { return found; }
+		}
+		return widget.querySelector( '.elementor-widget-container' ) || widget;
 	}
 
 	/* ----------------------------------------------------------------- */
@@ -146,6 +182,15 @@
 		} );
 	}
 
+	function savePoster( id, key, attachmentId ) {
+		return apiPost( 'poster', {
+			post_id:       cfg.postId,
+			element_id:    id,
+			key:           key,
+			attachment_id: attachmentId
+		} );
+	}
+
 	function saveBackground( id, attachmentId, styleId, variantIndex, overlayIndex ) {
 		return apiPost( 'background', {
 			post_id:       cfg.postId,
@@ -160,10 +205,8 @@
 	function refreshWidget( widget ) {
 		var id = widgetId( widget );
 		delete fieldsCache[ id ];
-		console.log( '[RI2] refreshWidget start, id=' + id );
 		return apiGet( 'render?post_id=' + cfg.postId + '&element_id=' + encodeURIComponent( id ) )
 			.then( function ( r ) {
-				console.log( '[RI2] render response:', r ? ( r.html ? r.html.substring( 0, 300 ) : 'no html' ) : 'null' );
 				if ( ! r || ! r.html ) { return; }
 				var tmp = document.createElement( 'div' );
 				tmp.innerHTML = r.html.trim();
@@ -185,7 +228,6 @@
 				}
 				// Reset hover state so the new widget gets onHover on next mouseover.
 				hoveredWidget = null;
-				console.log( '[RI2] Widget refreshed:', rendered.tagName, 'e-type=' + rendered.getAttribute( 'data-e-type' ), 'data-id=' + rendered.getAttribute( 'data-id' ), 'class=' + rendered.className );
 				return rendered;
 			} );
 	}
@@ -287,12 +329,10 @@
 		if ( ! widget ) { return; }
 		var type = widgetType( widget );
 		var handler = H[ type ];
-		console.log( '[RI2] Hover: type=' + type + ' handler=' + ( handler ? 'yes' : 'no' ) + ' class=' + widget.className + ' isHovered=' + ( hoveredWidget === widget ) + ' hoveredType=' + ( hoveredWidget ? widgetType( hoveredWidget ) : 'null' ) );
 		if ( ! handler ) { return; }
 
 		if ( hoveredWidget !== widget ) {
 			clearTimeout( hoverLeaveTimer );
-			console.log( '[RI2] Entering widget ' + type );
 			if ( hoveredWidget ) {
 				var prevType = widgetType( hoveredWidget );
 				var prevHandler = H[ prevType ];
@@ -675,9 +715,14 @@
 	function editText( widget, node, opts ) {
 		var id = widgetId( widget );
 		getFields( id ).then( function ( res ) {
+			var kind = opts.kind;
+			if ( ! kind ) {
+				var matched = ( res.fields || [] ).filter( function ( f ) { return f.key === opts.key; } )[ 0 ];
+				kind = matched ? matched.kind : 'rich_text';
+			}
 			startTextEdit( widget, node, {
 				key:      opts.key,
-				kind:     opts.kind || res.fields.filter( function ( f ) { return f.key === opts.key; } )[ 0 ].kind,
+				kind:     kind,
 				isAtomic: opts.isAtomic != null ? opts.isAtomic : res.is_atomic,
 				fieldMap: res
 			} );
@@ -711,23 +756,18 @@
 
 	function replaceImage( widget, imgNode, opts ) {
 		var id = widgetId( widget );
-		console.log( '[RI2] replaceImage called, id=' + id + ' key=' + opts.key );
 		openMedia( {
 			onSelect: function ( attachment ) {
-				console.log( '[RI2] Media selected, attachment id=' + attachment.id );
 				toast( i18n.saving || 'Saving…', 'saving' );
 				saveImage( id, opts.key, attachment.id )
-					.then( function ( r ) {
-						console.log( '[RI2] saveImage response:', r );
+					.then( function () {
 						delete fieldsCache[ id ];
 						return refreshWidget( widget );
 					} )
-					.then( function ( newWidget ) {
-						console.log( '[RI2] refreshWidget returned:', newWidget ? newWidget.tagName : 'null' );
+					.then( function () {
 						toast( i18n.saved || 'Saved', 'ok' );
 					} )
 					.catch( function ( err ) {
-						console.error( '[RI2] replaceImage error:', err );
 						toast( ( err && err.message ) || i18n.saveFailed || 'Save failed', 'error' );
 					} );
 			}
@@ -773,6 +813,26 @@
 		}
 	}
 
+	function replacePoster( widget, opts ) {
+		var id = widgetId( widget );
+		openMedia( {
+			onSelect: function ( attachment ) {
+				toast( i18n.saving || 'Saving…', 'saving' );
+				savePoster( id, opts.key, attachment.id )
+					.then( function () {
+						delete fieldsCache[ id ];
+						return refreshWidget( widget );
+					} )
+					.then( function () {
+						toast( i18n.saved || 'Saved', 'ok' );
+					} )
+					.catch( function ( err ) {
+						toast( ( err && err.message ) || i18n.saveFailed || 'Save failed', 'error' );
+					} );
+			}
+		} );
+	}
+
 	function replaceBackground( widget, opts ) {
 		var id = widgetId( widget );
 		openMedia( {
@@ -813,11 +873,13 @@
 			editLink:      function ( node, opts ) { return editLink( widget, node, opts ); },
 			replaceImage:  function ( node, opts ) { return replaceImage( widget, node, opts ); },
 			replaceVideo:  function ( node, opts ) { return replaceVideo( widget, opts ); },
+			replacePoster: function ( opts ) { return replacePoster( widget, opts ); },
 			replaceBackground: function ( opts ) { return replaceBackground( widget, opts ); },
 			saveText:      function ( key, value, kind ) { return saveText( id, key, value, kind ); },
 			saveLink:      function ( key, url, blank ) { return saveLink( id, key, url, blank ); },
 			saveImage:     function ( key, attId ) { return saveImage( id, key, attId ); },
 			saveVideo:     function ( key, attId, url, srcType ) { return saveVideo( id, key, attId, url, srcType ); },
+			savePoster:    function ( key, attId ) { return savePoster( id, key, attId ); },
 			saveBackground: function ( attId, styleId, vi, oi ) { return saveBackground( id, attId, styleId, vi, oi ); },
 			refreshWidget: function () { return refreshWidget( widget ); },
 			toast:         toast,
@@ -825,6 +887,9 @@
 			hideButton:    hideButton,
 			openMedia:     openMedia,
 			openVideoMedia: openVideoMedia,
+			locateNode:    locateNode,
+			preferTextNode: preferTextNode,
+			buildSelector: buildSelector,
 			widgetId:      id,
 			widgetType:    type,
 			isAtomic:      atomic,
@@ -840,7 +905,6 @@
 	window.RomanInline2 = {
 		register:  function ( type, handler ) {
 			H[ type ] = handler;
-			console.log( '[RI2] Handler registered: ' + type );
 		},
 		isActive:  function () { return active; },
 		ctx:       createContext,
@@ -848,6 +912,5 @@
 		i18n:      i18n
 	};
 
-	console.log( '[RI2] Core loaded. Handlers from PHP: ' + ( cfg.handlers ? cfg.handlers.join( ', ' ) : 'none' ) );
 
 } )( window.wp, window.jQuery );

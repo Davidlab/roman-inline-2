@@ -306,16 +306,144 @@ class Saver {
 						];
 					}
 				} elseif ( $is_atomic ) {
+					// Atomic string prop (e.g. YouTube widget's 'source').
 					$node['settings'][ $key ] = [
 						'$$type' => 'string',
 						'value'  => $clean_url,
 					];
+				} else {
+					// Classic widget — handle video_type + hosted mode switching.
+					$video_type = isset( $node['settings']['video_type'] ) ? (string) $node['settings']['video_type'] : '';
+
+					if ( $is_media ) {
+						// User chose Self Hosted via media library.
+						// Switch to hosted + media library mode.
+						$node['settings']['video_type'] = 'hosted';
+						$node['settings']['insert_url'] = '';
+						$node['settings']['hosted_url'] = [
+							'id'  => $attachment_id,
+							'url' => $clean_url,
+						];
+					} else {
+						// User chose Video URL.
+						// Detect the service from the URL and switch video_type accordingly.
+						$new_type = self::detect_video_type( $clean_url );
+						if ( 'hosted' === $new_type ) {
+							// URL doesn't match a known service — treat as hosted external URL.
+							$node['settings']['video_type'] = 'hosted';
+							$node['settings']['insert_url'] = 'yes';
+							$node['settings']['external_url'] = $clean_url;
+						} else {
+							// YouTube, Vimeo, etc. — save to {type}_url as plain string.
+							$node['settings']['video_type'] = $new_type;
+							$url_key                     = $new_type . '_url';
+							$node['settings'][ $url_key ] = $clean_url;
+						}
+					}
 				}
 
 				return [
 					'success' => true,
 					'key'     => $key,
 					'value'   => $clean_url,
+				];
+			}
+		);
+	}
+
+	/**
+	 * Detect the Elementor video_type from a URL.
+	 *
+	 * @param string $url
+	 * @return string 'youtube', 'vimeo', 'dailymotion', or 'hosted' (fallback).
+	 */
+	private static function detect_video_type( $url ) {
+		$url = strtolower( (string) $url );
+		if ( preg_match( '#(?:youtube\.com|youtu\.be)#i', $url ) ) {
+			return 'youtube';
+		}
+		if ( preg_match( '#vimeo\.com#i', $url ) ) {
+			return 'vimeo';
+		}
+		if ( preg_match( '#dailymotion\.com#i', $url ) ) {
+			return 'dailymotion';
+		}
+		return 'hosted';
+	}
+
+	/* --------------------------------------------------------------------- */
+	/* Poster / Overlay Image                                                 */
+	/* --------------------------------------------------------------------- */
+
+	/**
+	 * Save a poster or overlay image change from the media library.
+	 *
+	 * Atomic: updates the image prop tree for the given key (e.g. 'poster').
+	 * Classic: updates settings[key] as { id, url } (MEDIA control shape).
+	 *
+	 * @param int    $post_id
+	 * @param string $element_id
+	 * @param string $key         Setting key ('poster' or 'image_overlay').
+	 * @param int    $attachment_id
+	 * @param bool   $is_atomic
+	 * @return array|\WP_Error
+	 */
+	public static function save_poster( $post_id, $element_id, $key, $attachment_id, $is_atomic ) {
+		$attachment_id = absint( $attachment_id );
+		if ( ! $attachment_id || 'attachment' !== get_post_type( $attachment_id ) || ! wp_attachment_is_image( $attachment_id ) ) {
+			return new \WP_Error( 'ri2_invalid_attachment', __( 'Please choose a valid image.', 'roman-inline-2' ), [ 'status' => 400 ] );
+		}
+
+		$url = wp_get_attachment_url( $attachment_id );
+		if ( ! $url ) {
+			return new \WP_Error( 'ri2_no_url', __( 'Could not resolve the image URL.', 'roman-inline-2' ), [ 'status' => 400 ] );
+		}
+
+		$document = new Document( $post_id );
+
+		return $document->mutate_node(
+			$element_id,
+			function ( array &$node ) use ( $key, $attachment_id, $url, $is_atomic ) {
+				if ( ! isset( $node['settings'] ) || ! is_array( $node['settings'] ) ) {
+					$node['settings'] = [];
+				}
+
+				if ( $is_atomic ) {
+					$existing_size = 'full';
+					if ( isset( $node['settings'][ $key ]['value']['size']['value'] ) && is_string( $node['settings'][ $key ]['value']['size']['value'] ) ) {
+						$existing_size = $node['settings'][ $key ]['value']['size']['value'];
+					}
+					$node['settings'][ $key ] = [
+						'$$type' => 'image',
+						'value'  => [
+							'src' => [
+								'$$type' => 'image-src',
+								'value'  => [
+									'id'  => [
+										'$$type' => 'image-attachment-id',
+										'value'  => $attachment_id,
+									],
+									'url' => null,
+								],
+							],
+							'size' => [
+								'$$type' => 'string',
+								'value'  => $existing_size,
+							],
+						],
+					];
+				} else {
+					// Classic MEDIA control stores { id, url }.
+					$node['settings'][ $key ] = [
+						'id'  => $attachment_id,
+						'url' => $url,
+					];
+				}
+
+				return [
+					'success' => true,
+					'key'     => $key,
+					'value'   => $url,
 				];
 			}
 		);
@@ -357,22 +485,21 @@ class Saver {
 	/* --------------------------------------------------------------------- */
 
 	/**
-	 * Save a background image change for an atomic container.
+	 * Save a background image change.
 	 *
-	 * Updates the image prop inside the styles tree at:
-	 *   styles -> {style_id} -> variants -> [{variant_index}] -> props -> background
-	 *     -> value -> background-overlay -> value -> [{overlay_index}]
-	 *       -> value -> image
+	 * Atomic (e-flexbox, e-div-block): updates the image prop in the styles tree.
+	 * Classic (container, section):    updates settings.background_background + settings.background_image.
 	 *
 	 * @param int    $post_id
 	 * @param string $element_id
 	 * @param int    $attachment_id
-	 * @param string $style_id
-	 * @param int    $variant_index
-	 * @param int    $overlay_index
+	 * @param bool   $is_atomic
+	 * @param string $style_id       Atomic only: style ID in the styles tree.
+	 * @param int    $variant_index  Atomic only: variant index.
+	 * @param int    $overlay_index  Atomic only: overlay item index.
 	 * @return array|\WP_Error
 	 */
-	public static function save_background( $post_id, $element_id, $attachment_id, $style_id, $variant_index, $overlay_index ) {
+	public static function save_background( $post_id, $element_id, $attachment_id, $is_atomic = false, $style_id = '', $variant_index = 0, $overlay_index = 0 ) {
 		$attachment_id = absint( $attachment_id );
 		if ( ! $attachment_id || 'attachment' !== get_post_type( $attachment_id ) || ! wp_attachment_is_image( $attachment_id ) ) {
 			return new \WP_Error( 'ri2_invalid_attachment', __( 'Please choose a valid image.', 'roman-inline-2' ), [ 'status' => 400 ] );
@@ -385,6 +512,31 @@ class Saver {
 
 		$document = new Document( $post_id );
 
+		if ( ! $is_atomic ) {
+			// Classic path: update settings.background_background + settings.background_image.
+			return $document->mutate_node(
+				$element_id,
+				function ( array &$node ) use ( $attachment_id, $url ) {
+					if ( ! isset( $node['settings'] ) || ! is_array( $node['settings'] ) ) {
+						$node['settings'] = [];
+					}
+					$node['settings']['background_background'] = 'classic';
+					$node['settings']['background_image'] = [
+						'id'     => $attachment_id,
+						'url'    => $url,
+						'size'   => '',
+						'alt'    => '',
+						'source' => 'library',
+					];
+					return [
+						'success' => true,
+						'value'   => $url,
+					];
+				}
+			);
+		}
+
+		// Atomic path: update image prop inside the styles tree.
 		return $document->mutate_node(
 			$element_id,
 			function ( array &$node ) use ( $attachment_id, $url, $style_id, $variant_index, $overlay_index ) {
