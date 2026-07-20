@@ -175,6 +175,69 @@ class Field_Resolver {
 	}
 
 	/**
+	 * Detect classic gallery fields (gallery control type).
+	 *
+	 * Elementor's gallery control stores an array of { id, url } objects.
+	 * We detect it via control introspection so any widget using a gallery
+	 * control is supported (image-gallery, image-carousel, etc.).
+	 *
+	 * @param array        $node
+	 * @param object|null  $instance
+	 * @return array
+	 */
+	private static function classic_gallery_fields( array $node, $instance ) {
+		if ( ! $instance ) {
+			return [];
+		}
+
+		try {
+			$controls = $instance->get_controls();
+		} catch ( \Throwable $e ) {
+			return [];
+		}
+		if ( ! is_array( $controls ) ) {
+			return [];
+		}
+
+		$settings = isset( $node['settings'] ) && is_array( $node['settings'] ) ? $node['settings'] : [];
+		$fields   = [];
+
+		foreach ( $controls as $control ) {
+			$ctype = isset( $control['type'] ) ? (string) $control['type'] : '';
+			$name  = isset( $control['name'] ) ? (string) $control['name'] : '';
+			if ( 'gallery' !== $ctype || '' === $name ) {
+				continue;
+			}
+
+			$gallery = isset( $settings[ $name ] ) && is_array( $settings[ $name ] ) ? $settings[ $name ] : [];
+			$images  = [];
+			foreach ( $gallery as $img ) {
+				if ( ! is_array( $img ) ) {
+					continue;
+				}
+				$images[] = [
+					'id'  => isset( $img['id'] ) ? (int) $img['id'] : 0,
+					'url' => isset( $img['url'] ) && is_string( $img['url'] ) ? $img['url'] : '',
+				];
+			}
+
+			if ( ! $images ) {
+				continue;
+			}
+
+			$fields[] = [
+				'kind'   => 'gallery',
+				'key'    => $name,
+				'label'  => isset( $control['label'] ) && $control['label'] ? (string) $control['label'] : self::humanize( $name ),
+				'value'  => count( $images ),
+				'images' => $images,
+			];
+		}
+
+		return $fields;
+	}
+
+	/**
 	 * Detect background images in atomic container styles.
 	 *
 	 * Atomic containers (e-flexbox, e-div-block) store background images
@@ -388,8 +451,17 @@ class Field_Resolver {
 			$fields[] = $link;
 		}
 
+		// Detect classic gallery fields (gallery control type).
+		$gallery_fields = self::classic_gallery_fields( $node, $instance );
+		$gallery_keys   = [];
+		foreach ( $gallery_fields as $gf ) {
+			$fields[]      = $gf;
+			$gallery_keys[] = $gf['key'];
+		}
+
 		// Detect classic image fields (settings with {id, url} shape).
-		$images = self::classic_image_fields( $node );
+		// Pass gallery keys so individual gallery images aren't double-counted.
+		$images = self::classic_image_fields( $node, $gallery_keys );
 		foreach ( $images as $img ) {
 			$fields[] = $img;
 		}
@@ -407,10 +479,10 @@ class Field_Resolver {
 	 * @param array $node
 	 * @return array
 	 */
-	private static function classic_image_fields( array $node ) {
+	private static function classic_image_fields( array $node, array $exclude_keys = [] ) {
 		$settings = isset( $node['settings'] ) && is_array( $node['settings'] ) ? $node['settings'] : [];
 		$refs     = [];
-		self::collect_classic_images( $settings, $refs );
+		self::collect_classic_images( $settings, $refs, '', $exclude_keys );
 
 		$fields = [];
 		foreach ( $refs as $i => $ref ) {
@@ -432,13 +504,18 @@ class Field_Resolver {
 	 * @param array  $out   List of [ 'key' => string, 'id' => int ].
 	 * @param string $parent_key  Key of the parent setting (for labeling).
 	 */
-	private static function collect_classic_images( $value, array &$out, $parent_key = '' ) {
+	private static function collect_classic_images( $value, array &$out, $parent_key = '', array $exclude_keys = [] ) {
 		if ( ! is_array( $value ) ) {
 			return;
 		}
 
 		// Skip atomic image prop trees.
 		if ( isset( $value['$$type'] ) ) {
+			return;
+		}
+
+		// Skip gallery arrays — handled by classic_gallery_fields().
+		if ( $parent_key && in_array( $parent_key, $exclude_keys, true ) ) {
 			return;
 		}
 
@@ -456,7 +533,7 @@ class Field_Resolver {
 
 		foreach ( $value as $k => $child ) {
 			if ( is_array( $child ) ) {
-				self::collect_classic_images( $child, $out, (string) $k );
+				self::collect_classic_images( $child, $out, (string) $k, $exclude_keys );
 			}
 		}
 	}

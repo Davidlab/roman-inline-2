@@ -396,3 +396,103 @@
 	width: 16px !important;
 	height: 16px !important;
 }
+
+/* ------------------------------------------------------------------ */
+/* Gallery per-image buttons (Replace / Delete)                        */
+/* ------------------------------------------------------------------ */
+
+.ri2-gallery-btn {
+	position: fixed !important;
+	z-index: 99999 !important;
+	display: none !important;
+	align-items: center !important;
+	justify-content: center !important;
+	width: 28px !important;
+	height: 28px !important;
+	min-width: 28px !important;
+	max-width: 28px !important;
+	padding: 0 !important;
+	margin: 0 !important;
+	box-sizing: border-box !important;
+	border: none !important;
+	border-radius: 4px !important;
+	cursor: pointer !important;
+	font-family: dashicons !important;
+	font-size: 16px !important;
+	color: #fff !important;
+	opacity: 0 !important;
+	transition: opacity .15s ease !important;
+}
+
+.ri2-gallery-btn .dashicons {
+	font-family: dashicons !important;
+	font-size: 16px !important;
+	width: 16px !important;
+	height: 16px !important;
+}
+
+.ri2-gallery-btn.is-visible {
+	display: flex !important;
+	opacity: 1 !important;
+}
+
+.ri2-gallery-replace {
+	background: var(--ri2-accent, #007cba) !important;
+}
+
+.ri2-gallery-replace:hover {
+	background: var(--ri2-accent-dark, #006ba1) !important;
+}
+
+.ri2-gallery-delete {
+	background: #d63638 !important;
+}
+
+.ri2-gallery-delete:hover {
+	background: #b32d2e !important;
+}
+
+.ri2-gallery-add-btn {
+	position: fixed !important;
+	z-index: 99999 !important;
+	display: none !important;
+	align-items: center !important;
+	gap: 4px !important;
+	height: 28px !important;
+	padding: 0 10px !important;
+	margin: 0 !important;
+	box-sizing: border-box !important;
+	border: none !important;
+	border-radius: 4px !important;
+	cursor: pointer !important;
+	font-size: 12px !important;
+	font-weight: 600 !important;
+	color: #fff !important;
+	background: #00a32a !important;
+	opacity: 0 !important;
+	transition: opacity .15s ease !important;
+	white-space: nowrap !important;
+}
+
+.ri2-gallery-add-btn .dashicons {
+	font-size: 14px !important;
+	width: 14px !important;
+	height: 14px !important;
+}
+
+.ri2-gallery-add-btn.is-visible {
+	display: inline-flex !important;
+	opacity: 1 !important;
+}
+
+.ri2-gallery-add-btn:hover {
+	background: #008a20 !important;
+}
+
+.ri2-gallery-add {
+	background: #00a32a !important;
+}
+
+.ri2-gallery-add:hover {
+	background: #008a20 !important;
+}

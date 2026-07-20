@@ -48,6 +48,8 @@ class Plugin {
 		$this->register_handler( 'text-editor', 'handlers/classic/text.js' );
 		$this->register_handler( 'video', 'handlers/classic/video.js' );
 		$this->register_handler( 'google_maps', 'handlers/classic/google-maps.js' );
+		$this->register_handler( 'image-gallery', 'handlers/classic/gallery.js' );
+		$this->register_handler( 'image-carousel', 'handlers/classic/gallery.js' );
 		$this->register_handler( 'container', 'handlers/classic/background.js' );
 		$this->register_handler( 'section', 'handlers/classic/background.js' );
 

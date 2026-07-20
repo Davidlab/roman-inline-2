@@ -86,8 +86,13 @@
 		var widget = widgetOf( e.target );
 		if ( ! widget ) { return; }
 
-		// Only show for classic image widgets (not atomic, which has its own handler).
-		if ( widget.hasAttribute( 'data-e-type' ) ) { return; }
+		// Only show for classic widgets (not atomic, which has its own handler).
+		var et = widget.getAttribute( 'data-e-type' ) || '';
+		if ( et.indexOf( 'e-' ) === 0 ) { return; }
+
+		// Only show for classic image widgets — skip other classic widget types.
+		var wt = ( widget.getAttribute( 'data-widget_type' ) || '' ).split( '.' )[ 0 ];
+		if ( wt && 'image' !== wt ) { return; }
 
 		// Verify the widget has an editable image field.
 		RI.ctx( widget ).getFields().then( function ( res ) {

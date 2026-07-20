@@ -584,4 +584,79 @@ class Saver {
 			}
 		);
 	}
+
+	/**
+	 * Save a gallery change (replace, delete, or add an image).
+	 *
+	 * Classic gallery control stores an array of { id, url } objects in
+	 * settings[ $key ]. This method mutates the array in-place.
+	 *
+	 * @param int    $post_id
+	 * @param string $element_id
+	 * @param string $key          Settings key (e.g. 'wp_gallery').
+	 * @param string $action       'replace', 'delete', or 'add'.
+	 * @param int    $attachment_id Attachment ID for replace/add (0 for delete).
+	 * @param int    $index         Index for replace/delete (ignored for add).
+	 * @return array|\WP_Error
+	 */
+	public static function save_gallery( $post_id, $element_id, $key, $action, $attachment_id = 0, $index = -1 ) {
+		$attachment_id = absint( $attachment_id );
+
+		if ( 'delete' !== $action && ! $attachment_id ) {
+			return new \WP_Error( 'ri2_invalid_attachment', __( 'Please choose a valid image.', 'roman-inline-2' ), [ 'status' => 400 ] );
+		}
+
+		$url = '';
+		if ( $attachment_id ) {
+			$url = wp_get_attachment_url( $attachment_id );
+			if ( ! $url ) {
+				return new \WP_Error( 'ri2_no_url', __( 'Could not resolve the image URL.', 'roman-inline-2' ), [ 'status' => 400 ] );
+			}
+		}
+
+		$document = new Document( $post_id );
+
+		return $document->mutate_node(
+			$element_id,
+			function ( array &$node ) use ( $key, $action, $attachment_id, $url, $index ) {
+				if ( ! isset( $node['settings'] ) || ! is_array( $node['settings'] ) ) {
+					$node['settings'] = [];
+				}
+				if ( ! isset( $node['settings'][ $key ] ) || ! is_array( $node['settings'][ $key ] ) ) {
+					$node['settings'][ $key ] = [];
+				}
+
+				$gallery = &$node['settings'][ $key ];
+
+				if ( 'replace' === $action ) {
+					if ( $index < 0 || $index >= count( $gallery ) ) {
+						return new \WP_Error( 'ri2_bad_index', __( 'Invalid gallery index.', 'roman-inline-2' ), [ 'status' => 400 ] );
+					}
+					$gallery[ $index ] = [
+						'id'     => $attachment_id,
+						'url'    => $url,
+					];
+				} elseif ( 'delete' === $action ) {
+					if ( $index < 0 || $index >= count( $gallery ) ) {
+						return new \WP_Error( 'ri2_bad_index', __( 'Invalid gallery index.', 'roman-inline-2' ), [ 'status' => 400 ] );
+					}
+					array_splice( $gallery, $index, 1 );
+				} elseif ( 'add' === $action ) {
+					$gallery[] = [
+						'id'     => $attachment_id,
+						'url'    => $url,
+					];
+				} else {
+					return new \WP_Error( 'ri2_bad_action', __( 'Unknown gallery action.', 'roman-inline-2' ), [ 'status' => 400 ] );
+				}
+
+				unset( $gallery );
+
+				return [
+					'success' => true,
+					'count'   => count( $node['settings'][ $key ] ),
+				];
+			}
+		);
+	}
 }

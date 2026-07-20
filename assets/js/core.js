@@ -202,6 +202,17 @@
 		} );
 	}
 
+	function saveGallery( id, key, action, attachmentId, index ) {
+		return apiPost( 'gallery', {
+			post_id:       cfg.postId,
+			element_id:    id,
+			key:           key,
+			action:        action,
+			attachment_id: attachmentId || 0,
+			index:         index != null ? index : -1
+		} );
+	}
+
 	function refreshWidget( widget ) {
 		var id = widgetId( widget );
 		delete fieldsCache[ id ];
@@ -620,6 +631,28 @@
 		frame.open();
 	}
 
+	function openGalleryMedia( opts ) {
+		var frame = wp.media( {
+			title:   opts.title || 'Add images to gallery',
+			button:  { text: opts.buttonText || 'Add images' },
+			library: { type: 'image' },
+			multiple: 'add'
+		} );
+
+		frame.on( 'select', function () {
+			var selection = frame.state().get( 'selection' );
+			var attachments = [];
+			selection.map( function ( model ) {
+				attachments.push( model.toJSON() );
+			} );
+			if ( opts.onSelect && attachments.length ) {
+				opts.onSelect( attachments );
+			}
+		} );
+
+		frame.open();
+	}
+
 	/* ----------------------------------------------------------------- */
 	/* Video media frame                                                  */
 	/* ----------------------------------------------------------------- */
@@ -881,11 +914,13 @@
 			saveVideo:     function ( key, attId, url, srcType ) { return saveVideo( id, key, attId, url, srcType ); },
 			savePoster:    function ( key, attId ) { return savePoster( id, key, attId ); },
 			saveBackground: function ( attId, styleId, vi, oi ) { return saveBackground( id, attId, styleId, vi, oi ); },
+			saveGallery:   function ( key, action, attId, idx ) { return saveGallery( id, key, action, attId, idx ); },
 			refreshWidget: function () { return refreshWidget( widget ); },
 			toast:         toast,
 			showButton:    showButton,
 			hideButton:    hideButton,
 			openMedia:     openMedia,
+			openGalleryMedia: openGalleryMedia,
 			openVideoMedia: openVideoMedia,
 			locateNode:    locateNode,
 			preferTextNode: preferTextNode,

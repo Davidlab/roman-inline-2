@@ -10,6 +10,7 @@
  *   POST /video    post_id,element_id,key,attachment_id|url,source_type
  *   POST /poster   post_id,element_id,key,attachment_id
  *   POST /background post_id,element_id,attachment_id,style_id,variant_index,overlay_index
+ *   POST /gallery   post_id,element_id,key,action,attachment_id,index
  *   GET  /render   ?post_id&element_id     -> freshly rendered widget HTML
  *
  * @package RomanInline2
@@ -96,6 +97,16 @@ class Rest_Controller {
 			[
 				'methods'             => \WP_REST_Server::CREATABLE,
 				'callback'            => [ __CLASS__, 'save_background' ],
+				'permission_callback' => [ __CLASS__, 'can_edit' ],
+			]
+		);
+
+		register_rest_route(
+			self::NS,
+			'/gallery',
+			[
+				'methods'             => \WP_REST_Server::CREATABLE,
+				'callback'            => [ __CLASS__, 'save_gallery' ],
 				'permission_callback' => [ __CLASS__, 'can_edit' ],
 			]
 		);
@@ -273,6 +284,23 @@ class Rest_Controller {
 	/* --------------------------------------------------------------------- */
 	/* Authorization helper                                                   */
 	/* --------------------------------------------------------------------- */
+
+	public static function save_gallery( $request ) {
+		$post_id       = (int) $request->get_param( 'post_id' );
+		$element_id    = (string) $request->get_param( 'element_id' );
+		$key           = (string) $request->get_param( 'key' );
+		$action        = (string) $request->get_param( 'action' );
+		$attachment_id = (int) $request->get_param( 'attachment_id' );
+		$index         = (int) $request->get_param( 'index' );
+
+		$field = self::authorize_field( $post_id, $element_id, $key, [ 'gallery' ] );
+		if ( is_wp_error( $field ) ) {
+			return $field;
+		}
+
+		$result = Saver::save_gallery( $post_id, $element_id, $key, $action, $attachment_id, $index );
+		return is_wp_error( $result ) ? $result : rest_ensure_response( $result );
+	}
 
 	private static function authorize_field( $post_id, $element_id, $key, array $allowed_kinds ) {
 		$resolved = Field_Resolver::resolve( $post_id, $element_id );
