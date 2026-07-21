@@ -113,6 +113,26 @@ class Rest_Controller {
 
 		register_rest_route(
 			self::NS,
+			'/pro-gallery',
+			[
+				'methods'             => \WP_REST_Server::CREATABLE,
+				'callback'            => [ __CLASS__, 'save_pro_gallery' ],
+				'permission_callback' => [ __CLASS__, 'can_edit' ],
+			]
+		);
+
+		register_rest_route(
+			self::NS,
+			'/attachment-meta',
+			[
+				'methods'             => \WP_REST_Server::CREATABLE,
+				'callback'            => [ __CLASS__, 'save_attachment_meta' ],
+				'permission_callback' => [ __CLASS__, 'can_edit' ],
+			]
+		);
+
+		register_rest_route(
+			self::NS,
 			'/slides',
 			[
 				'methods'             => \WP_REST_Server::CREATABLE,
@@ -312,6 +332,33 @@ class Rest_Controller {
 		return is_wp_error( $result ) ? $result : rest_ensure_response( $result );
 	}
 
+	public static function save_pro_gallery( $request ) {
+		$post_id           = (int) $request->get_param( 'post_id' );
+		$element_id        = (string) $request->get_param( 'element_id' );
+		$key               = (string) $request->get_param( 'key' );
+		$action            = (string) $request->get_param( 'action' );
+		$attachment_id     = (int) $request->get_param( 'attachment_id' );
+		$old_attachment_id = (int) $request->get_param( 'old_attachment_id' );
+		$gallery_index     = (int) $request->get_param( 'gallery_index' );
+
+		$field = self::authorize_field( $post_id, $element_id, $key, [ 'pro-gallery', 'pro-gallery-multi' ] );
+		if ( is_wp_error( $field ) ) {
+			return $field;
+		}
+
+		$result = Saver::save_pro_gallery( $post_id, $element_id, $key, $action, $attachment_id, $old_attachment_id, $gallery_index );
+		return is_wp_error( $result ) ? $result : rest_ensure_response( $result );
+	}
+
+	public static function save_attachment_meta( $request ) {
+		$attachment_id = (int) $request->get_param( 'attachment_id' );
+		$field         = (string) $request->get_param( 'field' );
+		$value         = (string) $request->get_param( 'value' );
+
+		$result = Saver::save_attachment_meta( $attachment_id, $field, $value );
+		return is_wp_error( $result ) ? $result : rest_ensure_response( $result );
+	}
+
 	public static function save_slides( $request ) {
 		$post_id    = (int) $request->get_param( 'post_id' );
 		$element_id = (string) $request->get_param( 'element_id' );
@@ -320,7 +367,7 @@ class Rest_Controller {
 		$sub_field  = (string) $request->get_param( 'sub_field' );
 		$value      = $request->get_param( 'value' );
 
-		$field = self::authorize_field( $post_id, $element_id, $key, [ 'slides' ] );
+		$field = self::authorize_field( $post_id, $element_id, $key, [ 'slides', 'pro-gallery-multi' ] );
 		if ( is_wp_error( $field ) ) {
 			return $field;
 		}

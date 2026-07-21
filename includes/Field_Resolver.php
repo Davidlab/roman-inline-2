@@ -238,6 +238,130 @@ class Field_Resolver {
 	}
 
 	/**
+	 * Detect Elementor Pro Gallery widget fields.
+	 *
+	 * The Pro Gallery widget (name: 'gallery') supports two modes:
+	 *   - single:  settings['gallery'] = array of { id, url }
+	 *   - multiple: settings['galleries'] = REPEATER with gallery_title + multiple_gallery
+	 *
+	 * Overlay title/description come from attachment metadata, selected by
+	 * the overlay_title / overlay_description settings (title, caption, alt, description).
+	 *
+	 * @param array       $node
+	 * @param object|null $instance
+	 * @return array
+	 */
+	private static function classic_pro_gallery_fields( array $node, $instance ) {
+		if ( ! $instance ) {
+			return [];
+		}
+
+		try {
+			if ( ! method_exists( $instance, 'get_name' ) || 'gallery' !== $instance->get_name() ) {
+				return [];
+			}
+		} catch ( \Throwable $e ) {
+			return [];
+		}
+
+		$settings             = isset( $node['settings'] ) && is_array( $node['settings'] ) ? $node['settings'] : [];
+		$gallery_type         = isset( $settings['gallery_type'] ) ? (string) $settings['gallery_type'] : 'single';
+		$overlay_title        = isset( $settings['overlay_title'] ) ? (string) $settings['overlay_title'] : '';
+		$overlay_description  = isset( $settings['overlay_description'] ) ? (string) $settings['overlay_description'] : '';
+		$thumbnail_size       = isset( $settings['thumbnail_image_size'] ) ? (string) $settings['thumbnail_image_size'] : 'full';
+		$order_by             = isset( $settings['order_by'] ) ? (string) $settings['order_by'] : '';
+
+		$fields = [];
+
+		if ( 'multiple' === $gallery_type ) {
+			$galleries_data = isset( $settings['galleries'] ) && is_array( $settings['galleries'] ) ? $settings['galleries'] : [];
+			$gallery_list   = [];
+			// Build flat_images in DOM order (deduplicated by attachment ID).
+			$flat_ids = [];
+			$seen     = [];
+			foreach ( $galleries_data as $i => $gal ) {
+				if ( ! is_array( $gal ) ) {
+					continue;
+				}
+				$images       = [];
+				$multi_gallery = isset( $gal['multiple_gallery'] ) && is_array( $gal['multiple_gallery'] ) ? $gal['multiple_gallery'] : [];
+				foreach ( $multi_gallery as $img ) {
+					if ( ! is_array( $img ) ) {
+						continue;
+					}
+					$id  = isset( $img['id'] ) ? (int) $img['id'] : 0;
+					$url = isset( $img['url'] ) && is_string( $img['url'] ) ? $img['url'] : '';
+					$images[] = [ 'id' => $id, 'url' => $url ];
+					if ( $id && ! isset( $seen[ $id ] ) ) {
+						$seen[ $id ]      = true;
+						$flat_ids[] = $id;
+					}
+				}
+				$gallery_list[] = [
+					'index'  => $i,
+					'title'  => isset( $gal['gallery_title'] ) ? (string) $gal['gallery_title'] : '',
+					'images' => $images,
+				];
+			}
+
+			// Shuffle if random order.
+			if ( 'random' === $order_by ) {
+				shuffle( $flat_ids );
+			}
+
+			if ( $gallery_list ) {
+				$fields[] = [
+					'kind'                => 'pro-gallery-multi',
+					'key'                 => 'galleries',
+					'label'               => __( 'Pro Gallery', 'roman-inline-2' ),
+					'galleries'           => $gallery_list,
+					'flat_images'         => array_values( $flat_ids ),
+					'overlay_title'       => $overlay_title,
+					'overlay_description' => $overlay_description,
+					'thumbnail_size'      => $thumbnail_size,
+				];
+			}
+		} else {
+			$gallery = isset( $settings['gallery'] ) && is_array( $settings['gallery'] ) ? $settings['gallery'] : [];
+			$images  = [];
+			$flat_ids = [];
+			$seen     = [];
+			foreach ( $gallery as $img ) {
+				if ( ! is_array( $img ) ) {
+					continue;
+				}
+				$id  = isset( $img['id'] ) ? (int) $img['id'] : 0;
+				$url = isset( $img['url'] ) && is_string( $img['url'] ) ? $img['url'] : '';
+				$images[] = [ 'id' => $id, 'url' => $url ];
+				if ( $id && ! isset( $seen[ $id ] ) ) {
+					$seen[ $id ]      = true;
+					$flat_ids[] = $id;
+				}
+			}
+
+			// Shuffle if random order.
+			if ( 'random' === $order_by ) {
+				shuffle( $flat_ids );
+			}
+
+			if ( $images ) {
+				$fields[] = [
+					'kind'                => 'pro-gallery',
+					'key'                 => 'gallery',
+					'label'               => __( 'Pro Gallery', 'roman-inline-2' ),
+					'images'              => $images,
+					'flat_images'         => array_values( $flat_ids ),
+					'overlay_title'       => $overlay_title,
+					'overlay_description' => $overlay_description,
+					'thumbnail_size'      => $thumbnail_size,
+				];
+			}
+		}
+
+		return $fields;
+	}
+
+	/**
 	 * Detect classic slides repeater fields (Elementor Pro Slides widget).
 	 *
 	 * The slides widget stores a REPEATER control named 'slides' with
@@ -532,12 +656,22 @@ class Field_Resolver {
 			$fields[] = $link;
 		}
 
-		// Detect classic gallery fields (gallery control type).
-		$gallery_fields = self::classic_gallery_fields( $node, $instance );
-		$gallery_keys   = [];
-		foreach ( $gallery_fields as $gf ) {
-			$fields[]      = $gf;
-			$gallery_keys[] = $gf['key'];
+		// Detect Elementor Pro Gallery widget first — if found, skip the
+		// generic gallery detection to avoid double-counting.
+		$pro_gallery_fields = self::classic_pro_gallery_fields( $node, $instance );
+		$gallery_keys       = [];
+		if ( $pro_gallery_fields ) {
+			foreach ( $pro_gallery_fields as $pgf ) {
+				$fields[]       = $pgf;
+				$gallery_keys[] = $pgf['key'];
+			}
+		} else {
+			// Detect classic gallery fields (gallery control type).
+			$gallery_fields = self::classic_gallery_fields( $node, $instance );
+			foreach ( $gallery_fields as $gf ) {
+				$fields[]      = $gf;
+				$gallery_keys[] = $gf['key'];
+			}
 		}
 
 		// Detect classic slides repeater fields (Elementor Pro Slides widget).

@@ -213,6 +213,26 @@
 		} );
 	}
 
+	function saveProGallery( id, key, action, attachmentId, oldAttachmentId, galleryIndex ) {
+		return apiPost( 'pro-gallery', {
+			post_id:           cfg.postId,
+			element_id:        id,
+			key:               key,
+			action:            action,
+			attachment_id:     attachmentId || 0,
+			old_attachment_id: oldAttachmentId || 0,
+			gallery_index:     galleryIndex != null ? galleryIndex : -1
+		} );
+	}
+
+	function saveAttachmentMeta( attachmentId, field, value ) {
+		return apiPost( 'attachment-meta', {
+			attachment_id: attachmentId,
+			field:         field,
+			value:         value
+		} );
+	}
+
 	function saveSlides( id, key, index, subField, value ) {
 		return apiPost( 'slides', {
 			post_id:    cfg.postId,
@@ -408,7 +428,8 @@
 			original:  node.innerHTML,
 			fieldMap:  opts.fieldMap || null,
 			slideIndex: opts.slideIndex != null ? opts.slideIndex : null,
-			subField:   opts.subField || null
+			subField:   opts.subField || null,
+			attachmentMeta: opts.attachmentMeta || null
 		};
 
 		node.focus();
@@ -433,7 +454,9 @@
 			toast( i18n.saving || 'Saving…', 'saving' );
 
 			var savePromise;
-			if ( s.slideIndex != null && s.subField ) {
+			if ( s.attachmentMeta ) {
+				savePromise = saveAttachmentMeta( s.attachmentMeta.attachmentId, s.attachmentMeta.field, value );
+			} else if ( s.slideIndex != null && s.subField ) {
 				savePromise = saveSlides( widgetId( s.widget ), s.key, s.slideIndex, s.subField, value );
 			} else {
 				savePromise = saveText( widgetId( s.widget ), s.key, value, s.kind );
@@ -784,6 +807,17 @@
 		} );
 	}
 
+	function editAttachmentText( widget, node, opts ) {
+		startTextEdit( widget, node, {
+			key:            '__attachment_meta__',
+			kind:           opts.kind || 'text',
+			attachmentMeta: {
+				attachmentId: opts.attachmentId,
+				field:        opts.field
+			}
+		} );
+	}
+
 	function editLink( widget, node, opts ) {
 		var id = widgetId( widget );
 		getFields( id ).then( function ( res ) {
@@ -956,6 +990,8 @@
 			savePoster:    function ( key, attId ) { return savePoster( id, key, attId ); },
 			saveBackground: function ( attId, styleId, vi, oi ) { return saveBackground( id, attId, styleId, vi, oi ); },
 			saveGallery:   function ( key, action, attId, idx ) { return saveGallery( id, key, action, attId, idx ); },
+			saveProGallery: function ( key, action, attId, oldAttId, galIdx ) { return saveProGallery( id, key, action, attId, oldAttId, galIdx ); },
+			saveAttachmentMeta: saveAttachmentMeta,
 			saveSlides:    function ( key, index, subField, value ) { return saveSlides( id, key, index, subField, value ); },
 			refreshWidget: function () { return refreshWidget( widget ); },
 			toast:         toast,
@@ -987,7 +1023,8 @@
 		hasSession: function () { return !! session; },
 		ctx:       createContext,
 		cfg:       cfg,
-		i18n:      i18n
+		i18n:      i18n,
+		_editAttachmentText: editAttachmentText
 	};
 
 

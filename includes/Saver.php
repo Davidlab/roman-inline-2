@@ -700,6 +700,7 @@ class Saver {
 				switch ( $sub_field ) {
 					case 'heading':
 					case 'description':
+					case 'gallery_title':
 						$slides[ $index ][ $sub_field ] = (string) $value;
 						break;
 
@@ -740,5 +741,192 @@ class Saver {
 				];
 			}
 		);
+	}
+
+	/**
+	 * Save a Pro Gallery image operation (replace, delete, or add).
+	 *
+	 * Supports both single mode (key='gallery') and multiple mode
+	 * (key='galleries'). For replace/delete, the client sends
+	 * old_attachment_id to identify the image by its attachment ID,
+	 * since the DOM order may differ from the settings array order
+	 * (deduplication and optional shuffling).
+	 *
+	 * @param int    $post_id
+	 * @param string $element_id
+	 * @param string $key             'gallery' (single) or 'galleries' (multiple).
+	 * @param string $action          'replace', 'delete', or 'add'.
+	 * @param int    $attachment_id   New attachment ID for replace/add (0 for delete).
+	 * @param int    $old_attachment_id  ID of the image to replace/delete.
+	 * @param int    $gallery_index   For multiple mode add: which repeater gallery.
+	 * @return array|\WP_Error
+	 */
+	public static function save_pro_gallery( $post_id, $element_id, $key, $action, $attachment_id = 0, $old_attachment_id = 0, $gallery_index = -1 ) {
+		$attachment_id     = absint( $attachment_id );
+		$old_attachment_id = absint( $old_attachment_id );
+
+		if ( 'delete' !== $action && ! $attachment_id ) {
+			return new \WP_Error( 'ri2_invalid_attachment', __( 'Please choose a valid image.', 'roman-inline-2' ), [ 'status' => 400 ] );
+		}
+		if ( ( 'replace' === $action || 'delete' === $action ) && ! $old_attachment_id ) {
+			return new \WP_Error( 'ri2_no_old_id', __( 'Could not identify the image to replace.', 'roman-inline-2' ), [ 'status' => 400 ] );
+		}
+
+		$url = '';
+		if ( $attachment_id ) {
+			$url = wp_get_attachment_url( $attachment_id );
+			if ( ! $url ) {
+				return new \WP_Error( 'ri2_no_url', __( 'Could not resolve the image URL.', 'roman-inline-2' ), [ 'status' => 400 ] );
+			}
+		}
+
+		$document = new Document( $post_id );
+
+		return $document->mutate_node(
+			$element_id,
+			function ( array &$node ) use ( $key, $action, $attachment_id, $old_attachment_id, $url, $gallery_index ) {
+				if ( ! isset( $node['settings'] ) || ! is_array( $node['settings'] ) ) {
+					$node['settings'] = [];
+				}
+
+				if ( 'galleries' === $key ) {
+					// Multiple mode: operate across all sub-galleries.
+					if ( ! isset( $node['settings']['galleries'] ) || ! is_array( $node['settings']['galleries'] ) ) {
+						return new \WP_Error( 'ri2_no_galleries', __( 'No galleries found.', 'roman-inline-2' ), [ 'status' => 400 ] );
+					}
+
+					if ( 'add' === $action ) {
+						// Add to the specified gallery (or first one).
+						$gi = $gallery_index >= 0 ? $gallery_index : 0;
+						if ( ! isset( $node['settings']['galleries'][ $gi ]['multiple_gallery'] ) || ! is_array( $node['settings']['galleries'][ $gi ]['multiple_gallery'] ) ) {
+							$node['settings']['galleries'][ $gi ]['multiple_gallery'] = [];
+						}
+						$node['settings']['galleries'][ $gi ]['multiple_gallery'][] = [
+							'id'  => $attachment_id,
+							'url' => $url,
+						];
+					} else {
+						// Replace/delete: search all sub-galleries.
+						$found = false;
+						foreach ( $node['settings']['galleries'] as &$gal ) {
+							if ( ! isset( $gal['multiple_gallery'] ) || ! is_array( $gal['multiple_gallery'] ) ) {
+								continue;
+							}
+							$mg = &$gal['multiple_gallery'];
+							for ( $i = count( $mg ) - 1; $i >= 0; $i-- ) {
+								if ( isset( $mg[ $i ]['id'] ) && (int) $mg[ $i ]['id'] === $old_attachment_id ) {
+									if ( 'replace' === $action ) {
+										$mg[ $i ] = [ 'id' => $attachment_id, 'url' => $url ];
+									} else { // delete
+										array_splice( $mg, $i, 1 );
+									}
+									$found = true;
+								}
+							}
+							unset( $mg );
+						}
+						unset( $gal );
+
+						if ( ! $found ) {
+							return new \WP_Error( 'ri2_not_found', __( 'Image not found in gallery.', 'roman-inline-2' ), [ 'status' => 400 ] );
+						}
+					}
+				} else {
+					// Single mode.
+					if ( ! isset( $node['settings'][ $key ] ) || ! is_array( $node['settings'][ $key ] ) ) {
+						$node['settings'][ $key ] = [];
+					}
+					$gallery = &$node['settings'][ $key ];
+
+					if ( 'add' === $action ) {
+						$gallery[] = [
+							'id'  => $attachment_id,
+							'url' => $url,
+						];
+					} else {
+						// Replace/delete by old attachment ID.
+						$found = false;
+						for ( $i = count( $gallery ) - 1; $i >= 0; $i-- ) {
+							if ( isset( $gallery[ $i ]['id'] ) && (int) $gallery[ $i ]['id'] === $old_attachment_id ) {
+								if ( 'replace' === $action ) {
+									$gallery[ $i ] = [ 'id' => $attachment_id, 'url' => $url ];
+								} else {
+									array_splice( $gallery, $i, 1 );
+								}
+								$found = true;
+							}
+						}
+
+						if ( ! $found ) {
+							return new \WP_Error( 'ri2_not_found', __( 'Image not found in gallery.', 'roman-inline-2' ), [ 'status' => 400 ] );
+						}
+					}
+
+					unset( $gallery );
+				}
+
+				return [
+					'success' => true,
+				];
+			}
+		);
+	}
+
+	/**
+	 * Update attachment metadata (title, caption, alt, description).
+	 *
+	 * @param int    $attachment_id
+	 * @param string $field       'title', 'caption', 'alt', or 'description'.
+	 * @param string $value
+	 * @return array|\WP_Error
+	 */
+	public static function save_attachment_meta( $attachment_id, $field, $value ) {
+		$attachment_id = absint( $attachment_id );
+		$field         = (string) $field;
+		$value         = (string) $value;
+
+		if ( ! $attachment_id ) {
+			return new \WP_Error( 'ri2_invalid_attachment', __( 'Invalid attachment ID.', 'roman-inline-2' ), [ 'status' => 400 ] );
+		}
+
+		$allowed = [ 'title', 'caption', 'alt', 'description' ];
+		if ( ! in_array( $field, $allowed, true ) ) {
+			return new \WP_Error( 'ri2_bad_meta_field', __( 'Unknown attachment field.', 'roman-inline-2' ), [ 'status' => 400 ] );
+		}
+
+		$post = get_post( $attachment_id );
+		if ( ! $post || 'attachment' !== $post->post_type ) {
+			return new \WP_Error( 'ri2_not_attachment', __( 'Not an attachment.', 'roman-inline-2' ), [ 'status' => 400 ] );
+		}
+
+		switch ( $field ) {
+			case 'title':
+				wp_update_post( [
+					'ID'         => $attachment_id,
+					'post_title' => $value,
+				] );
+				break;
+			case 'caption':
+				wp_update_post( [
+					'ID'           => $attachment_id,
+					'post_excerpt' => $value,
+				] );
+				break;
+			case 'description':
+				wp_update_post( [
+					'ID'         => $attachment_id,
+					'post_content' => $value,
+				] );
+				break;
+			case 'alt':
+				update_post_meta( $attachment_id, '_wp_attachment_image_alt', $value );
+				break;
+		}
+
+		return [
+			'success' => true,
+			'field'   => $field,
+			'value'   => $value,
+		];
 	}
 }
