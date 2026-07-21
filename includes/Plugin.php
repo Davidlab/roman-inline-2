@@ -50,6 +50,7 @@ class Plugin {
 		$this->register_handler( 'google_maps', 'handlers/classic/google-maps.js' );
 		$this->register_handler( 'image-gallery', 'handlers/classic/gallery.js' );
 		$this->register_handler( 'image-carousel', 'handlers/classic/gallery.js' );
+		$this->register_handler( 'slides', 'handlers/classic/slides.js' );
 		$this->register_handler( 'container', 'handlers/classic/background.js' );
 		$this->register_handler( 'section', 'handlers/classic/background.js' );
 

@@ -238,6 +238,87 @@ class Field_Resolver {
 	}
 
 	/**
+	 * Detect classic slides repeater fields (Elementor Pro Slides widget).
+	 *
+	 * The slides widget stores a REPEATER control named 'slides' with
+	 * per-slide fields: heading (TEXT), description (TEXTAREA),
+	 * link (URL), background_image (MEDIA).
+	 *
+	 * @param array       $node
+	 * @param object|null $instance
+	 * @return array
+	 */
+	private static function classic_slides_fields( array $node, $instance ) {
+		if ( ! $instance ) {
+			return [];
+		}
+
+		try {
+			$controls = $instance->get_controls();
+		} catch ( \Throwable $e ) {
+			return [];
+		}
+		if ( ! is_array( $controls ) ) {
+			return [];
+		}
+
+		$settings = isset( $node['settings'] ) && is_array( $node['settings'] ) ? $node['settings'] : [];
+		$fields   = [];
+
+		foreach ( $controls as $control ) {
+			$ctype = isset( $control['type'] ) ? (string) $control['type'] : '';
+			$name  = isset( $control['name'] ) ? (string) $control['name'] : '';
+			if ( 'repeater' !== $ctype || '' === $name ) {
+				continue;
+			}
+
+			$slides = isset( $settings[ $name ] ) && is_array( $settings[ $name ] ) ? $settings[ $name ] : [];
+			if ( ! $slides ) {
+				continue;
+			}
+
+			// Check if this repeater has slide-like fields.
+			$sub_controls = isset( $control['fields'] ) && is_array( $control['fields'] ) ? $control['fields'] : [];
+			$sub_names    = array_column( $sub_controls, 'name' );
+			$is_slides    = in_array( 'heading', $sub_names, true ) && in_array( 'description', $sub_names, true );
+			if ( ! $is_slides ) {
+				continue;
+			}
+
+			$slide_list = [];
+			foreach ( $slides as $i => $slide ) {
+				if ( ! is_array( $slide ) ) {
+					continue;
+				}
+				$slide_list[] = [
+					'index'       => $i,
+					'heading'     => isset( $slide['heading'] ) ? (string) $slide['heading'] : '',
+					'description' => isset( $slide['description'] ) ? (string) $slide['description'] : '',
+					'link'        => isset( $slide['link'] ) && is_array( $slide['link'] ) ? $slide['link'] : [],
+					'image'       => [
+						'id'  => isset( $slide['background_image']['id'] ) ? (int) $slide['background_image']['id'] : 0,
+						'url' => isset( $slide['background_image']['url'] ) ? (string) $slide['background_image']['url'] : '',
+					],
+				];
+			}
+
+			if ( ! $slide_list ) {
+				continue;
+			}
+
+			$fields[] = [
+				'kind'   => 'slides',
+				'key'    => $name,
+				'label'  => isset( $control['label'] ) && $control['label'] ? (string) $control['label'] : self::humanize( $name ),
+				'value'  => count( $slide_list ),
+				'slides' => $slide_list,
+			];
+		}
+
+		return $fields;
+	}
+
+	/**
 	 * Detect background images in atomic container styles.
 	 *
 	 * Atomic containers (e-flexbox, e-div-block) store background images
@@ -459,9 +540,18 @@ class Field_Resolver {
 			$gallery_keys[] = $gf['key'];
 		}
 
+		// Detect classic slides repeater fields (Elementor Pro Slides widget).
+		$slides_fields = self::classic_slides_fields( $node, $instance );
+		$slides_keys   = [];
+		foreach ( $slides_fields as $sf ) {
+			$fields[]     = $sf;
+			$slides_keys[] = $sf['key'];
+		}
+
 		// Detect classic image fields (settings with {id, url} shape).
-		// Pass gallery keys so individual gallery images aren't double-counted.
-		$images = self::classic_image_fields( $node, $gallery_keys );
+		// Pass gallery + slides keys so repeater images aren't double-counted.
+		$exclude_keys = array_merge( $gallery_keys, $slides_keys );
+		$images = self::classic_image_fields( $node, $exclude_keys );
 		foreach ( $images as $img ) {
 			$fields[] = $img;
 		}

@@ -213,6 +213,17 @@
 		} );
 	}
 
+	function saveSlides( id, key, index, subField, value ) {
+		return apiPost( 'slides', {
+			post_id:    cfg.postId,
+			element_id: id,
+			key:        key,
+			index:      index,
+			sub_field:  subField,
+			value:      value
+		} );
+	}
+
 	function refreshWidget( widget ) {
 		var id = widgetId( widget );
 		delete fieldsCache[ id ];
@@ -388,14 +399,16 @@
 		node.classList.add( 'ri2-editing' );
 
 		session = {
-			type:     'text',
-			widget:   widget,
-			node:     node,
-			key:      opts.key,
-			kind:     opts.kind || 'rich_text',
-			isAtomic: opts.isAtomic,
-			original: node.innerHTML,
-			fieldMap: opts.fieldMap || null
+			type:      'text',
+			widget:    widget,
+			node:      node,
+			key:       opts.key,
+			kind:      opts.kind || 'rich_text',
+			isAtomic:  opts.isAtomic,
+			original:  node.innerHTML,
+			fieldMap:  opts.fieldMap || null,
+			slideIndex: opts.slideIndex != null ? opts.slideIndex : null,
+			subField:   opts.subField || null
 		};
 
 		node.focus();
@@ -419,7 +432,14 @@
 			var value = ( 'rich_text' === s.kind ) ? raw : raw.trim();
 			toast( i18n.saving || 'Saving…', 'saving' );
 
-			saveText( widgetId( s.widget ), s.key, value, s.kind )
+			var savePromise;
+			if ( s.slideIndex != null && s.subField ) {
+				savePromise = saveSlides( widgetId( s.widget ), s.key, s.slideIndex, s.subField, value );
+			} else {
+				savePromise = saveText( widgetId( s.widget ), s.key, value, s.kind );
+			}
+
+			savePromise
 				.then( function ( r ) {
 					toast( i18n.saved || 'Saved', 'ok' );
 					if ( s.fieldMap ) { s.fieldMap.value = ( r && r.value ) != null ? r.value : value; }
@@ -754,10 +774,12 @@
 				kind = matched ? matched.kind : 'rich_text';
 			}
 			startTextEdit( widget, node, {
-				key:      opts.key,
-				kind:     kind,
-				isAtomic: opts.isAtomic != null ? opts.isAtomic : res.is_atomic,
-				fieldMap: res
+				key:        opts.key,
+				kind:       kind,
+				isAtomic:   opts.isAtomic != null ? opts.isAtomic : res.is_atomic,
+				fieldMap:   res,
+				slideIndex: opts.slideIndex,
+				subField:   opts.subField
 			} );
 		} );
 	}
@@ -765,11 +787,30 @@
 	function editLink( widget, node, opts ) {
 		var id = widgetId( widget );
 		getFields( id ).then( function ( res ) {
-			var linkField = ( res.fields || [] ).filter( function ( f ) { return 'link' === f.kind; } )[ 0 ];
-			if ( ! linkField ) { return; }
-			openLinkPop( opts.url || linkField.value || '', !! ( opts.targetBlank != null ? opts.targetBlank : linkField.target_blank ), function ( url, blank ) {
+			var linkField, linkValue, linkBlank;
+			if ( opts.slideIndex != null && opts.key ) {
+				var slidesField = ( res.fields || [] ).filter( function ( f ) { return f.key === opts.key && 'slides' === f.kind; } )[ 0 ];
+				if ( ! slidesField || ! slidesField.slides ) { return; }
+				var slide = slidesField.slides[ opts.slideIndex ];
+				if ( ! slide ) { return; }
+				linkValue = ( slide.link && slide.link.url ) || '';
+				linkBlank = !! ( slide.link && slide.link.is_external );
+				linkField = { key: opts.key, value: linkValue, target_blank: linkBlank };
+			} else {
+				linkField = ( res.fields || [] ).filter( function ( f ) { return 'link' === f.kind; } )[ 0 ];
+				if ( ! linkField ) { return; }
+				linkValue = linkField.value || '';
+				linkBlank = !! linkField.target_blank;
+			}
+			openLinkPop( opts.url || linkValue, !! ( opts.targetBlank != null ? opts.targetBlank : linkBlank ), function ( url, blank ) {
 				toast( i18n.saving || 'Saving…', 'saving' );
-				saveLink( id, linkField.key, url, blank )
+				var savePromise;
+				if ( opts.slideIndex != null && opts.subField ) {
+					savePromise = saveSlides( id, opts.key, opts.slideIndex, opts.subField, { url: url, is_external: blank, nofollow: false } );
+				} else {
+					savePromise = saveLink( id, linkField.key, url, blank );
+				}
+				savePromise
 					.then( function () {
 						linkField.value = url;
 						linkField.target_blank = blank;
@@ -915,6 +956,7 @@
 			savePoster:    function ( key, attId ) { return savePoster( id, key, attId ); },
 			saveBackground: function ( attId, styleId, vi, oi ) { return saveBackground( id, attId, styleId, vi, oi ); },
 			saveGallery:   function ( key, action, attId, idx ) { return saveGallery( id, key, action, attId, idx ); },
+			saveSlides:    function ( key, index, subField, value ) { return saveSlides( id, key, index, subField, value ); },
 			refreshWidget: function () { return refreshWidget( widget ); },
 			toast:         toast,
 			showButton:    showButton,
@@ -942,6 +984,7 @@
 			H[ type ] = handler;
 		},
 		isActive:  function () { return active; },
+		hasSession: function () { return !! session; },
 		ctx:       createContext,
 		cfg:       cfg,
 		i18n:      i18n

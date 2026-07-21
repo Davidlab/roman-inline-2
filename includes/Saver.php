@@ -659,4 +659,86 @@ class Saver {
 			}
 		);
 	}
+
+	/**
+	 * Save a single slide field within a repeater.
+	 *
+	 * @param int    $post_id
+	 * @param string $element_id
+	 * @param string $key       Repeater settings key (e.g. 'slides').
+	 * @param int    $index     Slide index.
+	 * @param string $sub_field Sub-field name: 'heading', 'description', 'link', 'background_image'.
+	 * @param mixed  $value     New value (string for text, array for link, int for image attachment_id).
+	 * @return array|\WP_Error
+	 */
+	public static function save_slides( $post_id, $element_id, $key, $index, $sub_field, $value ) {
+		$index     = (int) $index;
+		$sub_field = (string) $sub_field;
+
+		$document = new Document( $post_id );
+
+		return $document->mutate_node(
+			$element_id,
+			function ( array &$node ) use ( $key, $index, $sub_field, $value ) {
+				if ( ! isset( $node['settings'] ) || ! is_array( $node['settings'] ) ) {
+					$node['settings'] = [];
+				}
+				if ( ! isset( $node['settings'][ $key ] ) || ! is_array( $node['settings'][ $key ] ) ) {
+					$node['settings'][ $key ] = [];
+				}
+
+				$slides = &$node['settings'][ $key ];
+
+				if ( $index < 0 || $index >= count( $slides ) ) {
+					return new \WP_Error( 'ri2_bad_slide_index', __( 'Invalid slide index.', 'roman-inline-2' ), [ 'status' => 400 ] );
+				}
+
+				if ( ! isset( $slides[ $index ] ) || ! is_array( $slides[ $index ] ) ) {
+					$slides[ $index ] = [];
+				}
+
+				switch ( $sub_field ) {
+					case 'heading':
+					case 'description':
+						$slides[ $index ][ $sub_field ] = (string) $value;
+						break;
+
+					case 'link':
+						if ( ! is_array( $value ) ) {
+							return new \WP_Error( 'ri2_bad_link', __( 'Invalid link data.', 'roman-inline-2' ), [ 'status' => 400 ] );
+						}
+						$slides[ $index ]['link'] = [
+							'url'         => isset( $value['url'] ) ? (string) $value['url'] : '',
+							'is_external' => ! empty( $value['is_external'] ) ? true : '',
+							'nofollow'    => ! empty( $value['nofollow'] ) ? true : '',
+						];
+						break;
+
+					case 'background_image':
+						$attachment_id = absint( $value );
+						if ( ! $attachment_id ) {
+							return new \WP_Error( 'ri2_invalid_attachment', __( 'Please choose a valid image.', 'roman-inline-2' ), [ 'status' => 400 ] );
+						}
+						$url = wp_get_attachment_url( $attachment_id );
+						if ( ! $url ) {
+							return new \WP_Error( 'ri2_no_url', __( 'Could not resolve the image URL.', 'roman-inline-2' ), [ 'status' => 400 ] );
+						}
+						$slides[ $index ]['background_image'] = [
+							'id'  => $attachment_id,
+							'url' => $url,
+						];
+						break;
+
+					default:
+						return new \WP_Error( 'ri2_bad_subfield', __( 'Unknown slide field.', 'roman-inline-2' ), [ 'status' => 400 ] );
+				}
+
+				unset( $slides );
+
+				return [
+					'success' => true,
+				];
+			}
+		);
+	}
 }

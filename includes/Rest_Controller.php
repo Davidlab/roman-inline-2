@@ -113,6 +113,16 @@ class Rest_Controller {
 
 		register_rest_route(
 			self::NS,
+			'/slides',
+			[
+				'methods'             => \WP_REST_Server::CREATABLE,
+				'callback'            => [ __CLASS__, 'save_slides' ],
+				'permission_callback' => [ __CLASS__, 'can_edit' ],
+			]
+		);
+
+		register_rest_route(
+			self::NS,
 			'/render',
 			[
 				'methods'             => \WP_REST_Server::READABLE,
@@ -299,6 +309,23 @@ class Rest_Controller {
 		}
 
 		$result = Saver::save_gallery( $post_id, $element_id, $key, $action, $attachment_id, $index );
+		return is_wp_error( $result ) ? $result : rest_ensure_response( $result );
+	}
+
+	public static function save_slides( $request ) {
+		$post_id    = (int) $request->get_param( 'post_id' );
+		$element_id = (string) $request->get_param( 'element_id' );
+		$key        = (string) $request->get_param( 'key' );
+		$index      = (int) $request->get_param( 'index' );
+		$sub_field  = (string) $request->get_param( 'sub_field' );
+		$value      = $request->get_param( 'value' );
+
+		$field = self::authorize_field( $post_id, $element_id, $key, [ 'slides' ] );
+		if ( is_wp_error( $field ) ) {
+			return $field;
+		}
+
+		$result = Saver::save_slides( $post_id, $element_id, $key, $index, $sub_field, $value );
 		return is_wp_error( $result ) ? $result : rest_ensure_response( $result );
 	}
 
