@@ -596,3 +596,117 @@
 	width: 16px;
 	height: 16px;
 }
+
+/* Icon picker popover */
+.ri2-iconpop {
+	position: fixed !important;
+	top: 50% !important;
+	left: 50% !important;
+	transform: translate( -50%, -50% ) !important;
+	z-index: 99995 !important;
+	width: 480px !important;
+	max-width: 90vw !important;
+	max-height: 70vh !important;
+	display: flex !important;
+	flex-direction: column !important;
+	background: #fff !important;
+	border-radius: 8px !important;
+	box-shadow: 0 8px 32px rgba( 0, 0, 0, 0.25 ) !important;
+	overflow: hidden !important;
+}
+
+.ri2-iconpop__close {
+	position: absolute !important;
+	top: 8px !important;
+	right: 8px !important;
+	width: 28px !important;
+	height: 28px !important;
+	padding: 0 !important;
+	border: 0 !important;
+	background: transparent !important;
+	font-size: 20px !important;
+	cursor: pointer !important;
+	color: #666 !important;
+	border-radius: 4px !important;
+}
+
+.ri2-iconpop__close:hover {
+	background: #eee !important;
+}
+
+.ri2-iconpop__tabs {
+	display: flex !important;
+	gap: 0 !important;
+	border-bottom: 1px solid #ddd !important;
+	padding: 0 !important;
+	margin: 0 !important;
+}
+
+.ri2-iconpop__tab {
+	padding: 10px 16px !important;
+	border: 0 !important;
+	background: transparent !important;
+	cursor: pointer !important;
+	font-size: 13px !important;
+	color: #666 !important;
+	border-bottom: 2px solid transparent !important;
+}
+
+.ri2-iconpop__tab.is-active {
+	color: var( --ri2-accent ) !important;
+	border-bottom-color: var( --ri2-accent ) !important;
+	font-weight: 600 !important;
+}
+
+.ri2-iconpop__search {
+	margin: 12px !important;
+	padding: 8px 12px !important;
+	border: 1px solid #ddd !important;
+	border-radius: 4px !important;
+	font-size: 14px !important;
+	width: calc( 100% - 24px ) !important;
+	box-sizing: border-box !important;
+}
+
+.ri2-iconpop__search:focus {
+	outline: none !important;
+	border-color: var( --ri2-accent ) !important;
+}
+
+.ri2-iconpop__grid {
+	flex: 1 !important;
+	overflow-y: auto !important;
+	display: grid !important;
+	grid-template-columns: repeat( auto-fill, minmax( 40px, 1fr ) ) !important;
+	gap: 4px !important;
+	padding: 0 12px 12px !important;
+}
+
+.ri2-iconpop__icon {
+	display: flex !important;
+	align-items: center !important;
+	justify-content: center !important;
+	width: 40px !important;
+	height: 40px !important;
+	padding: 0 !important;
+	border: 1px solid #eee !important;
+	border-radius: 4px !important;
+	background: #fff !important;
+	cursor: pointer !important;
+	font-size: 18px !important;
+	color: #444 !important;
+}
+
+.ri2-iconpop__icon:hover {
+	background: var( --ri2-accent ) !important;
+	color: #fff !important;
+	border-color: var( --ri2-accent ) !important;
+}
+
+.ri2-iconpop__empty {
+	grid-column: 1 / -1 !important;
+	text-align: center !important;
+	padding: 24px !important;
+	color: #999 !important;
+	font-size: 14px !important;
+}

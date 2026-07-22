@@ -123,6 +123,16 @@ class Rest_Controller {
 
 		register_rest_route(
 			self::NS,
+			'/icon',
+			[
+				'methods'             => \WP_REST_Server::CREATABLE,
+				'callback'            => [ __CLASS__, 'save_icon' ],
+				'permission_callback' => [ __CLASS__, 'can_edit' ],
+			]
+		);
+
+		register_rest_route(
+			self::NS,
 			'/attachment-meta',
 			[
 				'methods'             => \WP_REST_Server::CREATABLE,
@@ -373,6 +383,22 @@ class Rest_Controller {
 		}
 
 		$result = Saver::save_slides( $post_id, $element_id, $key, $index, $sub_field, $value );
+		return is_wp_error( $result ) ? $result : rest_ensure_response( $result );
+	}
+
+	public static function save_icon( $request ) {
+		$post_id    = (int) $request->get_param( 'post_id' );
+		$element_id = (string) $request->get_param( 'element_id' );
+		$key        = (string) $request->get_param( 'key' );
+		$value      = (string) $request->get_param( 'value' );
+		$library    = (string) $request->get_param( 'library' );
+
+		$field = self::authorize_field( $post_id, $element_id, $key, [ 'icon' ] );
+		if ( is_wp_error( $field ) ) {
+			return $field;
+		}
+
+		$result = Saver::save_icon( $post_id, $element_id, $key, $value, $library );
 		return is_wp_error( $result ) ? $result : rest_ensure_response( $result );
 	}
 

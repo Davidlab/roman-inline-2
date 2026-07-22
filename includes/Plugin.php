@@ -48,6 +48,7 @@ class Plugin {
 		$this->register_handler( 'button', 'handlers/classic/button.js' );
 		$this->register_handler( 'image', 'handlers/classic/image.js' );
 		$this->register_handler( 'image-box', 'handlers/classic/image-box.js' );
+		$this->register_handler( 'icon-box', 'handlers/classic/icon-box.js' );
 		$this->register_handler( 'text-editor', 'handlers/classic/text.js' );
 		$this->register_handler( 'video', 'handlers/classic/video.js' );
 		$this->register_handler( 'google_maps', 'handlers/classic/google-maps.js' );
@@ -225,10 +226,11 @@ class Plugin {
 			'roman-inline-2-core',
 			'romanInline2',
 			[
-				'restRoot' => esc_url_raw( rest_url( Rest_Controller::NS . '/' ) ),
-				'nonce'    => wp_create_nonce( 'wp_rest' ),
-				'postId'   => $post_id,
-				'handlers' => array_keys( $this->handlers ),
+				'restRoot'     => esc_url_raw( rest_url( Rest_Controller::NS . '/' ) ),
+				'nonce'        => wp_create_nonce( 'wp_rest' ),
+				'postId'       => $post_id,
+				'elementorUrl' => ELEMENTOR_URL . 'assets/',
+				'handlers'     => array_keys( $this->handlers ),
 				'i18n'     => [
 					'editing'    => __( 'Roman Inline 2 — editing', 'roman-inline-2' ),
 					'exit'       => __( 'Exit', 'roman-inline-2' ),
@@ -249,6 +251,9 @@ class Plugin {
 					'editVideo'    => __( 'Edit video', 'roman-inline-2' ),
 					'changeBg'     => __( 'Change background', 'roman-inline-2' ),
 					'changeImage'  => __( 'Change Image', 'roman-inline-2' ),
+					'editLink'     => __( 'Edit Link', 'roman-inline-2' ),
+					'searchIcons'  => __( 'Search icons…', 'roman-inline-2' ),
+					'noIcons'      => __( 'No icons found', 'roman-inline-2' ),
 					],
 			]
 		);

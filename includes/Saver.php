@@ -449,6 +449,47 @@ class Saver {
 		);
 	}
 
+	/**
+	 * Save an icon change for a classic widget (ICONS control).
+	 *
+	 * Stores { value, library } at settings[ $key ].
+	 *
+	 * @param int    $post_id
+	 * @param string $element_id
+	 * @param string $key
+	 * @param string $value     Icon class (e.g. 'fas fa-star').
+	 * @param string $library   Icon library (e.g. 'fa-solid').
+	 * @return array|\WP_Error
+	 */
+	public static function save_icon( $post_id, $element_id, $key, $value, $library ) {
+		$value   = (string) $value;
+		$library = (string) $library;
+
+		if ( '' === $value ) {
+			return new \WP_Error( 'ri2_no_icon', __( 'No icon selected.', 'roman-inline-2' ), [ 'status' => 400 ] );
+		}
+
+		$document = new Document( $post_id );
+
+		return $document->mutate_node(
+			$element_id,
+			function ( array &$node ) use ( $key, $value, $library ) {
+				if ( ! isset( $node['settings'] ) || ! is_array( $node['settings'] ) ) {
+					$node['settings'] = [];
+				}
+				$node['settings'][ $key ] = [
+					'value'   => $value,
+					'library' => $library,
+				];
+				return [
+					'success' => true,
+					'key'     => $key,
+					'value'   => $value,
+				];
+			}
+		);
+	}
+
 	private static function inline_allowed_tags() {
 		return [
 			'a'      => [ 'href' => true, 'target' => true, 'rel' => true, 'class' => true, 'id' => true ],

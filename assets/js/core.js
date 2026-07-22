@@ -244,6 +244,138 @@
 		} );
 	}
 
+	function saveIcon( id, key, value, library ) {
+		return apiPost( 'icon', {
+			post_id:    cfg.postId,
+			element_id: id,
+			key:        key,
+			value:      value,
+			library:    library
+		} );
+	}
+
+	/* ----------------------------------------------------------------- */
+	/* Icon picker                                                        */
+	/* ----------------------------------------------------------------- */
+
+	var iconPop = null;
+	var iconCache = {};   // library -> array of icon names
+
+	var ICON_LIBRARIES = {
+		'fa-solid':   { displayPrefix: 'fas', url: cfg.elementorUrl + 'lib/font-awesome/js/solid.js' },
+		'fa-regular': { displayPrefix: 'far', url: cfg.elementorUrl + 'lib/font-awesome/js/regular.js' },
+		'fa-brands':  { displayPrefix: 'fab', url: cfg.elementorUrl + 'lib/font-awesome/js/brands.js' }
+	};
+
+	function loadIconLibrary( library ) {
+		if ( iconCache[ library ] ) { return Promise.resolve( iconCache[ library ] ); }
+		var conf = ICON_LIBRARIES[ library ];
+		if ( ! conf ) { return Promise.resolve( [] ); }
+		return fetch( conf.url ).then( function ( r ) { return r.json(); } ).then( function ( data ) {
+			var icons = ( data && data.icons ) ? data.icons : [];
+			iconCache[ library ] = icons;
+			return icons;
+		} ).catch( function () { return []; } );
+	}
+
+	function closeIconPop() {
+		if ( iconPop && iconPop.parentNode ) { iconPop.parentNode.removeChild( iconPop ); }
+		iconPop = null;
+	}
+
+	function openIconPop( currentLibrary, onPick ) {
+		closeIconPop();
+		iconPop = el( 'div', 'ri2-iconpop ri2-ui' );
+
+		// Library tabs.
+		var tabs = el( 'div', 'ri2-iconpop__tabs' );
+		var activeLib = currentLibrary || 'fa-solid';
+		var grid = el( 'div', 'ri2-iconpop__grid' );
+		var search = el( 'input', 'ri2-iconpop__search' );
+		search.type = 'text';
+		search.placeholder = i18n.searchIcons || 'Search icons…';
+
+		function renderGrid( library, filter ) {
+			grid.innerHTML = '';
+			var conf = ICON_LIBRARIES[ library ] || ICON_LIBRARIES['fa-solid'];
+			loadIconLibrary( library ).then( function ( icons ) {
+				var filtered = filter ? icons.filter( function ( name ) { return name.indexOf( filter ) !== -1; } ) : icons;
+				filtered.slice( 0, 200 ).forEach( function ( name ) {
+					var btn = el( 'button', 'ri2-iconpop__icon' );
+					btn.type = 'button';
+					btn.innerHTML = '<i class="' + conf.displayPrefix + ' fa-' + name + '"></i>';
+					btn.title = name;
+					btn.addEventListener( 'click', function () {
+						var value = conf.displayPrefix + ' fa-' + name;
+						closeIconPop();
+						onPick( value, library );
+					} );
+					grid.appendChild( btn );
+				} );
+				if ( ! grid.children.length ) {
+					grid.innerHTML = '<div class="ri2-iconpop__empty">' + ( i18n.noIcons || 'No icons found' ) + '</div>';
+				}
+			} );
+		}
+
+		Object.keys( ICON_LIBRARIES ).forEach( function ( lib ) {
+			var tab = el( 'button', 'ri2-iconpop__tab' );
+			tab.type = 'button';
+			tab.textContent = lib.replace( 'fa-', '' ).charAt( 0 ).toUpperCase() + lib.slice( 3 );
+			if ( lib === activeLib ) { tab.classList.add( 'is-active' ); }
+			tab.addEventListener( 'click', function () {
+				activeLib = lib;
+				var siblings = tabs.querySelectorAll( '.ri2-iconpop__tab' );
+				for ( var i = 0; i < siblings.length; i++ ) { siblings[ i ].classList.remove( 'is-active' ); }
+				tab.classList.add( 'is-active' );
+				renderGrid( lib, search.value.trim().toLowerCase() );
+			} );
+			tabs.appendChild( tab );
+		} );
+
+		search.addEventListener( 'input', function () {
+			renderGrid( activeLib, search.value.trim().toLowerCase() );
+		} );
+
+		var closeBtn = el( 'button', 'ri2-iconpop__close' );
+		closeBtn.type = 'button';
+		closeBtn.innerHTML = '&times;';
+		closeBtn.addEventListener( 'click', closeIconPop );
+
+		iconPop.appendChild( closeBtn );
+		iconPop.appendChild( tabs );
+		iconPop.appendChild( search );
+		iconPop.appendChild( grid );
+		document.body.appendChild( iconPop );
+		renderGrid( activeLib, '' );
+		search.focus();
+	}
+
+	function replaceIcon( widget, opts ) {
+		var id = widgetId( widget );
+		getFields( id ).then( function ( res ) {
+			var iconField = ( res.fields || [] ).filter( function ( f ) { return 'icon' === f.kind; } )[ 0 ];
+			if ( ! iconField ) {
+				toast( i18n.nothingEditable || 'Nothing editable here', 'error' );
+				return;
+			}
+			openIconPop( iconField.library, function ( value, library ) {
+				toast( i18n.saving || 'Saving…', 'saving' );
+				saveIcon( id, iconField.key, value, library )
+					.then( function () {
+						delete fieldsCache[ id ];
+						return refreshWidget( widget );
+					} )
+					.then( function () {
+						toast( i18n.saved || 'Saved', 'ok' );
+					} )
+					.catch( function ( err ) {
+						toast( ( err && err.message ) || i18n.saveFailed || 'Save failed', 'error' );
+					} );
+			} );
+		} );
+	}
+
 	function refreshWidget( widget ) {
 		var id = widgetId( widget );
 		delete fieldsCache[ id ];
@@ -988,6 +1120,8 @@
 			replaceVideo:  function ( node, opts ) { return replaceVideo( widget, opts ); },
 			replacePoster: function ( opts ) { return replacePoster( widget, opts ); },
 			replaceBackground: function ( opts ) { return replaceBackground( widget, opts ); },
+			replaceIcon:    function ( opts ) { return replaceIcon( widget, opts ); },
+			saveIcon:       function ( key, value, library ) { return saveIcon( id, key, value, library ); },
 			saveText:      function ( key, value, kind ) { return saveText( id, key, value, kind ); },
 			saveLink:      function ( key, url, blank ) { return saveLink( id, key, url, blank ); },
 			saveImage:     function ( key, attId ) { return saveImage( id, key, attId ); },

@@ -878,6 +878,16 @@ class Field_Resolver {
 				$kind = 'rich_text';
 			} elseif ( in_array( $ctype, [ 'text', 'textarea' ], true ) ) {
 				$kind = 'text';
+			} elseif ( 'icons' === $ctype ) {
+				$icon_val = isset( $settings[ $name ] ) && is_array( $settings[ $name ] ) ? $settings[ $name ] : [];
+				$fields[ $name ] = [
+					'key'     => $name,
+					'kind'    => 'icon',
+					'label'   => isset( $control['label'] ) ? (string) $control['label'] : self::humanize( $name ),
+					'value'   => isset( $icon_val['value'] ) ? (string) $icon_val['value'] : '',
+					'library' => isset( $icon_val['library'] ) ? (string) $icon_val['library'] : '',
+				];
+				continue;
 			} else {
 				continue;
 			}
