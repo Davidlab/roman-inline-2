@@ -39,12 +39,15 @@ class Plugin {
 		$this->register_handler( 'e-image', 'handlers/atomic/image.js' );
 		$this->register_handler( 'e-self-hosted-video', 'handlers/atomic/video.js' );
 		$this->register_handler( 'e-youtube', 'handlers/atomic/youtube.js' );
+		$this->register_handler( 'e-button', 'handlers/atomic/button.js' );
 		$this->register_handler( 'e-flexbox', 'handlers/atomic/background.js' );
 		$this->register_handler( 'e-div-block', 'handlers/atomic/background.js' );
 
 		// Register built-in classic widget handlers.
 		$this->register_handler( 'heading', 'handlers/classic/heading.js' );
+		$this->register_handler( 'button', 'handlers/classic/button.js' );
 		$this->register_handler( 'image', 'handlers/classic/image.js' );
+		$this->register_handler( 'image-box', 'handlers/classic/image-box.js' );
 		$this->register_handler( 'text-editor', 'handlers/classic/text.js' );
 		$this->register_handler( 'video', 'handlers/classic/video.js' );
 		$this->register_handler( 'google_maps', 'handlers/classic/google-maps.js' );

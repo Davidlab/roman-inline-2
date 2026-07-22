@@ -645,6 +645,11 @@
 			var r = toolbar.getBoundingClientRect();
 			linkPop.style.top = ( r.bottom + 6 ) + 'px';
 			linkPop.style.left = r.left + 'px';
+		} else {
+			// No toolbar — position near the center-top of the viewport.
+			linkPop.style.top = '80px';
+			linkPop.style.left = '50%';
+			linkPop.style.transform = 'translateX( -50% )';
 		}
 		input.focus();
 	}

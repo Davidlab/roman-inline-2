@@ -619,7 +619,8 @@ class Field_Resolver {
 	/* --------------------------------------------------------------------- */
 
 	private static function classic_fields( array $node, $type, $instance ) {
-		$fields = self::marker_fields( $node );
+		$marker_fields = self::marker_fields( $node );
+		$fields        = $marker_fields;
 
 		// Detect classic video URL fields early so they aren't also picked up
 		// by text introspection (e.g. youtube_url is a text control).
@@ -642,10 +643,13 @@ class Field_Resolver {
 			$fields[] = $bg;
 		}
 
-		if ( empty( $fields ) && $instance ) {
-			$fields = self::introspection_fields( $node, $instance, $video_keys );
-		} elseif ( $instance && $video_keys ) {
-			$extra = self::introspection_fields( $node, $instance, $video_keys );
+		// Always run introspection as a fallback for text/textarea/wysiwyg
+		// controls that marker_fields missed (e.g. description_text in
+		// image-box when only title_text had a marker).  Exclude keys
+		// already claimed by markers or video detection to avoid dupes.
+		if ( $instance ) {
+			$exclude_keys = array_merge( $video_keys, array_keys( $marker_fields ) );
+			$extra        = self::introspection_fields( $node, $instance, $exclude_keys );
 			foreach ( $extra as $f ) {
 				$fields[] = $f;
 			}

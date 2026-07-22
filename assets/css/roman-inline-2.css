@@ -563,3 +563,36 @@
 .ri2-galpicker__cancel:hover {
 	background: #d0d0d0 !important;
 }
+
+/* Floating link icon button — positioned at top-right of hovered widget */
+.ri2-linkbtn {
+	position: fixed !important;
+	z-index: 99989 !important;
+	display: none;
+	align-items: center !important;
+	justify-content: center !important;
+	width: 28px !important;
+	height: 28px !important;
+	padding: 0 !important;
+	background: var( --ri2-accent ) !important;
+	color: #fff !important;
+	border: 0 !important;
+	border-radius: 4px !important;
+	cursor: pointer !important;
+	box-shadow: 0 2px 8px rgba( 0, 0, 0, 0.3 ) !important;
+	margin: 0 !important;
+}
+
+.ri2-linkbtn.is-visible {
+	display: inline-flex;
+}
+
+.ri2-linkbtn:hover {
+	background: var( --ri2-accent-dark );
+}
+
+.ri2-linkbtn .dashicons {
+	font-size: 16px;
+	width: 16px;
+	height: 16px;
+}
