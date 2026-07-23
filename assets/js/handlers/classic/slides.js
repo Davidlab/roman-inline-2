@@ -28,7 +28,7 @@
 	}
 
 	function findSlidesField( res ) {
-		return ( res.fields || [] ).filter( function ( f ) { return 'slides' === f.kind; } )[ 0 ];
+		return ( res.fields || [] ).filter( function ( f ) { return 'repeater' === f.kind; } )[ 0 ];
 	}
 
 	function getSlides( widget ) {
@@ -115,7 +115,7 @@
 			var active = getActiveSlide( widget );
 			if ( ! active ) { return; }
 			var slideEl = active.el;
-			var slideIndex = active.index;
+			var itemIndex = active.index;
 			var repId = repeaterId( slideEl );
 			var ctx = RI.ctx( widget );
 			ctx.getFields().then( function ( res ) {
@@ -144,7 +144,7 @@
 							applyBg( slideEl.querySelector( '.swiper-slide-bg' ) );
 						}
 
-						ctx.saveSlides( field.key, slideIndex, 'background_image', attachment.id )
+						ctx.saveRepeaterItem( field.key, itemIndex, 'background_image', attachment.id )
 							.then( function () {
 								ctx.toast( ctx.i18n.saved || 'Saved', 'ok' );
 							} )
@@ -191,7 +191,7 @@
 				ctx.editText( heading, {
 					key:        field.key,
 					kind:       'text',
-					slideIndex: active.index,
+					itemIndex: active.index,
 					subField:   'heading'
 				} );
 			} );
@@ -209,7 +209,7 @@
 				ctx.editText( desc, {
 					key:        field.key,
 					kind:       'text',
-					slideIndex: active.index,
+					itemIndex: active.index,
 					subField:   'description'
 				} );
 			} );
@@ -226,7 +226,7 @@
 				if ( ! field ) { return; }
 				ctx.editLink( btn, {
 					key:        field.key,
-					slideIndex: active.index,
+					itemIndex: active.index,
 					subField:   'link'
 				} );
 			} );
@@ -247,7 +247,7 @@
 				if ( ! field ) { return; }
 				ctx.editLink( inner, {
 					key:        field.key,
-					slideIndex: active.index,
+					itemIndex: active.index,
 					subField:   'link'
 				} );
 			} );

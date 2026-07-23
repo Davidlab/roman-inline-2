@@ -143,10 +143,20 @@ class Rest_Controller {
 
 		register_rest_route(
 			self::NS,
-			'/slides',
+			'/repeater',
 			[
 				'methods'             => \WP_REST_Server::CREATABLE,
-				'callback'            => [ __CLASS__, 'save_slides' ],
+				'callback'            => [ __CLASS__, 'save_repeater_item' ],
+				'permission_callback' => [ __CLASS__, 'can_edit' ],
+			]
+		);
+
+		register_rest_route(
+			self::NS,
+			'/delete-repeater-item',
+			[
+				'methods'             => \WP_REST_Server::CREATABLE,
+				'callback'            => [ __CLASS__, 'delete_repeater_item' ],
 				'permission_callback' => [ __CLASS__, 'can_edit' ],
 			]
 		);
@@ -369,7 +379,7 @@ class Rest_Controller {
 		return is_wp_error( $result ) ? $result : rest_ensure_response( $result );
 	}
 
-	public static function save_slides( $request ) {
+	public static function save_repeater_item( $request ) {
 		$post_id    = (int) $request->get_param( 'post_id' );
 		$element_id = (string) $request->get_param( 'element_id' );
 		$key        = (string) $request->get_param( 'key' );
@@ -377,12 +387,27 @@ class Rest_Controller {
 		$sub_field  = (string) $request->get_param( 'sub_field' );
 		$value      = $request->get_param( 'value' );
 
-		$field = self::authorize_field( $post_id, $element_id, $key, [ 'slides', 'pro-gallery-multi' ] );
+		$field = self::authorize_field( $post_id, $element_id, $key, [ 'repeater', 'pro-gallery-multi', 'icon-list', 'social-icons' ] );
 		if ( is_wp_error( $field ) ) {
 			return $field;
 		}
 
-		$result = Saver::save_slides( $post_id, $element_id, $key, $index, $sub_field, $value );
+		$result = Saver::save_repeater_item( $post_id, $element_id, $key, $index, $sub_field, $value );
+		return is_wp_error( $result ) ? $result : rest_ensure_response( $result );
+	}
+
+	public static function delete_repeater_item( $request ) {
+		$post_id    = (int) $request->get_param( 'post_id' );
+		$element_id = (string) $request->get_param( 'element_id' );
+		$key        = (string) $request->get_param( 'key' );
+		$index      = (int) $request->get_param( 'index' );
+
+		$field = self::authorize_field( $post_id, $element_id, $key, [ 'repeater', 'icon-list', 'social-icons' ] );
+		if ( is_wp_error( $field ) ) {
+			return $field;
+		}
+
+		$result = Saver::delete_repeater_item( $post_id, $element_id, $key, $index );
 		return is_wp_error( $result ) ? $result : rest_ensure_response( $result );
 	}
 

@@ -233,14 +233,23 @@
 		} );
 	}
 
-	function saveSlides( id, key, index, subField, value ) {
-		return apiPost( 'slides', {
+	function saveRepeaterItem( id, key, index, subField, value ) {
+		return apiPost( 'repeater', {
 			post_id:    cfg.postId,
 			element_id: id,
 			key:        key,
 			index:      index,
 			sub_field:  subField,
 			value:      value
+		} );
+	}
+
+	function deleteRepeaterItem( id, key, index ) {
+		return apiPost( 'delete-repeater-item', {
+			post_id:    cfg.postId,
+			element_id: id,
+			key:        key,
+			index:      index
 		} );
 	}
 
@@ -354,14 +363,42 @@
 	function replaceIcon( widget, opts ) {
 		var id = widgetId( widget );
 		getFields( id ).then( function ( res ) {
-			var iconField = ( res.fields || [] ).filter( function ( f ) { return 'icon' === f.kind; } )[ 0 ];
-			if ( ! iconField ) {
-				toast( i18n.nothingEditable || 'Nothing editable here', 'error' );
-				return;
+			var iconField, currentLib, saveFn;
+
+			if ( opts && opts.itemIndex != null && opts.key ) {
+				// Repeater item (icon-list or social-icons).
+				var repKind = opts.kind || 'icon-list';
+				var listField = ( res.fields || [] ).filter( function ( f ) { return f.key === opts.key && repKind === f.kind; } )[ 0 ];
+				if ( ! listField || ! listField.items ) {
+					toast( i18n.nothingEditable || 'Nothing editable here', 'error' );
+					return;
+				}
+				var item = listField.items[ opts.itemIndex ];
+				if ( ! item ) {
+					toast( i18n.nothingEditable || 'Nothing editable here', 'error' );
+					return;
+				}
+				currentLib = item.icon ? item.icon.library : '';
+				var iconSubField = 'social-icons' === repKind ? 'social_icon' : 'selected_icon';
+				saveFn = function ( value, library ) {
+					return saveRepeaterItem( id, opts.key, opts.itemIndex, iconSubField, { value: value, library: library } );
+				};
+			} else {
+				// Single icon field (icon-box widget).
+				iconField = ( res.fields || [] ).filter( function ( f ) { return 'icon' === f.kind; } )[ 0 ];
+				if ( ! iconField ) {
+					toast( i18n.nothingEditable || 'Nothing editable here', 'error' );
+					return;
+				}
+				currentLib = iconField.library;
+				saveFn = function ( value, library ) {
+					return saveIcon( id, iconField.key, value, library );
+				};
 			}
-			openIconPop( iconField.library, function ( value, library ) {
+
+			openIconPop( currentLib, function ( value, library ) {
 				toast( i18n.saving || 'Saving…', 'saving' );
-				saveIcon( id, iconField.key, value, library )
+				saveFn( value, library )
 					.then( function () {
 						delete fieldsCache[ id ];
 						return refreshWidget( widget );
@@ -559,7 +596,7 @@
 			isAtomic:  opts.isAtomic,
 			original:  node.innerHTML,
 			fieldMap:  opts.fieldMap || null,
-			slideIndex: opts.slideIndex != null ? opts.slideIndex : null,
+			itemIndex: opts.itemIndex != null ? opts.itemIndex : null,
 			subField:   opts.subField || null,
 			attachmentMeta: opts.attachmentMeta || null
 		};
@@ -588,8 +625,8 @@
 			var savePromise;
 			if ( s.attachmentMeta ) {
 				savePromise = saveAttachmentMeta( s.attachmentMeta.attachmentId, s.attachmentMeta.field, value );
-			} else if ( s.slideIndex != null && s.subField ) {
-				savePromise = saveSlides( widgetId( s.widget ), s.key, s.slideIndex, s.subField, value );
+			} else if ( s.itemIndex != null && s.subField ) {
+				savePromise = saveRepeaterItem( widgetId( s.widget ), s.key, s.itemIndex, s.subField, value );
 			} else {
 				savePromise = saveText( widgetId( s.widget ), s.key, value, s.kind );
 			}
@@ -748,7 +785,7 @@
 		} );
 	}
 
-	function openLinkPop( url, blank, onApply ) {
+	function openLinkPop( url, blank, onApply, anchorRect ) {
 		closeLinkPop();
 		linkPop = el( 'div', 'ri2-linkpop ri2-ui' );
 		var input = el( 'input', 'ri2-linkpop__url' );
@@ -773,7 +810,18 @@
 		linkPop.appendChild( lbl );
 		linkPop.appendChild( apply );
 		document.body.appendChild( linkPop );
-		if ( toolbar ) {
+		if ( anchorRect ) {
+			var lpW = linkPop.offsetWidth;
+			var lpH = linkPop.offsetHeight;
+			var top = anchorRect.bottom + 4;
+			var left = anchorRect.left + ( anchorRect.width - lpW ) / 2;
+			if ( top + lpH > window.innerHeight - 4 ) { top = anchorRect.top - lpH - 4; }
+			if ( top < 4 ) { top = 4; }
+			if ( left < 4 ) { left = 4; }
+			if ( left + lpW > window.innerWidth - 4 ) { left = window.innerWidth - lpW - 4; }
+			linkPop.style.top = top + 'px';
+			linkPop.style.left = left + 'px';
+		} else if ( toolbar ) {
 			var r = toolbar.getBoundingClientRect();
 			linkPop.style.top = ( r.bottom + 6 ) + 'px';
 			linkPop.style.left = r.left + 'px';
@@ -938,7 +986,7 @@
 				kind:       kind,
 				isAtomic:   opts.isAtomic != null ? opts.isAtomic : res.is_atomic,
 				fieldMap:   res,
-				slideIndex: opts.slideIndex,
+				itemIndex: opts.itemIndex,
 				subField:   opts.subField
 			} );
 		} );
@@ -959,13 +1007,14 @@
 		var id = widgetId( widget );
 		getFields( id ).then( function ( res ) {
 			var linkField, linkValue, linkBlank;
-			if ( opts.slideIndex != null && opts.key ) {
-				var slidesField = ( res.fields || [] ).filter( function ( f ) { return f.key === opts.key && 'slides' === f.kind; } )[ 0 ];
-				if ( ! slidesField || ! slidesField.slides ) { return; }
-				var slide = slidesField.slides[ opts.slideIndex ];
-				if ( ! slide ) { return; }
-				linkValue = ( slide.link && slide.link.url ) || '';
-				linkBlank = !! ( slide.link && slide.link.is_external );
+			if ( opts.itemIndex != null && opts.key ) {
+				var repField = ( res.fields || [] ).filter( function ( f ) { return f.key === opts.key && ( 'repeater' === f.kind || 'icon-list' === f.kind || 'social-icons' === f.kind ); } )[ 0 ];
+				if ( ! repField ) { return; }
+				var repItems = repField.items || [];
+				var repItem = repItems[ opts.itemIndex ];
+				if ( ! repItem ) { return; }
+				linkValue = ( repItem.link && repItem.link.url ) || '';
+				linkBlank = !! ( repItem.link && repItem.link.is_external );
 				linkField = { key: opts.key, value: linkValue, target_blank: linkBlank };
 			} else {
 				linkField = ( res.fields || [] ).filter( function ( f ) { return 'link' === f.kind; } )[ 0 ];
@@ -973,11 +1022,12 @@
 				linkValue = linkField.value || '';
 				linkBlank = !! linkField.target_blank;
 			}
-			openLinkPop( opts.url || linkValue, !! ( opts.targetBlank != null ? opts.targetBlank : linkBlank ), function ( url, blank ) {
+			var anchorRect = node && node.getBoundingClientRect ? node.getBoundingClientRect() : null;
+		openLinkPop( opts.url || linkValue, !! ( opts.targetBlank != null ? opts.targetBlank : linkBlank ), function ( url, blank ) {
 				toast( i18n.saving || 'Saving…', 'saving' );
 				var savePromise;
-				if ( opts.slideIndex != null && opts.subField ) {
-					savePromise = saveSlides( id, opts.key, opts.slideIndex, opts.subField, { url: url, is_external: blank, nofollow: false } );
+				if ( opts.itemIndex != null && opts.subField ) {
+					savePromise = saveRepeaterItem( id, opts.key, opts.itemIndex, opts.subField, { url: url, is_external: blank, nofollow: false } );
 				} else {
 					savePromise = saveLink( id, linkField.key, url, blank );
 				}
@@ -995,7 +1045,7 @@
 					.catch( function ( err ) {
 						toast( ( err && err.message ) || i18n.saveFailed || 'Save failed', 'error' );
 					} );
-			} );
+			}, anchorRect );
 		} );
 	}
 
@@ -1131,7 +1181,8 @@
 			saveGallery:   function ( key, action, attId, idx ) { return saveGallery( id, key, action, attId, idx ); },
 			saveProGallery: function ( key, action, attId, oldAttId, galIdx ) { return saveProGallery( id, key, action, attId, oldAttId, galIdx ); },
 			saveAttachmentMeta: saveAttachmentMeta,
-			saveSlides:    function ( key, index, subField, value ) { return saveSlides( id, key, index, subField, value ); },
+			saveRepeaterItem: function ( key, index, subField, value ) { return saveRepeaterItem( id, key, index, subField, value ); },
+			deleteRepeaterItem: function ( key, index ) { return deleteRepeaterItem( id, key, index ); },
 			refreshWidget: function () { return refreshWidget( widget ); },
 			toast:         toast,
 			showButton:    showButton,

@@ -362,17 +362,17 @@ class Field_Resolver {
 	}
 
 	/**
-	 * Detect classic slides repeater fields (Elementor Pro Slides widget).
+	 * Detect classic repeater fields (Elementor Pro Slides widget).
 	 *
 	 * The slides widget stores a REPEATER control named 'slides' with
-	 * per-slide fields: heading (TEXT), description (TEXTAREA),
+	 * per-item fields: heading (TEXT), description (TEXTAREA),
 	 * link (URL), background_image (MEDIA).
 	 *
 	 * @param array       $node
 	 * @param object|null $instance
 	 * @return array
 	 */
-	private static function classic_slides_fields( array $node, $instance ) {
+	private static function classic_repeater_fields( array $node, $instance ) {
 		if ( ! $instance ) {
 			return [];
 		}
@@ -396,46 +396,203 @@ class Field_Resolver {
 				continue;
 			}
 
-			$slides = isset( $settings[ $name ] ) && is_array( $settings[ $name ] ) ? $settings[ $name ] : [];
-			if ( ! $slides ) {
+			$items = isset( $settings[ $name ] ) && is_array( $settings[ $name ] ) ? $settings[ $name ] : [];
+			if ( ! $items ) {
 				continue;
 			}
 
 			// Check if this repeater has slide-like fields.
 			$sub_controls = isset( $control['fields'] ) && is_array( $control['fields'] ) ? $control['fields'] : [];
 			$sub_names    = array_column( $sub_controls, 'name' );
-			$is_slides    = in_array( 'heading', $sub_names, true ) && in_array( 'description', $sub_names, true );
-			if ( ! $is_slides ) {
+			$is_repeater  = in_array( 'heading', $sub_names, true ) && in_array( 'description', $sub_names, true );
+			if ( ! $is_repeater ) {
 				continue;
 			}
 
-			$slide_list = [];
-			foreach ( $slides as $i => $slide ) {
-				if ( ! is_array( $slide ) ) {
+			$item_list = [];
+			foreach ( $items as $i => $item ) {
+				if ( ! is_array( $item ) ) {
 					continue;
 				}
-				$slide_list[] = [
+				$item_list[] = [
 					'index'       => $i,
-					'heading'     => isset( $slide['heading'] ) ? (string) $slide['heading'] : '',
-					'description' => isset( $slide['description'] ) ? (string) $slide['description'] : '',
-					'link'        => isset( $slide['link'] ) && is_array( $slide['link'] ) ? $slide['link'] : [],
+					'heading'     => isset( $item['heading'] ) ? (string) $item['heading'] : '',
+					'description' => isset( $item['description'] ) ? (string) $item['description'] : '',
+					'link'        => isset( $item['link'] ) && is_array( $item['link'] ) ? $item['link'] : [],
 					'image'       => [
-						'id'  => isset( $slide['background_image']['id'] ) ? (int) $slide['background_image']['id'] : 0,
-						'url' => isset( $slide['background_image']['url'] ) ? (string) $slide['background_image']['url'] : '',
+						'id'  => isset( $item['background_image']['id'] ) ? (int) $item['background_image']['id'] : 0,
+						'url' => isset( $item['background_image']['url'] ) ? (string) $item['background_image']['url'] : '',
 					],
 				];
 			}
 
-			if ( ! $slide_list ) {
+			if ( ! $item_list ) {
 				continue;
 			}
 
 			$fields[] = [
-				'kind'   => 'slides',
+				'kind'  => 'repeater',
+				'key'   => $name,
+				'label' => isset( $control['label'] ) && $control['label'] ? (string) $control['label'] : self::humanize( $name ),
+				'value' => count( $item_list ),
+				'items' => $item_list,
+			];
+		}
+
+		return $fields;
+	}
+
+	/**
+	 * Detect classic icon-list repeater fields (Elementor Icon List widget).
+	 *
+	 * The icon-list widget stores a REPEATER control named 'icon_list' with
+	 * per-item fields: text (TEXT), selected_icon (ICONS), link (URL).
+	 *
+	 * @param array       $node
+	 * @param object|null $instance
+	 * @return array
+	 */
+	private static function classic_icon_list_fields( array $node, $instance ) {
+		if ( ! $instance ) {
+			return [];
+		}
+
+		try {
+			$controls = $instance->get_controls();
+		} catch ( \Throwable $e ) {
+			return [];
+		}
+		if ( ! is_array( $controls ) ) {
+			return [];
+		}
+
+		$settings = isset( $node['settings'] ) && is_array( $node['settings'] ) ? $node['settings'] : [];
+		$fields   = [];
+
+		foreach ( $controls as $control ) {
+			$ctype = isset( $control['type'] ) ? (string) $control['type'] : '';
+			$name  = isset( $control['name'] ) ? (string) $control['name'] : '';
+			if ( 'repeater' !== $ctype || '' === $name ) {
+				continue;
+			}
+
+			$items = isset( $settings[ $name ] ) && is_array( $settings[ $name ] ) ? $settings[ $name ] : [];
+			if ( ! $items ) {
+				continue;
+			}
+
+			// Check if this repeater has icon-list-like fields.
+			$sub_controls = isset( $control['fields'] ) && is_array( $control['fields'] ) ? $control['fields'] : [];
+			$sub_names    = array_column( $sub_controls, 'name' );
+			$is_icon_list = in_array( 'text', $sub_names, true ) && in_array( 'selected_icon', $sub_names, true );
+			if ( ! $is_icon_list ) {
+				continue;
+			}
+
+			$item_list = [];
+			foreach ( $items as $i => $item ) {
+				if ( ! is_array( $item ) ) {
+					continue;
+				}
+				$item_list[] = [
+					'index'   => $i,
+					'text'    => isset( $item['text'] ) ? (string) $item['text'] : '',
+					'icon'    => [
+						'value'   => isset( $item['selected_icon']['value'] ) ? (string) $item['selected_icon']['value'] : '',
+						'library' => isset( $item['selected_icon']['library'] ) ? (string) $item['selected_icon']['library'] : '',
+					],
+					'link'    => isset( $item['link'] ) && is_array( $item['link'] ) ? $item['link'] : [],
+				];
+			}
+
+			if ( ! $item_list ) {
+				continue;
+			}
+
+			$fields[] = [
+				'kind'   => 'icon-list',
 				'key'    => $name,
 				'label'  => isset( $control['label'] ) && $control['label'] ? (string) $control['label'] : self::humanize( $name ),
-				'value'  => count( $slide_list ),
-				'slides' => $slide_list,
+				'value'  => count( $item_list ),
+				'items'  => $item_list,
+			];
+		}
+
+		return $fields;
+	}
+
+	/**
+	 * Detect classic social-icons repeater fields (Elementor Social Icons widget).
+	 *
+	 * The social-icons widget stores a REPEATER control named 'social_icon_list'
+	 * with per-item fields: social_icon (ICONS), link (URL).
+	 *
+	 * @param array       $node
+	 * @param object|null $instance
+	 * @return array
+	 */
+	private static function classic_social_icons_fields( array $node, $instance ) {
+		if ( ! $instance ) {
+			return [];
+		}
+
+		try {
+			$controls = $instance->get_controls();
+		} catch ( \Throwable $e ) {
+			return [];
+		}
+		if ( ! is_array( $controls ) ) {
+			return [];
+		}
+
+		$settings = isset( $node['settings'] ) && is_array( $node['settings'] ) ? $node['settings'] : [];
+		$fields   = [];
+
+		foreach ( $controls as $control ) {
+			$ctype = isset( $control['type'] ) ? (string) $control['type'] : '';
+			$name  = isset( $control['name'] ) ? (string) $control['name'] : '';
+			if ( 'repeater' !== $ctype || '' === $name ) {
+				continue;
+			}
+
+			$items = isset( $settings[ $name ] ) && is_array( $settings[ $name ] ) ? $settings[ $name ] : [];
+			if ( ! $items ) {
+				continue;
+			}
+
+			// Check if this repeater has social-icons-like fields.
+			$sub_controls = isset( $control['fields'] ) && is_array( $control['fields'] ) ? $control['fields'] : [];
+			$sub_names    = array_column( $sub_controls, 'name' );
+			$is_social    = in_array( 'social_icon', $sub_names, true ) && in_array( 'link', $sub_names, true );
+			if ( ! $is_social ) {
+				continue;
+			}
+
+			$item_list = [];
+			foreach ( $items as $i => $item ) {
+				if ( ! is_array( $item ) ) {
+					continue;
+				}
+				$item_list[] = [
+					'index'   => $i,
+					'icon'    => [
+						'value'   => isset( $item['social_icon']['value'] ) ? (string) $item['social_icon']['value'] : '',
+						'library' => isset( $item['social_icon']['library'] ) ? (string) $item['social_icon']['library'] : '',
+					],
+					'link'    => isset( $item['link'] ) && is_array( $item['link'] ) ? $item['link'] : [],
+				];
+			}
+
+			if ( ! $item_list ) {
+				continue;
+			}
+
+			$fields[] = [
+				'kind'   => 'social-icons',
+				'key'    => $name,
+				'label'  => isset( $control['label'] ) && $control['label'] ? (string) $control['label'] : self::humanize( $name ),
+				'value'  => count( $item_list ),
+				'items'  => $item_list,
 			];
 		}
 
@@ -678,23 +835,107 @@ class Field_Resolver {
 			}
 		}
 
-		// Detect classic slides repeater fields (Elementor Pro Slides widget).
-		$slides_fields = self::classic_slides_fields( $node, $instance );
-		$slides_keys   = [];
-		foreach ( $slides_fields as $sf ) {
+		// Detect classic repeater fields (Elementor Pro Slides widget).
+		$repeater_fields = self::classic_repeater_fields( $node, $instance );
+		$repeater_keys   = [];
+		foreach ( $repeater_fields as $rf ) {
+			$fields[]        = $rf;
+			$repeater_keys[] = $rf['key'];
+		}
+
+		// Detect classic icon-list repeater fields (Elementor Icon List widget).
+		$icon_list_fields = self::classic_icon_list_fields( $node, $instance );
+		$icon_list_keys   = [];
+		foreach ( $icon_list_fields as $ilf ) {
+			$fields[]       = $ilf;
+			$icon_list_keys[] = $ilf['key'];
+		}
+
+		// Detect classic social-icons repeater fields (Elementor Social Icons widget).
+		$social_fields  = self::classic_social_icons_fields( $node, $instance );
+		$social_keys    = [];
+		foreach ( $social_fields as $sf ) {
 			$fields[]     = $sf;
-			$slides_keys[] = $sf['key'];
+			$social_keys[] = $sf['key'];
 		}
 
 		// Detect classic image fields (settings with {id, url} shape).
-		// Pass gallery + slides keys so repeater images aren't double-counted.
-		$exclude_keys = array_merge( $gallery_keys, $slides_keys );
+		// Pass gallery + slides + icon-list + social-icons + link keys so
+		// repeater images and URL controls aren't double-counted as images.
+		$exclude_keys = array_merge( $gallery_keys, $repeater_keys, $icon_list_keys, $social_keys, [ 'link' ] );
 		$images = self::classic_image_fields( $node, $exclude_keys );
+		$found_image_keys = [];
 		foreach ( $images as $img ) {
 			$fields[] = $img;
+			$found_image_keys[] = $img['key'];
+		}
+
+		// Fallback: detect MEDIA controls via instance introspection.
+		// This catches image fields whose stored settings don't have a URL
+		// (e.g. testimonial default placeholder image).
+		if ( $instance ) {
+			$media_images = self::classic_media_control_fields( $node, $instance, $found_image_keys );
+			foreach ( $media_images as $mi ) {
+				$fields[] = $mi;
+			}
 		}
 
 		return array_values( $fields );
+	}
+
+	/**
+	 * Detect MEDIA control fields that weren't already found by
+	 * classic_image_fields(). Uses the instance's controls to find
+	 * MEDIA-type controls, then checks merged settings (with defaults)
+	 * for the URL.
+	 *
+	 * @param array            $node
+	 * @param \Elementor\Element_Base $instance
+	 * @param array            $already_found  Keys already detected.
+	 * @return array
+	 */
+	private static function classic_media_control_fields( array $node, $instance, array $already_found = [] ) {
+		try {
+			$controls = $instance->get_controls();
+		} catch ( \Throwable $e ) {
+			return [];
+		}
+		if ( ! is_array( $controls ) ) {
+			return [];
+		}
+
+		// Get merged settings (includes defaults).
+		try {
+			$settings = $instance->get_settings();
+		} catch ( \Throwable $e ) {
+			$settings = isset( $node['settings'] ) && is_array( $node['settings'] ) ? $node['settings'] : [];
+		}
+
+		$fields = [];
+		foreach ( $controls as $control ) {
+			$ctype = isset( $control['type'] ) ? (string) $control['type'] : '';
+			$name  = isset( $control['name'] ) ? (string) $control['name'] : '';
+			if ( 'media' !== $ctype || '' === $name ) {
+				continue;
+			}
+			if ( in_array( $name, $already_found, true ) ) {
+				continue;
+			}
+
+			$value = isset( $settings[ $name ] ) && is_array( $settings[ $name ] ) ? $settings[ $name ] : [];
+			$url   = isset( $value['url'] ) ? (string) $value['url'] : '';
+			$id    = isset( $value['id'] ) ? (int) $value['id'] : 0;
+
+			$fields[] = [
+				'key'   => $name,
+				'kind'  => 'image',
+				'label' => isset( $control['label'] ) && $control['label'] ? (string) $control['label'] : self::humanize( $name ),
+				'value' => $id,
+				'index' => count( $already_found ) + count( $fields ),
+			];
+		}
+
+		return $fields;
 	}
 
 	/**
@@ -748,13 +989,16 @@ class Field_Resolver {
 		}
 
 		// Detect classic image shape: { id, url } with no $$type.
+		// Also detect placeholder images that have { url } but no id
+		// (e.g. testimonial default). Distinguish from link controls by
+		// checking absence of 'is_external' key.
 		if ( array_key_exists( 'url', $value )
 			&& is_string( $value['url'] )
-			&& array_key_exists( 'id', $value )
-			&& ! isset( $value['$$type'] ) ) {
+			&& ! isset( $value['$$type'] )
+			&& ! array_key_exists( 'is_external', $value ) ) {
 			$out[] = [
 				'key' => $parent_key ?: 'image',
-				'id'  => (int) $value['id'],
+				'id'  => isset( $value['id'] ) ? (int) $value['id'] : 0,
 			];
 			return;
 		}

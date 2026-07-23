@@ -597,6 +597,90 @@
 	height: 16px;
 }
 
+/* Social icons — centered edit pencil overlay */
+.ri2-edit-overlay {
+	position: fixed !important;
+	z-index: 99989 !important;
+	display: none;
+	align-items: center;
+	justify-content: center;
+	background: var( --ri2-accent ) !important;
+	border-radius: 50% !important;
+	cursor: pointer !important;
+	opacity: 0;
+	transition: opacity 0.12s ease;
+}
+
+.ri2-edit-overlay.is-visible {
+	display: flex;
+	opacity: 1;
+}
+
+.ri2-edit-overlay:hover {
+	background: var( --ri2-accent-dark ) !important;
+}
+
+.ri2-edit-overlay .dashicons {
+	color: #fff !important;
+	font-size: 16px;
+	width: 16px;
+	height: 16px;
+}
+
+/* Social icons — action menu */
+.ri2-action-menu {
+	position: fixed !important;
+	z-index: 99990 !important;
+	display: none;
+	flex-direction: column;
+	background: #fff !important;
+	border-radius: 6px !important;
+	box-shadow: 0 4px 20px rgba( 0, 0, 0, 0.18 ) !important;
+	overflow: hidden;
+	min-width: 150px;
+}
+
+.ri2-action-menu.is-visible {
+	display: flex;
+}
+
+.ri2-action-item {
+	all: revert;
+	display: flex !important;
+	align-items: center !important;
+	gap: 8px !important;
+	padding: 10px 14px !important;
+	border: none !important;
+	background: #fff !important;
+	color: #333 !important;
+	font-size: 13px !important;
+	cursor: pointer !important;
+	white-space: nowrap !important;
+}
+
+.ri2-action-item:hover {
+	background: #f0f0f0 !important;
+}
+
+.ri2-action-item .dashicons {
+	font-size: 16px !important;
+	width: 16px !important;
+	height: 16px !important;
+	color: var( --ri2-accent, #0073aa ) !important;
+}
+
+.ri2-action-delete {
+	color: #e5484d !important;
+}
+
+.ri2-action-delete:hover {
+	background: #fef0f0 !important;
+}
+
+.ri2-action-delete .dashicons {
+	color: #e5484d !important;
+}
+
 /* Icon picker popover */
 .ri2-iconpop {
 	position: fixed !important;

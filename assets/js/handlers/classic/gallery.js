@@ -201,8 +201,18 @@
 		// WordPress [gallery] shortcode renders .gallery-item img
 		var galleryImgs = widget.querySelectorAll( '.gallery-item img, .elementor-image-gallery img' );
 		if ( galleryImgs.length ) { return galleryImgs; }
-		// Carousel renders .swiper-slide-image
-		return widget.querySelectorAll( '.swiper-slide-image' );
+		// Carousel renders .swiper-slide-image — exclude duplicated slides
+		// (Swiper clones slides in loop mode with class swiper-slide-duplicate).
+		var all = widget.querySelectorAll( '.swiper-slide-image' );
+		var real = [];
+		for ( var i = 0; i < all.length; i++ ) {
+			var slide = all[ i ].closest( '.swiper-slide' );
+			if ( slide && slide.classList.contains( 'swiper-slide-duplicate' ) ) {
+				continue;
+			}
+			real.push( all[ i ] );
+		}
+		return real;
 	}
 
 	function indexOfImg( widget, img ) {
@@ -276,7 +286,22 @@
 	window.addEventListener( 'resize', function () { hideAll(); } );
 
 	var handler = {
-		onClick: function () {},
+		onClick: function ( event, widget, ctx ) {
+			// Click on a gallery image → replace it.
+			var img = event.target.closest && event.target.closest( 'img' );
+			if ( img && widget.contains( img ) ) {
+				var allImgs = getGalleryImages( widget );
+				var idx = -1;
+				for ( var i = 0; i < allImgs.length; i++ ) {
+					if ( allImgs[ i ] === img ) { idx = i; break; }
+				}
+				if ( idx >= 0 ) {
+					hideAll();
+					doReplace( widget, ctx, idx );
+					return;
+				}
+			}
+		},
 		onHover: function () {},
 		onLeave: function () {}
 	};

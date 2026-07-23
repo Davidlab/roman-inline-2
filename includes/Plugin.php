@@ -49,6 +49,9 @@ class Plugin {
 		$this->register_handler( 'image', 'handlers/classic/image.js' );
 		$this->register_handler( 'image-box', 'handlers/classic/image-box.js' );
 		$this->register_handler( 'icon-box', 'handlers/classic/icon-box.js' );
+		$this->register_handler( 'icon-list', 'handlers/classic/icon-list.js' );
+		$this->register_handler( 'social-icons', 'handlers/classic/social-icons.js' );
+		$this->register_handler( 'testimonial', 'handlers/classic/testimonial.js' );
 		$this->register_handler( 'text-editor', 'handlers/classic/text.js' );
 		$this->register_handler( 'video', 'handlers/classic/video.js' );
 		$this->register_handler( 'google_maps', 'handlers/classic/google-maps.js' );

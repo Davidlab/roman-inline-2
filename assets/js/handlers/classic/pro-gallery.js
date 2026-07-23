@@ -14,7 +14,7 @@
  *   - Click on gallery filter title (multiple mode) to inline-edit gallery_title.
  *   - All image operations use the /pro-gallery REST endpoint.
  *   - Title/description edits use /attachment-meta endpoint.
- *   - Gallery title edits use /slides endpoint (repeater sub_field='gallery_title').
+ *   - Gallery title edits use /repeater endpoint (repeater sub_field='gallery_title').
  *
  * Uses direct document-level mouseover/mouseout (like gallery.js handler).
  */
@@ -346,7 +346,7 @@
 				if ( ! field || 'pro-gallery-multi' !== field.kind ) { return; }
 				ctx.editText( galleryTitle, {
 					key:        field.key,
-					slideIndex: parseInt( idx, 10 ),
+					itemIndex: parseInt( idx, 10 ),
 					subField:   'gallery_title',
 					kind:       'text'
 				} );

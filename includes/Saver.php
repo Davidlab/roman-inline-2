@@ -707,12 +707,12 @@ class Saver {
 	 * @param int    $post_id
 	 * @param string $element_id
 	 * @param string $key       Repeater settings key (e.g. 'slides').
-	 * @param int    $index     Slide index.
+	 * @param int    $index     Item index.
 	 * @param string $sub_field Sub-field name: 'heading', 'description', 'link', 'background_image'.
 	 * @param mixed  $value     New value (string for text, array for link, int for image attachment_id).
 	 * @return array|\WP_Error
 	 */
-	public static function save_slides( $post_id, $element_id, $key, $index, $sub_field, $value ) {
+	public static function save_repeater_item( $post_id, $element_id, $key, $index, $sub_field, $value ) {
 		$index     = (int) $index;
 		$sub_field = (string) $sub_field;
 
@@ -728,28 +728,49 @@ class Saver {
 					$node['settings'][ $key ] = [];
 				}
 
-				$slides = &$node['settings'][ $key ];
+				$items = &$node['settings'][ $key ];
 
-				if ( $index < 0 || $index >= count( $slides ) ) {
-					return new \WP_Error( 'ri2_bad_slide_index', __( 'Invalid slide index.', 'roman-inline-2' ), [ 'status' => 400 ] );
+				if ( $index < 0 || $index >= count( $items ) ) {
+					return new \WP_Error( 'ri2_bad_item_index', __( 'Invalid item index.', 'roman-inline-2' ), [ 'status' => 400 ] );
 				}
 
-				if ( ! isset( $slides[ $index ] ) || ! is_array( $slides[ $index ] ) ) {
-					$slides[ $index ] = [];
+				if ( ! isset( $items[ $index ] ) || ! is_array( $items[ $index ] ) ) {
+					$items[ $index ] = [];
 				}
 
 				switch ( $sub_field ) {
 					case 'heading':
 					case 'description':
 					case 'gallery_title':
-						$slides[ $index ][ $sub_field ] = (string) $value;
+					case 'text':
+						$items[ $index ][ $sub_field ] = (string) $value;
+						break;
+
+					case 'selected_icon':
+						if ( ! is_array( $value ) ) {
+							return new \WP_Error( 'ri2_bad_icon', __( 'Invalid icon data.', 'roman-inline-2' ), [ 'status' => 400 ] );
+						}
+						$items[ $index ]['selected_icon'] = [
+							'value'   => isset( $value['value'] ) ? (string) $value['value'] : '',
+							'library' => isset( $value['library'] ) ? (string) $value['library'] : '',
+						];
+						break;
+
+					case 'social_icon':
+						if ( ! is_array( $value ) ) {
+							return new \WP_Error( 'ri2_bad_icon', __( 'Invalid icon data.', 'roman-inline-2' ), [ 'status' => 400 ] );
+						}
+						$items[ $index ]['social_icon'] = [
+							'value'   => isset( $value['value'] ) ? (string) $value['value'] : '',
+							'library' => isset( $value['library'] ) ? (string) $value['library'] : '',
+						];
 						break;
 
 					case 'link':
 						if ( ! is_array( $value ) ) {
 							return new \WP_Error( 'ri2_bad_link', __( 'Invalid link data.', 'roman-inline-2' ), [ 'status' => 400 ] );
 						}
-						$slides[ $index ]['link'] = [
+						$items[ $index ]['link'] = [
 							'url'         => isset( $value['url'] ) ? (string) $value['url'] : '',
 							'is_external' => ! empty( $value['is_external'] ) ? true : '',
 							'nofollow'    => ! empty( $value['nofollow'] ) ? true : '',
@@ -765,17 +786,58 @@ class Saver {
 						if ( ! $url ) {
 							return new \WP_Error( 'ri2_no_url', __( 'Could not resolve the image URL.', 'roman-inline-2' ), [ 'status' => 400 ] );
 						}
-						$slides[ $index ]['background_image'] = [
+						$items[ $index ]['background_image'] = [
 							'id'  => $attachment_id,
 							'url' => $url,
 						];
 						break;
 
 					default:
-						return new \WP_Error( 'ri2_bad_subfield', __( 'Unknown slide field.', 'roman-inline-2' ), [ 'status' => 400 ] );
+						return new \WP_Error( 'ri2_bad_subfield', __( 'Unknown repeater field.', 'roman-inline-2' ), [ 'status' => 400 ] );
 				}
 
-				unset( $slides );
+				unset( $items );
+
+				return [
+					'success' => true,
+				];
+			}
+		);
+	}
+
+	/**
+	 * Delete a single repeater item by index.
+	 *
+	 * @param int    $post_id
+	 * @param string $element_id
+	 * @param string $key       Repeater settings key (e.g. 'social_icon_list').
+	 * @param int    $index     Item index to remove.
+	 * @return array|\WP_Error
+	 */
+	public static function delete_repeater_item( $post_id, $element_id, $key, $index ) {
+		$index = (int) $index;
+
+		$document = new Document( $post_id );
+
+		return $document->mutate_node(
+			$element_id,
+			function ( array &$node ) use ( $key, $index ) {
+				if ( ! isset( $node['settings'] ) || ! is_array( $node['settings'] ) ) {
+					$node['settings'] = [];
+				}
+				if ( ! isset( $node['settings'][ $key ] ) || ! is_array( $node['settings'][ $key ] ) ) {
+					$node['settings'][ $key ] = [];
+				}
+
+				$items = &$node['settings'][ $key ];
+
+				if ( $index < 0 || $index >= count( $items ) ) {
+					return new \WP_Error( 'ri2_bad_item_index', __( 'Invalid item index.', 'roman-inline-2' ), [ 'status' => 400 ] );
+				}
+
+				array_splice( $items, $index, 1 );
+
+				unset( $items );
 
 				return [
 					'success' => true,
