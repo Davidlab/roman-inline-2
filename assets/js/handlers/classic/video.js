@@ -19,12 +19,12 @@
 
 	if ( ! RI ) { return; }
 
-	var vidBtn = null;
-	var posterBtn = null;
-	var btnWidget = null;
-	var leaveTimer = null;
-	var srcPop = null;
-	var TYPE = 'video';
+	let vidBtn = null;
+	let posterBtn = null;
+	let btnWidget = null;
+	let leaveTimer = null;
+	let srcPop = null;
+	const TYPE = 'video';
 
 	function findVideoField( res ) {
 		return ( res.fields || [] ).filter( function ( f ) {
@@ -40,7 +40,7 @@
 
 	function doEditVideoUrl( widget, ctx ) {
 		ctx.getFields().then( function ( res ) {
-			var field = findVideoField( res );
+			const field = findVideoField( res );
 			if ( ! field ) {
 				ctx.toast( ctx.i18n.nothingEditable || 'Nothing editable here', 'error' );
 				return;
@@ -57,7 +57,7 @@
 
 	function doChangeVideo( widget, ctx ) {
 		ctx.getFields().then( function ( res ) {
-			var field = findVideoField( res );
+			const field = findVideoField( res );
 			if ( ! field ) {
 				ctx.toast( ctx.i18n.nothingEditable || 'Nothing editable here', 'error' );
 				return;
@@ -79,15 +79,15 @@
 		closeSrcPop();
 		srcPop = document.createElement( 'div' );
 		srcPop.className = 'ri2-vidpop ri2-srcpop ri2-ui';
-		var inner = document.createElement( 'div' );
+		const inner = document.createElement( 'div' );
 		inner.className = 'ri2-srcpop__inner';
 
-		var title = document.createElement( 'div' );
+		const title = document.createElement( 'div' );
 		title.className = 'ri2-vidpop__title';
 		title.textContent = 'Choose Video Source';
 		inner.appendChild( title );
 
-		var urlOpt = document.createElement( 'button' );
+		const urlOpt = document.createElement( 'button' );
 		urlOpt.type = 'button';
 		urlOpt.className = 'ri2-srcpop__opt';
 		urlOpt.innerHTML = '<span class="dashicons dashicons-video-alt3"></span> Video URL';
@@ -97,7 +97,7 @@
 			doEditVideoUrl( widget, ctx );
 		} );
 
-		var mediaOpt = document.createElement( 'button' );
+		const mediaOpt = document.createElement( 'button' );
 		mediaOpt.type = 'button';
 		mediaOpt.className = 'ri2-srcpop__opt';
 		mediaOpt.innerHTML = '<span class="dashicons dashicons-video-alt3"></span> Self Hosted';
@@ -107,7 +107,7 @@
 			doChangeVideo( widget, ctx );
 		} );
 
-		var cancel = document.createElement( 'button' );
+		const cancel = document.createElement( 'button' );
 		cancel.type = 'button';
 		cancel.className = 'ri2-vidpop__cancel';
 		cancel.textContent = ctx.i18n.cancel || 'Cancel';
@@ -115,7 +115,7 @@
 
 		inner.appendChild( urlOpt );
 		inner.appendChild( mediaOpt );
-		var actions = document.createElement( 'div' );
+		const actions = document.createElement( 'div' );
 		actions.className = 'ri2-vidpop__actions';
 		actions.appendChild( cancel );
 		inner.appendChild( actions );
@@ -138,7 +138,7 @@
 
 	function doReplacePoster( widget, ctx ) {
 		ctx.getFields().then( function ( res ) {
-			var field = findPosterField( res );
+			const field = findPosterField( res );
 			if ( ! field ) {
 				ctx.toast( ctx.i18n.nothingEditable || 'Nothing editable here', 'error' );
 				return;
@@ -152,19 +152,19 @@
 
 	function widgetOf( el ) {
 		if ( ! el.closest ) { return null; }
-		var w = el.closest( '.elementor-widget-video' );
+		const w = el.closest( '.elementor-widget-video' );
 		if ( w ) { return w; }
 		// Fallback: match by data-widget_type containing "video".
-		var node = el.closest( '[data-widget_type]' );
+		const node = el.closest( '[data-widget_type]' );
 		if ( node ) {
-			var wt = node.getAttribute( 'data-widget_type' ) || '';
+			const wt = node.getAttribute( 'data-widget_type' ) || '';
 			if ( wt.split( '.' )[ 0 ] === TYPE ) { return node; }
 		}
 		return null;
 	}
 
 	function makeBtn( text, icon, onClick ) {
-		var b = document.createElement( 'button' );
+		const b = document.createElement( 'button' );
 		b.type = 'button';
 		b.className = 'ri2-vidbtn ri2-ui';
 		b.innerHTML = '<span class="dashicons dashicons-' + icon + '"></span> ' + text;
@@ -173,7 +173,7 @@
 			e.stopPropagation();
 			clearTimeout( leaveTimer );
 			if ( btnWidget ) {
-				var widget = btnWidget;
+				const widget = btnWidget;
 				hideBtns();
 				onClick( widget, RI.ctx( widget ) );
 			}
@@ -207,9 +207,9 @@
 		ensureBtns( posterLabel );
 		clearTimeout( leaveTimer );
 		btnWidget = widget;
-		var r = widget.getBoundingClientRect();
+		const r = widget.getBoundingClientRect();
 		if ( r.width < 24 || r.height < 24 ) { hideBtns(); return; }
-		var offset = r.left + 8;
+		let offset = r.left + 8;
 		vidBtn.style.top = ( r.top + 8 ) + 'px';
 		vidBtn.style.left = offset + 'px';
 		vidBtn.classList.add( 'is-visible' );
@@ -242,13 +242,13 @@
 	/* --- Hover detection (direct mouseover/mouseout) --- */
 	document.addEventListener( 'mouseover', function ( e ) {
 		if ( ! RI.isActive() ) { return; }
-		var widget = widgetOf( e.target );
+		const widget = widgetOf( e.target );
 		if ( ! widget ) { return; }
 		RI.ctx( widget ).getFields().then( function ( res ) {
 			if ( widgetOf( e.target ) !== widget ) { return; }
-			var hasVideo = findVideoField( res );
+			const hasVideo = findVideoField( res );
 			if ( ! hasVideo ) { return; }
-			var poster = findPosterField( res );
+			const poster = findPosterField( res );
 			showBtns( widget, poster ? poster.label : null );
 		} );
 	} );
@@ -268,7 +268,7 @@
 	window.addEventListener( 'scroll', function () { reallyHideBtn(); }, true );
 	window.addEventListener( 'resize', function () { reallyHideBtn(); } );
 
-	var handler = {
+	const handler = {
 		onClick: function ( event, widget, ctx ) {
 			reallyHideBtn();
 			openSrcPop( widget, ctx );

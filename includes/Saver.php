@@ -847,6 +847,81 @@ class Saver {
 	}
 
 	/**
+	 * Append a new default item to a repeater.
+	 *
+	 * @param int    $post_id
+	 * @param string $element_id
+	 * @param string $key       Repeater settings key (e.g. 'social_icon_list').
+	 * @param string $kind      Field kind: 'social-icons', 'icon-list', 'repeater'.
+	 * @return array|\WP_Error  Returns ['success'=>true, 'index'=>N] where N is the new item index.
+	 */
+	public static function add_repeater_item( $post_id, $element_id, $key, $kind ) {
+		$kind = (string) $kind;
+
+		$document = new Document( $post_id );
+
+		return $document->mutate_node(
+			$element_id,
+			function ( array &$node ) use ( $key, $kind ) {
+				if ( ! isset( $node['settings'] ) || ! is_array( $node['settings'] ) ) {
+					$node['settings'] = [];
+				}
+				if ( ! isset( $node['settings'][ $key ] ) || ! is_array( $node['settings'][ $key ] ) ) {
+					$node['settings'][ $key ] = [];
+				}
+
+				$items = &$node['settings'][ $key ];
+
+				// Build a default item based on the repeater kind.
+				switch ( $kind ) {
+					case 'social-icons':
+						$items[] = [
+							'social_icon' => [
+								'value'   => 'fas fa-share',
+								'library' => 'fa-solid',
+							],
+							'link'        => [
+								'url'         => '',
+								'is_external' => '',
+								'nofollow'    => '',
+							],
+						];
+						break;
+
+					case 'icon-list':
+						$items[] = [
+							'selected_icon' => [
+								'value'   => 'fas fa-circle',
+								'library' => 'fa-solid',
+							],
+							'text'          => 'List Item',
+							'link'          => [
+								'url'         => '',
+								'is_external' => '',
+								'nofollow'    => '',
+							],
+						];
+						break;
+
+					default:
+						// Generic repeater (e.g. slides) — empty item.
+						$items[] = [];
+						break;
+				}
+
+				$new_index = count( $items ) - 1;
+
+				unset( $items );
+
+				return [
+					'success' => true,
+					'index'   => $new_index,
+				];
+			}
+		);
+	}
+
+	/**
 	 * Save a Pro Gallery image operation (replace, delete, or add).
 	 *
 	 * Supports both single mode (key='gallery') and multiple mode

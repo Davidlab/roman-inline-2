@@ -15,9 +15,9 @@
 	if ( ! RI ) { return; }
 
 	/* --- Floating "Change Image" button --- */
-	var imgBtn = null;
-	var hoveredImg = null;
-	var imgLeaveTimer = null;
+	let imgBtn = null;
+	let hoveredImg = null;
+	let imgLeaveTimer = null;
 
 	function ensureImgBtn() {
 		if ( imgBtn ) { return; }
@@ -30,9 +30,9 @@
 			e.stopPropagation();
 			clearTimeout( imgLeaveTimer );
 			if ( hoveredImg ) {
-				var img = hoveredImg;
+				const img = hoveredImg;
 				hideImgBtn();
-				var widget = widgetOf( img );
+				const widget = widgetOf( img );
 				if ( widget ) {
 					doReplaceImage( img, RI.ctx( widget ) );
 				}
@@ -46,7 +46,7 @@
 		ensureImgBtn();
 		clearTimeout( imgLeaveTimer );
 		hoveredImg = img;
-		var r = img.getBoundingClientRect();
+		const r = img.getBoundingClientRect();
 		if ( r.width < 24 || r.height < 24 ) { hideImgBtn(); return; }
 		imgBtn.style.top = ( r.top + 8 ) + 'px';
 		imgBtn.style.left = ( r.left + 8 ) + 'px';
@@ -63,8 +63,8 @@
 	}
 
 	/* --- Floating link icon button --- */
-	var linkBtn = null;
-	var linkLeaveTimer = null;
+	let linkBtn = null;
+	let linkLeaveTimer = null;
 
 	function ensureLinkBtn() {
 		if ( linkBtn ) { return; }
@@ -78,7 +78,7 @@
 			e.stopPropagation();
 			clearTimeout( linkLeaveTimer );
 			hideLinkBtn();
-			var w = linkBtn._widget;
+			const w = linkBtn._widget;
 			if ( w ) {
 				RI.ctx( w ).editLink( w, { key: 'link' } );
 			}
@@ -91,7 +91,7 @@
 		ensureLinkBtn();
 		clearTimeout( linkLeaveTimer );
 		linkBtn._widget = widget;
-		var r = widget.getBoundingClientRect();
+		const r = widget.getBoundingClientRect();
 		if ( r.width < 24 || r.height < 24 ) { hideLinkBtn(); return; }
 		linkBtn.classList.add( 'is-visible' );
 		linkBtn.style.top = ( r.top + 6 ) + 'px';
@@ -113,7 +113,7 @@
 
 	function doReplaceImage( img, ctx ) {
 		ctx.getFields().then( function ( res ) {
-			var field = findField( res, 'image' );
+			const field = findField( res, 'image' );
 			if ( ! field ) {
 				ctx.toast( ctx.i18n.nothingEditable || 'Nothing editable here', 'error' );
 				return;
@@ -129,7 +129,7 @@
 	document.addEventListener( 'mouseover', function ( e ) {
 		if ( ! RI.isActive() ) { return; }
 		if ( 'IMG' !== e.target.tagName ) { return; }
-		var widget = widgetOf( e.target );
+		const widget = widgetOf( e.target );
 		if ( ! widget ) { return; }
 		RI.ctx( widget ).getFields().then( function ( res ) {
 			if ( ! RI.isActive() ) { return; }
@@ -154,7 +154,7 @@
 	/* --- Widget hover for link button --- */
 	document.addEventListener( 'mouseover', function ( e ) {
 		if ( ! RI.isActive() ) { return; }
-		var widget = widgetOf( e.target );
+		const widget = widgetOf( e.target );
 		if ( ! widget ) { return; }
 		RI.ctx( widget ).getFields().then( function ( res ) {
 			if ( ! RI.isActive() ) { return; }
@@ -166,7 +166,7 @@
 
 	document.addEventListener( 'mouseout', function ( e ) {
 		if ( ! RI.isActive() ) { return; }
-		var widget = widgetOf( e.target );
+		const widget = widgetOf( e.target );
 		if ( ! widget ) { return; }
 		clearTimeout( linkLeaveTimer );
 		linkLeaveTimer = setTimeout( function () {
@@ -185,20 +185,20 @@
 	} );
 
 	/* --- Handler --- */
-	var handler = {
+	const handler = {
 		onClick: function ( event, widget, ctx ) {
 			// Prevent link navigation while editing.
-			var anchor = event.target.closest && event.target.closest( 'a' );
+			const anchor = event.target.closest && event.target.closest( 'a' );
 			if ( anchor && widget.contains( anchor ) ) {
 				event.preventDefault();
 				event.stopPropagation();
 			}
 
 			ctx.getFields().then( function ( res ) {
-				var fields = res.fields || [];
+				const fields = res.fields || [];
 
 				// Image click → replace image.
-				var img = widget.querySelector( '.elementor-image-box-img img' );
+				const img = widget.querySelector( '.elementor-image-box-img img' );
 				if ( img && ( event.target === img || img.contains( event.target ) ) ) {
 					hideImgBtn();
 					doReplaceImage( img, ctx );
@@ -206,9 +206,9 @@
 				}
 
 				// Title click → inline edit (text kind, no toolbar).
-				var titleEl = widget.querySelector( '.elementor-image-box-title' );
+				const titleEl = widget.querySelector( '.elementor-image-box-title' );
 				if ( titleEl && ( event.target === titleEl || titleEl.contains( event.target ) ) ) {
-					var titleField = fields.filter( function ( f ) { return 'title_text' === f.key; } )[ 0 ];
+					const titleField = fields.filter( function ( f ) { return 'title_text' === f.key; } )[ 0 ];
 					if ( titleField ) {
 						ctx.editText( titleEl, {
 							key:      titleField.key,
@@ -220,9 +220,9 @@
 				}
 
 				// Description click → inline edit (rich_text toolbar).
-				var descEl = widget.querySelector( '.elementor-image-box-description' );
+				const descEl = widget.querySelector( '.elementor-image-box-description' );
 				if ( descEl && ( event.target === descEl || descEl.contains( event.target ) ) ) {
-					var descField = fields.filter( function ( f ) { return 'description_text' === f.key; } )[ 0 ];
+					const descField = fields.filter( function ( f ) { return 'description_text' === f.key; } )[ 0 ];
 					if ( descField ) {
 						ctx.editText( descEl, {
 							key:      descField.key,

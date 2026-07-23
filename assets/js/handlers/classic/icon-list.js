@@ -17,13 +17,13 @@
 
 	if ( ! RI ) { return; }
 
-	var SELECTOR = '.elementor-widget-icon-list[data-id]';
+	const SELECTOR = '.elementor-widget-icon-list[data-id]';
 
 	/* --- Floating link button --- */
-	var linkBtn = null;
-	var linkLeaveTimer = null;
-	var hoveredItem = null;
-	var hoveredWidget = null;
+	let linkBtn = null;
+	let linkLeaveTimer = null;
+	let hoveredItem = null;
+	let hoveredWidget = null;
 
 	function ensureLinkBtn() {
 		if ( linkBtn ) { return; }
@@ -38,7 +38,7 @@
 			clearTimeout( linkLeaveTimer );
 			hideLinkBtn();
 			if ( hoveredItem && hoveredWidget ) {
-				var idx = itemIndexOf( hoveredWidget, hoveredItem );
+				const idx = itemIndexOf( hoveredWidget, hoveredItem );
 				if ( idx >= 0 ) {
 					RI.ctx( hoveredWidget ).editLink( hoveredItem, {
 						key:        findIconListKey( hoveredWidget ),
@@ -57,7 +57,7 @@
 		clearTimeout( linkLeaveTimer );
 		hoveredItem = item;
 		hoveredWidget = widget;
-		var r = item.getBoundingClientRect();
+		const r = item.getBoundingClientRect();
 		if ( r.width < 24 || r.height < 24 ) { hideLinkBtn(); return; }
 		linkBtn.classList.add( 'is-visible' );
 		linkBtn.style.top = ( r.top + ( r.height - linkBtn.offsetHeight ) / 2 ) + 'px';
@@ -71,11 +71,11 @@
 	function findIconListKey( widget ) {
 		// Cached lookup — the field key is always 'icon_list' for this widget,
 		// but we verify via getFields to be safe.
-		var ctx = RI.ctx( widget );
-		var key = widget._ri2IconListKey;
+		const ctx = RI.ctx( widget );
+		const key = widget._ri2IconListKey;
 		if ( key ) { return key; }
 		ctx.getFields().then( function ( res ) {
-			var f = findIconListField( res );
+			const f = findIconListField( res );
 			if ( f ) { widget._ri2IconListKey = f.key; }
 		} ).catch( function () {} );
 		return 'icon_list';
@@ -95,8 +95,8 @@
 	}
 
 	function itemIndexOf( widget, el ) {
-		var items = getItems( widget );
-		for ( var i = 0; i < items.length; i++ ) {
+		const items = getItems( widget );
+		for ( let i = 0; i < items.length; i++ ) {
 			if ( items[ i ] === el ) { return i; }
 		}
 		return -1;
@@ -109,13 +109,13 @@
 	/* --- Hover: show link button per item --- */
 	document.addEventListener( 'mouseover', function ( e ) {
 		if ( ! RI.isActive() ) { return; }
-		var widget = widgetOf( e.target );
+		const widget = widgetOf( e.target );
 		if ( ! widget ) { return; }
-		var item = closestItem( e.target );
+		const item = closestItem( e.target );
 		if ( ! item || ! widget.contains( item ) ) { return; }
 
 		// Don't show link button when hovering the icon itself (that opens icon picker).
-		var iconWrap = item.querySelector( '.elementor-icon-list-icon' );
+		const iconWrap = item.querySelector( '.elementor-icon-list-icon' );
 		if ( iconWrap && ( e.target === iconWrap || iconWrap.contains( e.target ) ) ) { return; }
 
 		RI.ctx( widget ).getFields().then( function ( res ) {
@@ -129,7 +129,7 @@
 	document.addEventListener( 'mouseout', function ( e ) {
 		if ( ! RI.isActive() ) { return; }
 		if ( ! hoveredItem ) { return; }
-		var to = e.relatedTarget;
+		const to = e.relatedTarget;
 		if ( to && ( to === linkBtn || ( linkBtn && linkBtn.contains( to ) ) ) ) { return; }
 		if ( to && hoveredItem.contains( to ) ) { return; }
 		clearTimeout( linkLeaveTimer );
@@ -144,36 +144,36 @@
 	window.addEventListener( 'resize', function () { hideLinkBtn(); } );
 
 	/* --- Handler --- */
-	var handler = {
+	const handler = {
 		onClick: function ( event, widget, ctx ) {
 			// Prevent link navigation while editing.
-			var anchor = event.target.closest && event.target.closest( 'a' );
+			const anchor = event.target.closest && event.target.closest( 'a' );
 			if ( anchor && widget.contains( anchor ) ) {
 				event.preventDefault();
 				event.stopPropagation();
 			}
 
 			ctx.getFields().then( function ( res ) {
-				var field = findIconListField( res );
+				const field = findIconListField( res );
 				if ( ! field ) {
 					ctx.toast( ctx.i18n.nothingEditable || 'Nothing editable here', 'error' );
 					return;
 				}
 
-				var item = closestItem( event.target );
+				const item = closestItem( event.target );
 				if ( ! item || ! widget.contains( item ) ) { return; }
-				var idx = itemIndexOf( widget, item );
+				const idx = itemIndexOf( widget, item );
 				if ( idx < 0 ) { return; }
 
 				// Icon click → open icon picker.
-				var iconWrap = item.querySelector( '.elementor-icon-list-icon' );
+				const iconWrap = item.querySelector( '.elementor-icon-list-icon' );
 				if ( iconWrap && ( event.target === iconWrap || iconWrap.contains( event.target ) ) ) {
 					ctx.replaceIcon( { key: field.key, itemIndex: idx } );
 					return;
 				}
 
 				// Text click → inline edit.
-				var textEl = item.querySelector( '.elementor-icon-list-text' );
+				const textEl = item.querySelector( '.elementor-icon-list-text' );
 				if ( textEl && ( event.target === textEl || textEl.contains( event.target ) ) ) {
 					ctx.editText( textEl, {
 						key:        field.key,

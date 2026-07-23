@@ -10,10 +10,10 @@
 
 	if ( ! RI ) { return; }
 
-	var handler = {
+	const handler = {
 		onClick: function ( event, widget, ctx ) {
 			ctx.getFields().then( function ( res ) {
-				var textField = ( res.fields || [] ).filter( function ( f ) {
+				const textField = ( res.fields || [] ).filter( function ( f ) {
 					return 'rich_text' === f.kind || 'text' === f.kind;
 				} )[ 0 ];
 
@@ -22,7 +22,7 @@
 					return;
 				}
 
-				var node = widget.querySelector( 'a, button' ) || widget;
+				const node = widget.querySelector( 'a, button' ) || widget;
 
 				ctx.editText( node, {
 					key:      textField.key,

@@ -1,20 +1,18 @@
 /**
- * Roman Inline 2 — Classic icon-box widget handler.
+ * Roman Inline 2 — Classic text-path widget handler.
  *
- * - Click the icon → opens icon picker popover (Font Awesome libraries).
- * - Click the title → inline edit (text, no toolbar).
- * - Click the description → inline edit (rich-text toolbar).
- * - Hover the widget → small link icon button (top-right) to edit the box link.
+ * - Click the text → inline edit (text, no toolbar).
+ * - Hover the widget → floating link button (top-right) to edit the link.
  *
- * Field detection uses markers (data-elementor-setting-key) for title/description,
- * introspection (ICONS control) for the icon, and classic_link() for the link.
+ * Field detection uses markers (data-elementor-setting-key) and
+ * introspection (text control for 'text', link control for 'link').
  */
 ( function ( RI ) {
 	'use strict';
 
 	if ( ! RI ) { return; }
 
-	/* --- Floating link icon button --- */
+	/* --- Floating link button --- */
 	let linkBtn = null;
 	let linkLeaveTimer = null;
 
@@ -54,9 +52,8 @@
 		if ( linkBtn ) { linkBtn.classList.remove( 'is-visible' ); }
 	}
 
-	/* --- Helpers --- */
 	function widgetOf( el ) {
-		return el.closest && el.closest( '.elementor-widget-icon-box[data-id]' );
+		return el.closest && el.closest( '.elementor-widget-text-path[data-id]' );
 	}
 
 	function findField( res, kind ) {
@@ -87,12 +84,8 @@
 		}, 100 );
 	}, true );
 
-	window.addEventListener( 'scroll', function () {
-		hideLinkBtn();
-	}, true );
-	window.addEventListener( 'resize', function () {
-		hideLinkBtn();
-	} );
+	window.addEventListener( 'scroll', function () { hideLinkBtn(); }, true );
+	window.addEventListener( 'resize', function () { hideLinkBtn(); } );
 
 	/* --- Handler --- */
 	const handler = {
@@ -107,42 +100,20 @@
 			ctx.getFields().then( function ( res ) {
 				const fields = res.fields || [];
 
-				// Icon click → open icon picker.
-				const iconWrap = widget.querySelector( '.elementor-icon-box-icon' );
-				if ( iconWrap && ( event.target === iconWrap || iconWrap.contains( event.target ) ) ) {
-					const iconField = fields.filter( function ( f ) { return 'icon' === f.kind; } )[ 0 ];
-					if ( iconField ) {
-						ctx.replaceIcon( { key: iconField.key } );
-						return;
-					}
-				}
+				// Find the text field.
+				const textField = fields.filter( function ( f ) {
+					return 'text' === f.kind || 'rich_text' === f.kind;
+				} )[ 0 ];
 
-				// Title click → inline edit (text kind, no toolbar).
-				const titleEl = widget.querySelector( '.elementor-icon-box-title' );
-				if ( titleEl && ( event.target === titleEl || titleEl.contains( event.target ) ) ) {
-					const titleField = fields.filter( function ( f ) { return 'title_text' === f.key; } )[ 0 ];
-					if ( titleField ) {
-						ctx.editText( titleEl, {
-							key:      titleField.key,
-							kind:     'text',
-							isAtomic: false
-						} );
-						return;
-					}
-				}
-
-				// Description click → inline edit (rich_text toolbar).
-				const descEl = widget.querySelector( '.elementor-icon-box-description' );
-				if ( descEl && ( event.target === descEl || descEl.contains( event.target ) ) ) {
-					const descField = fields.filter( function ( f ) { return 'description_text' === f.key; } )[ 0 ];
-					if ( descField ) {
-						ctx.editText( descEl, {
-							key:      descField.key,
-							kind:     'rich_text',
-							isAtomic: false
-						} );
-						return;
-					}
+				if ( textField ) {
+					let node = ctx.locateNode( widget, textField, event.target );
+					node = ctx.preferTextNode( node );
+					ctx.editText( node, {
+						key:      textField.key,
+						kind:     textField.kind,
+						isAtomic: false
+					} );
+					return;
 				}
 
 				ctx.toast( ctx.i18n.nothingEditable || 'Nothing editable here', 'error' );
@@ -154,6 +125,6 @@
 		onLeave: function () {}
 	};
 
-	RI.register( 'icon-box', handler );
+	RI.register( 'text-path', handler );
 
 } )( window.RomanInline2 );

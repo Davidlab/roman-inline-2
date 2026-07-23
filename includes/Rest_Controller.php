@@ -163,6 +163,16 @@ class Rest_Controller {
 
 		register_rest_route(
 			self::NS,
+			'/add-repeater-item',
+			[
+				'methods'             => \WP_REST_Server::CREATABLE,
+				'callback'            => [ __CLASS__, 'add_repeater_item' ],
+				'permission_callback' => [ __CLASS__, 'can_edit' ],
+			]
+		);
+
+		register_rest_route(
+			self::NS,
 			'/render',
 			[
 				'methods'             => \WP_REST_Server::READABLE,
@@ -408,6 +418,22 @@ class Rest_Controller {
 		}
 
 		$result = Saver::delete_repeater_item( $post_id, $element_id, $key, $index );
+		return is_wp_error( $result ) ? $result : rest_ensure_response( $result );
+	}
+
+	public static function add_repeater_item( $request ) {
+		$post_id    = (int) $request->get_param( 'post_id' );
+		$element_id = (string) $request->get_param( 'element_id' );
+		$key        = (string) $request->get_param( 'key' );
+		$kind       = (string) $request->get_param( 'kind' );
+
+		$field = self::authorize_field( $post_id, $element_id, $key, [ 'repeater', 'icon-list', 'social-icons' ] );
+		if ( is_wp_error( $field ) ) {
+			return $field;
+		}
+
+		$resolved_kind = $kind ?: $field['kind'];
+		$result = Saver::add_repeater_item( $post_id, $element_id, $key, $resolved_kind );
 		return is_wp_error( $result ) ? $result : rest_ensure_response( $result );
 	}
 

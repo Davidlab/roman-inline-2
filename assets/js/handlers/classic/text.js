@@ -10,10 +10,10 @@
 
 	if ( ! RI ) { return; }
 
-	var handler = {
+	const handler = {
 		onClick: function ( event, widget, ctx ) {
 			ctx.getFields().then( function ( res ) {
-				var texts = ( res.fields || [] ).filter( function ( f ) {
+				const texts = ( res.fields || [] ).filter( function ( f ) {
 					return 'text' === f.kind || 'rich_text' === f.kind;
 				} );
 
@@ -23,8 +23,8 @@
 				}
 
 				// Text editor widget typically has a single 'editor' field.
-				var field = texts[ 0 ];
-				var node = ctx.locateNode( widget, field, event.target );
+				const field = texts[ 0 ];
+				let node = ctx.locateNode( widget, field, event.target );
 				node = ctx.preferTextNode( node );
 
 				ctx.editText( node, {

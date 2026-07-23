@@ -10,8 +10,8 @@
 
 	if ( ! RI ) { return; }
 
-	var btn = null;
-	var hoveredImg = null;
+	let btn = null;
+	let hoveredImg = null;
 
 	function findImageField( res ) {
 		return ( res.fields || [] ).filter( function ( f ) { return 'image' === f.kind; } )[ 0 ];
@@ -19,7 +19,7 @@
 
 	function doReplace( img, ctx ) {
 		ctx.getFields().then( function ( res ) {
-			var field = findImageField( res );
+			const field = findImageField( res );
 			if ( ! field ) {
 				ctx.toast( ctx.i18n.nothingEditable || 'Nothing editable here', 'error' );
 				return;
@@ -41,9 +41,9 @@
 			e.preventDefault();
 			e.stopPropagation();
 			if ( hoveredImg ) {
-				var img = hoveredImg;
+				const img = hoveredImg;
 				hideBtn();
-				var widget = widgetOf( img ) || img;
+				const widget = widgetOf( img ) || img;
 				doReplace( img, RI.ctx( widget ) );
 			}
 		} );
@@ -58,7 +58,7 @@
 	function showBtn( img ) {
 		ensureBtn();
 		hoveredImg = img;
-		var r = img.getBoundingClientRect();
+		const r = img.getBoundingClientRect();
 		if ( r.width < 24 || r.height < 24 ) { hideBtn(); return; }
 		btn.style.top = ( r.top + 8 ) + 'px';
 		btn.style.left = ( r.left + 8 ) + 'px';
@@ -76,10 +76,10 @@
 	document.addEventListener( 'mouseover', function ( e ) {
 		if ( ! RI.isActive() ) { return; }
 		if ( 'IMG' !== e.target.tagName ) { return; }
-		var widget = widgetOf( e.target );
+		const widget = widgetOf( e.target );
 		if ( ! widget ) { return; }
 		// Only show for atomic widgets — classic widgets have their own handlers.
-		var et = widget.getAttribute( 'data-e-type' ) || '';
+		const et = widget.getAttribute( 'data-e-type' ) || '';
 		if ( et.indexOf( 'e-' ) !== 0 ) { return; }
 		showBtn( e.target );
 	} );
@@ -99,9 +99,9 @@
 
 	/* --- Atomic e-image handler --- */
 	// Atomic e-image: the widget element IS the <img> (carries data-e-type/data-id).
-	var handler = {
+	const handler = {
 		onClick: function ( event, widget, ctx ) {
-			var img = ( 'IMG' === widget.tagName ) ? widget : widget.querySelector( 'img' );
+			const img = ( 'IMG' === widget.tagName ) ? widget : widget.querySelector( 'img' );
 			if ( ! img ) { return; }
 			if ( event.target !== img && ! img.contains( event.target ) ) { return; }
 			hideBtn();

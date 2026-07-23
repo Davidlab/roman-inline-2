@@ -9,12 +9,12 @@
 
 	if ( ! RI ) { return; }
 
-	var handler = {
+	const handler = {
 		onClick: function ( event, widget, ctx ) {
-			var para = widget.querySelector( 'p' ) || widget;
+			const para = widget.querySelector( 'p' ) || widget;
 
 			ctx.getFields().then( function ( res ) {
-				var textField = ( res.fields || [] ).filter( function ( f ) {
+				const textField = ( res.fields || [] ).filter( function ( f ) {
 					return 'rich_text' === f.kind || 'text' === f.kind;
 				} )[ 0 ];
 

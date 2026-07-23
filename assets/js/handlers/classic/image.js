@@ -10,9 +10,9 @@
 
 	if ( ! RI ) { return; }
 
-	var btn = null;
-	var hoveredImg = null;
-	var leaveTimer = null;
+	let btn = null;
+	let hoveredImg = null;
+	let leaveTimer = null;
 
 	function findImageField( res ) {
 		return ( res.fields || [] ).filter( function ( f ) { return 'image' === f.kind; } )[ 0 ];
@@ -24,7 +24,7 @@
 
 	function doReplace( img, ctx ) {
 		ctx.getFields().then( function ( res ) {
-			var field = findImageField( res );
+			const field = findImageField( res );
 			if ( ! field ) {
 				ctx.toast( ctx.i18n.nothingEditable || 'Nothing editable here', 'error' );
 				return;
@@ -47,9 +47,9 @@
 			e.stopPropagation();
 			clearTimeout( leaveTimer );
 			if ( hoveredImg ) {
-				var img = hoveredImg;
+				const img = hoveredImg;
 				hideBtn();
-				var widget = widgetOf( img );
+				const widget = widgetOf( img );
 				if ( widget ) {
 					doReplace( img, RI.ctx( widget ) );
 				}
@@ -63,7 +63,7 @@
 		ensureBtn();
 		clearTimeout( leaveTimer );
 		hoveredImg = img;
-		var r = img.getBoundingClientRect();
+		const r = img.getBoundingClientRect();
 		if ( r.width < 24 || r.height < 24 ) { hideBtn(); return; }
 		btn.style.top = ( r.top + 8 ) + 'px';
 		btn.style.left = ( r.left + 8 ) + 'px';
@@ -83,15 +83,15 @@
 	document.addEventListener( 'mouseover', function ( e ) {
 		if ( ! RI.isActive() ) { return; }
 		if ( 'IMG' !== e.target.tagName ) { return; }
-		var widget = widgetOf( e.target );
+		const widget = widgetOf( e.target );
 		if ( ! widget ) { return; }
 
 		// Only show for classic widgets (not atomic, which has its own handler).
-		var et = widget.getAttribute( 'data-e-type' ) || '';
+		const et = widget.getAttribute( 'data-e-type' ) || '';
 		if ( et.indexOf( 'e-' ) === 0 ) { return; }
 
 		// Only show for classic image widgets — skip other classic widget types.
-		var wt = ( widget.getAttribute( 'data-widget_type' ) || '' ).split( '.' )[ 0 ];
+		const wt = ( widget.getAttribute( 'data-widget_type' ) || '' ).split( '.' )[ 0 ];
 		if ( wt && 'image' !== wt ) { return; }
 
 		// Verify the widget has an editable image field.
@@ -119,9 +119,9 @@
 	window.addEventListener( 'resize', function () { reallyHideBtn(); } );
 
 	/* --- Classic image widget handler --- */
-	var handler = {
+	const handler = {
 		onClick: function ( event, widget, ctx ) {
-			var img = widget.querySelector( 'img' );
+			const img = widget.querySelector( 'img' );
 			if ( ! img ) { return; }
 			if ( event.target !== img && ! img.contains( event.target ) ) { return; }
 			hideBtn();

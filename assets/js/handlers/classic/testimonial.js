@@ -12,12 +12,12 @@
 
 	if ( ! RI ) { return; }
 
-	var SELECTOR = '.elementor-widget-testimonial[data-id]';
+	const SELECTOR = '.elementor-widget-testimonial[data-id]';
 
 	/* --- Floating "Change Image" button --- */
-	var imgBtn = null;
-	var hoveredImg = null;
-	var imgLeaveTimer = null;
+	let imgBtn = null;
+	let hoveredImg = null;
+	let imgLeaveTimer = null;
 
 	function ensureImgBtn() {
 		if ( imgBtn ) { return; }
@@ -30,9 +30,9 @@
 			e.stopPropagation();
 			clearTimeout( imgLeaveTimer );
 			if ( hoveredImg ) {
-				var img = hoveredImg;
+				const img = hoveredImg;
 				hideImgBtn();
-				var widget = widgetOf( img );
+				const widget = widgetOf( img );
 				if ( widget ) {
 					doReplaceImage( img, RI.ctx( widget ) );
 				}
@@ -46,7 +46,7 @@
 		ensureImgBtn();
 		clearTimeout( imgLeaveTimer );
 		hoveredImg = img;
-		var r = img.getBoundingClientRect();
+		const r = img.getBoundingClientRect();
 		if ( r.width < 24 || r.height < 24 ) { hideImgBtn(); return; }
 		imgBtn.style.top = ( r.top + 8 ) + 'px';
 		imgBtn.style.left = ( r.left + 8 ) + 'px';
@@ -63,8 +63,8 @@
 	}
 
 	/* --- Floating link icon button --- */
-	var linkBtn = null;
-	var linkLeaveTimer = null;
+	let linkBtn = null;
+	let linkLeaveTimer = null;
 
 	function ensureLinkBtn() {
 		if ( linkBtn ) { return; }
@@ -78,7 +78,7 @@
 			e.stopPropagation();
 			clearTimeout( linkLeaveTimer );
 			hideLinkBtn();
-			var w = linkBtn._widget;
+			const w = linkBtn._widget;
 			if ( w ) {
 				RI.ctx( w ).editLink( w, { key: 'link' } );
 			}
@@ -91,7 +91,7 @@
 		ensureLinkBtn();
 		clearTimeout( linkLeaveTimer );
 		linkBtn._widget = widget;
-		var r = widget.getBoundingClientRect();
+		const r = widget.getBoundingClientRect();
 		if ( r.width < 24 || r.height < 24 ) { hideLinkBtn(); return; }
 		linkBtn.classList.add( 'is-visible' );
 		linkBtn.style.top = ( r.top + 6 ) + 'px';
@@ -117,7 +117,7 @@
 
 	function doReplaceImage( img, ctx ) {
 		ctx.getFields().then( function ( res ) {
-			var field = findField( res, 'image' );
+			const field = findField( res, 'image' );
 			if ( ! field ) {
 				ctx.toast( ctx.i18n.nothingEditable || 'Nothing editable here', 'error' );
 				return;
@@ -133,7 +133,7 @@
 	document.addEventListener( 'mouseover', function ( e ) {
 		if ( ! RI.isActive() ) { return; }
 		if ( 'IMG' !== e.target.tagName ) { return; }
-		var widget = widgetOf( e.target );
+		const widget = widgetOf( e.target );
 		if ( ! widget ) { return; }
 		RI.ctx( widget ).getFields().then( function ( res ) {
 			if ( ! RI.isActive() ) { return; }
@@ -158,7 +158,7 @@
 	/* --- Widget hover for link button --- */
 	document.addEventListener( 'mouseover', function ( e ) {
 		if ( ! RI.isActive() ) { return; }
-		var widget = widgetOf( e.target );
+		const widget = widgetOf( e.target );
 		if ( ! widget ) { return; }
 		RI.ctx( widget ).getFields().then( function ( res ) {
 			if ( ! RI.isActive() ) { return; }
@@ -170,7 +170,7 @@
 
 	document.addEventListener( 'mouseout', function ( e ) {
 		if ( ! RI.isActive() ) { return; }
-		var widget = widgetOf( e.target );
+		const widget = widgetOf( e.target );
 		if ( ! widget ) { return; }
 		clearTimeout( linkLeaveTimer );
 		linkLeaveTimer = setTimeout( function () {
@@ -189,20 +189,20 @@
 	} );
 
 	/* --- Handler --- */
-	var handler = {
+	const handler = {
 		onClick: function ( event, widget, ctx ) {
 			// Prevent link navigation while editing.
-			var anchor = event.target.closest && event.target.closest( 'a' );
+			const anchor = event.target.closest && event.target.closest( 'a' );
 			if ( anchor && widget.contains( anchor ) ) {
 				event.preventDefault();
 				event.stopPropagation();
 			}
 
 			ctx.getFields().then( function ( res ) {
-				var fields = res.fields || [];
+				const fields = res.fields || [];
 
 				// Image click → replace image.
-				var img = widget.querySelector( '.elementor-testimonial-image img' );
+				const img = widget.querySelector( '.elementor-testimonial-image img' );
 				if ( img && ( event.target === img || img.contains( event.target ) ) ) {
 					hideImgBtn();
 					doReplaceImage( img, ctx );
@@ -210,9 +210,9 @@
 				}
 
 				// Content click → inline edit (text kind).
-				var contentEl = widget.querySelector( '.elementor-testimonial-content' );
+				const contentEl = widget.querySelector( '.elementor-testimonial-content' );
 				if ( contentEl && ( event.target === contentEl || contentEl.contains( event.target ) ) ) {
-					var contentField = findFieldByKey( res, 'testimonial_content' );
+					const contentField = findFieldByKey( res, 'testimonial_content' );
 					if ( contentField ) {
 						ctx.editText( contentEl, {
 							key:      contentField.key,
@@ -224,9 +224,9 @@
 				}
 
 				// Name click → inline edit (text kind).
-				var nameEl = widget.querySelector( '.elementor-testimonial-name' );
+				const nameEl = widget.querySelector( '.elementor-testimonial-name' );
 				if ( nameEl && ( event.target === nameEl || nameEl.contains( event.target ) ) ) {
-					var nameField = findFieldByKey( res, 'testimonial_name' );
+					const nameField = findFieldByKey( res, 'testimonial_name' );
 					if ( nameField ) {
 						ctx.editText( nameEl, {
 							key:      nameField.key,
@@ -238,9 +238,9 @@
 				}
 
 				// Job click → inline edit (text kind).
-				var jobEl = widget.querySelector( '.elementor-testimonial-job' );
+				const jobEl = widget.querySelector( '.elementor-testimonial-job' );
 				if ( jobEl && ( event.target === jobEl || jobEl.contains( event.target ) ) ) {
-					var jobField = findFieldByKey( res, 'testimonial_job' );
+					const jobField = findFieldByKey( res, 'testimonial_job' );
 					if ( jobField ) {
 						ctx.editText( jobEl, {
 							key:      jobField.key,

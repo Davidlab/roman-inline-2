@@ -38,12 +38,12 @@
 		return;
 	}
 
-	var cfg   = window.romanInline2;
-	var i18n  = cfg.i18n || {};
-	var H     = {};          // registered handlers: type -> handler
-	var active = false;
-	var session = null;      // current edit session
-	var fieldsCache = {};    // elementId -> fields response
+	const cfg   = window.romanInline2;
+	const i18n  = cfg.i18n || {};
+	const H     = {};          // registered handlers: type -> handler
+	let active = false;
+	let session = null;      // current edit session
+	const fieldsCache = {};    // elementId -> fields response
 
 	wp.apiFetch.use( wp.apiFetch.createNonceMiddleware( cfg.nonce ) );
 
@@ -52,7 +52,7 @@
 	/* ----------------------------------------------------------------- */
 
 	function el( tag, cls, html ) {
-		var n = document.createElement( tag );
+		const n = document.createElement( tag );
 		if ( cls ) { n.className = cls; }
 		if ( html != null ) { n.innerHTML = html; }
 		return n;
@@ -67,7 +67,7 @@
 	/* Widget discovery                                                   */
 	/* ----------------------------------------------------------------- */
 
-	var WIDGET_SELECTOR = '.elementor-widget[data-id], [data-e-type][data-id], .e-con[data-id], .elementor-section[data-id]';
+	const WIDGET_SELECTOR = '.elementor-widget[data-id], [data-e-type][data-id], .e-con[data-id], .elementor-section[data-id]';
 
 	function widgetOf( node ) {
 		return node.closest ? node.closest( WIDGET_SELECTOR ) : null;
@@ -78,8 +78,8 @@
 	}
 
 	function widgetType( widget ) {
-		var wt = widget.getAttribute( 'data-widget_type' ) || '';
-		var et = widget.getAttribute( 'data-e-type' ) || '';
+		const wt = widget.getAttribute( 'data-widget_type' ) || '';
+		const et = widget.getAttribute( 'data-e-type' ) || '';
 
 		// data-widget_type has the specific type (e.g. "heading.default").
 		if ( wt ) {
@@ -92,8 +92,8 @@
 		}
 
 		// Atomic widgets often put the type in a class like "e-heading-base".
-		var cls = widget.className || '';
-		var m = cls.match( /\be-([a-z]+)-base\b/ );
+		const cls = widget.className || '';
+		const m = cls.match( /\be-([a-z]+)-base\b/ );
 		if ( m ) {
 			return 'e-' + m[ 1 ];
 		}
@@ -102,7 +102,7 @@
 	}
 
 	function isAtomic( widget ) {
-		var et = widget.getAttribute( 'data-e-type' ) || '';
+		const et = widget.getAttribute( 'data-e-type' ) || '';
 		return et.indexOf( 'e-' ) === 0;
 	}
 
@@ -111,7 +111,7 @@
 	/* ----------------------------------------------------------------- */
 
 	function buildSelector( match ) {
-		var sel = match.tag || '*';
+		let sel = match.tag || '*';
 		( match.classes || [] ).forEach( function ( c ) { sel += '.' + cssEscape( c ); } );
 		return sel;
 	}
@@ -120,7 +120,7 @@
 	// heading), edit the text inside the link rather than the wrapper itself.
 	function preferTextNode( node ) {
 		if ( ! node ) { return node; }
-		var kids = node.children;
+		const kids = node.children;
 		if ( 1 === kids.length && 'A' === kids[ 0 ].tagName &&
 			( kids[ 0 ].textContent || '' ).trim() === ( node.textContent || '' ).trim() ) {
 			return kids[ 0 ];
@@ -130,12 +130,12 @@
 
 	function locateNode( widget, field, clicked ) {
 		if ( field.match ) {
-			var sel = buildSelector( field.match );
+			const sel = buildSelector( field.match );
 			if ( clicked ) {
-				var near = clicked.closest( sel );
+				const near = clicked.closest( sel );
 				if ( near && widget.contains( near ) ) { return near; }
 			}
-			var found = widget.querySelector( sel );
+			const found = widget.querySelector( sel );
 			if ( found ) { return found; }
 		}
 		return widget.querySelector( '.elementor-widget-container' ) || widget;
@@ -253,6 +253,15 @@
 		} );
 	}
 
+	function addRepeaterItem( id, key, kind ) {
+		return apiPost( 'add-repeater-item', {
+			post_id:    cfg.postId,
+			element_id: id,
+			key:        key,
+			kind:       kind || ''
+		} );
+	}
+
 	function saveIcon( id, key, value, library ) {
 		return apiPost( 'icon', {
 			post_id:    cfg.postId,
@@ -267,10 +276,10 @@
 	/* Icon picker                                                        */
 	/* ----------------------------------------------------------------- */
 
-	var iconPop = null;
-	var iconCache = {};   // library -> array of icon names
+	let iconPop = null;
+	const iconCache = {};   // library -> array of icon names
 
-	var ICON_LIBRARIES = {
+	const ICON_LIBRARIES = {
 		'fa-solid':   { displayPrefix: 'fas', url: cfg.elementorUrl + 'lib/font-awesome/js/solid.js' },
 		'fa-regular': { displayPrefix: 'far', url: cfg.elementorUrl + 'lib/font-awesome/js/regular.js' },
 		'fa-brands':  { displayPrefix: 'fab', url: cfg.elementorUrl + 'lib/font-awesome/js/brands.js' }
@@ -278,10 +287,10 @@
 
 	function loadIconLibrary( library ) {
 		if ( iconCache[ library ] ) { return Promise.resolve( iconCache[ library ] ); }
-		var conf = ICON_LIBRARIES[ library ];
+		const conf = ICON_LIBRARIES[ library ];
 		if ( ! conf ) { return Promise.resolve( [] ); }
 		return fetch( conf.url ).then( function ( r ) { return r.json(); } ).then( function ( data ) {
-			var icons = ( data && data.icons ) ? data.icons : [];
+			const icons = ( data && data.icons ) ? data.icons : [];
 			iconCache[ library ] = icons;
 			return icons;
 		} ).catch( function () { return []; } );
@@ -297,25 +306,25 @@
 		iconPop = el( 'div', 'ri2-iconpop ri2-ui' );
 
 		// Library tabs.
-		var tabs = el( 'div', 'ri2-iconpop__tabs' );
-		var activeLib = currentLibrary || 'fa-solid';
-		var grid = el( 'div', 'ri2-iconpop__grid' );
-		var search = el( 'input', 'ri2-iconpop__search' );
+		const tabs = el( 'div', 'ri2-iconpop__tabs' );
+		let activeLib = currentLibrary || 'fa-solid';
+		const grid = el( 'div', 'ri2-iconpop__grid' );
+		const search = el( 'input', 'ri2-iconpop__search' );
 		search.type = 'text';
 		search.placeholder = i18n.searchIcons || 'Search icons…';
 
 		function renderGrid( library, filter ) {
 			grid.innerHTML = '';
-			var conf = ICON_LIBRARIES[ library ] || ICON_LIBRARIES['fa-solid'];
+			const conf = ICON_LIBRARIES[ library ] || ICON_LIBRARIES['fa-solid'];
 			loadIconLibrary( library ).then( function ( icons ) {
-				var filtered = filter ? icons.filter( function ( name ) { return name.indexOf( filter ) !== -1; } ) : icons;
+				const filtered = filter ? icons.filter( function ( name ) { return name.indexOf( filter ) !== -1; } ) : icons;
 				filtered.slice( 0, 200 ).forEach( function ( name ) {
-					var btn = el( 'button', 'ri2-iconpop__icon' );
+					const btn = el( 'button', 'ri2-iconpop__icon' );
 					btn.type = 'button';
 					btn.innerHTML = '<i class="' + conf.displayPrefix + ' fa-' + name + '"></i>';
 					btn.title = name;
 					btn.addEventListener( 'click', function () {
-						var value = conf.displayPrefix + ' fa-' + name;
+						const value = conf.displayPrefix + ' fa-' + name;
 						closeIconPop();
 						onPick( value, library );
 					} );
@@ -328,14 +337,14 @@
 		}
 
 		Object.keys( ICON_LIBRARIES ).forEach( function ( lib ) {
-			var tab = el( 'button', 'ri2-iconpop__tab' );
+			const tab = el( 'button', 'ri2-iconpop__tab' );
 			tab.type = 'button';
 			tab.textContent = lib.replace( 'fa-', '' ).charAt( 0 ).toUpperCase() + lib.slice( 3 );
 			if ( lib === activeLib ) { tab.classList.add( 'is-active' ); }
 			tab.addEventListener( 'click', function () {
 				activeLib = lib;
-				var siblings = tabs.querySelectorAll( '.ri2-iconpop__tab' );
-				for ( var i = 0; i < siblings.length; i++ ) { siblings[ i ].classList.remove( 'is-active' ); }
+				const siblings = tabs.querySelectorAll( '.ri2-iconpop__tab' );
+				for ( let i = 0; i < siblings.length; i++ ) { siblings[ i ].classList.remove( 'is-active' ); }
 				tab.classList.add( 'is-active' );
 				renderGrid( lib, search.value.trim().toLowerCase() );
 			} );
@@ -346,7 +355,7 @@
 			renderGrid( activeLib, search.value.trim().toLowerCase() );
 		} );
 
-		var closeBtn = el( 'button', 'ri2-iconpop__close' );
+		const closeBtn = el( 'button', 'ri2-iconpop__close' );
 		closeBtn.type = 'button';
 		closeBtn.innerHTML = '&times;';
 		closeBtn.addEventListener( 'click', closeIconPop );
@@ -361,25 +370,25 @@
 	}
 
 	function replaceIcon( widget, opts ) {
-		var id = widgetId( widget );
+		const id = widgetId( widget );
 		getFields( id ).then( function ( res ) {
-			var iconField, currentLib, saveFn;
+			let iconField, currentLib, saveFn;
 
 			if ( opts && opts.itemIndex != null && opts.key ) {
 				// Repeater item (icon-list or social-icons).
-				var repKind = opts.kind || 'icon-list';
-				var listField = ( res.fields || [] ).filter( function ( f ) { return f.key === opts.key && repKind === f.kind; } )[ 0 ];
+				const repKind = opts.kind || 'icon-list';
+				const listField = ( res.fields || [] ).filter( function ( f ) { return f.key === opts.key && repKind === f.kind; } )[ 0 ];
 				if ( ! listField || ! listField.items ) {
 					toast( i18n.nothingEditable || 'Nothing editable here', 'error' );
 					return;
 				}
-				var item = listField.items[ opts.itemIndex ];
+				const item = listField.items[ opts.itemIndex ];
 				if ( ! item ) {
 					toast( i18n.nothingEditable || 'Nothing editable here', 'error' );
 					return;
 				}
 				currentLib = item.icon ? item.icon.library : '';
-				var iconSubField = 'social-icons' === repKind ? 'social_icon' : 'selected_icon';
+				const iconSubField = 'social-icons' === repKind ? 'social_icon' : 'selected_icon';
 				saveFn = function ( value, library ) {
 					return saveRepeaterItem( id, opts.key, opts.itemIndex, iconSubField, { value: value, library: library } );
 				};
@@ -414,24 +423,24 @@
 	}
 
 	function refreshWidget( widget ) {
-		var id = widgetId( widget );
+		const id = widgetId( widget );
 		delete fieldsCache[ id ];
 		return apiGet( 'render?post_id=' + cfg.postId + '&element_id=' + encodeURIComponent( id ) )
 			.then( function ( r ) {
 				if ( ! r || ! r.html ) { return; }
-				var tmp = document.createElement( 'div' );
+				const tmp = document.createElement( 'div' );
 				tmp.innerHTML = r.html.trim();
-				var rendered = tmp.firstElementChild;
+				const rendered = tmp.firstElementChild;
 				if ( ! rendered ) { return; }
 				// Ensure the rendered element has data-id so we can find it later.
 				if ( ! rendered.getAttribute( 'data-id' ) ) {
 					rendered.setAttribute( 'data-id', id );
 				}
 				if ( ! rendered.getAttribute( 'data-widget_type' ) ) {
-					var wt = rendered.getAttribute( 'data-e-type' ) || '';
+					const wt = rendered.getAttribute( 'data-e-type' ) || '';
 					if ( wt ) { rendered.setAttribute( 'data-widget_type', wt ); }
 				}
-				var parent = widget.parentNode;
+				const parent = widget.parentNode;
 				if ( ! parent ) { return; }
 				parent.replaceChild( rendered, widget );
 				if ( window.elementorFrontend && window.elementorFrontend.elementsHandler ) {
@@ -447,13 +456,13 @@
 	/* Toast                                                              */
 	/* ----------------------------------------------------------------- */
 
-	var bar, toastEl, toastTimer;
+	let bar, toastEl, toastTimer;
 
 	function buildChrome() {
 		bar = el( 'div', 'ri2-bar' );
-		var label = el( 'span', 'ri2-bar__label', '<span class="dashicons dashicons-edit-page"></span> ' + ( i18n.editing || 'Editing' ) );
+		const label = el( 'span', 'ri2-bar__label', '<span class="dashicons dashicons-edit-page"></span> ' + ( i18n.editing || 'Editing' ) );
 		toastEl = el( 'span', 'ri2-bar__toast' );
-		var exit = el( 'button', 'ri2-bar__exit' );
+		const exit = el( 'button', 'ri2-bar__exit' );
 		exit.type = 'button';
 		exit.textContent = i18n.exit || 'Exit';
 		exit.addEventListener( 'click', function () { deactivate(); } );
@@ -497,7 +506,7 @@
 	function toggle() { active ? deactivate() : activate(); }
 
 	document.addEventListener( 'click', function ( e ) {
-		var t = e.target.closest && e.target.closest( '#wp-admin-bar-roman-inline-2-toggle' );
+		const t = e.target.closest && e.target.closest( '#wp-admin-bar-roman-inline-2-toggle' );
 		if ( t ) { e.preventDefault(); toggle(); }
 	} );
 
@@ -515,16 +524,16 @@
 			return;
 		}
 
-		var widget = widgetOf( e.target );
+		const widget = widgetOf( e.target );
 		if ( ! widget ) {
 			return;
 		}
 
-		var anchor = e.target.closest( 'a' );
+		const anchor = e.target.closest( 'a' );
 		if ( anchor && widget.contains( anchor ) ) { e.preventDefault(); }
 
-		var type = widgetType( widget );
-		var handler = H[ type ];
+		const type = widgetType( widget );
+		const handler = H[ type ];
 		if ( handler && handler.onClick ) {
 			handler.onClick( e, widget, createContext( widget ) );
 		} else {
@@ -532,21 +541,21 @@
 		}
 	}, true );
 
-	var hoveredWidget = null;
+	let hoveredWidget = null;
 
 	document.addEventListener( 'mouseover', function ( e ) {
 		if ( ! active ) { return; }
-		var widget = widgetOf( e.target );
+		const widget = widgetOf( e.target );
 		if ( ! widget ) { return; }
-		var type = widgetType( widget );
-		var handler = H[ type ];
+		const type = widgetType( widget );
+		const handler = H[ type ];
 		if ( ! handler ) { return; }
 
 		if ( hoveredWidget !== widget ) {
 			clearTimeout( hoverLeaveTimer );
 			if ( hoveredWidget ) {
-				var prevType = widgetType( hoveredWidget );
-				var prevHandler = H[ prevType ];
+				const prevType = widgetType( hoveredWidget );
+				const prevHandler = H[ prevType ];
 				if ( prevHandler && prevHandler.onLeave ) {
 					prevHandler.onLeave( e, hoveredWidget, createContext( hoveredWidget ) );
 				}
@@ -558,7 +567,7 @@
 		}
 	} );
 
-	var hoverLeaveTimer = null;
+	let hoverLeaveTimer = null;
 
 	document.addEventListener( 'mouseout', function ( e ) {
 		if ( ! active || ! hoveredWidget ) { return; }
@@ -568,8 +577,8 @@
 		clearTimeout( hoverLeaveTimer );
 		hoverLeaveTimer = setTimeout( function () {
 			if ( ! hoveredWidget ) { return; }
-			var type = widgetType( hoveredWidget );
-			var handler = H[ type ];
+			const type = widgetType( hoveredWidget );
+			const handler = H[ type ];
 			if ( handler && handler.onLeave ) {
 				handler.onLeave( e, hoveredWidget, createContext( hoveredWidget ) );
 			}
@@ -608,7 +617,7 @@
 
 	function commitSession() {
 		if ( ! session ) { return; }
-		var s = session;
+		const s = session;
 		session = null;
 
 		if ( 'text' === s.type ) {
@@ -616,13 +625,13 @@
 			s.node.classList.remove( 'ri2-editing' );
 			hideToolbar();
 
-			var raw = s.node.innerHTML;
+			const raw = s.node.innerHTML;
 			if ( raw === s.original ) { return; }
 
-			var value = ( 'rich_text' === s.kind ) ? raw : raw.trim();
+			const value = ( 'rich_text' === s.kind ) ? raw : raw.trim();
 			toast( i18n.saving || 'Saving…', 'saving' );
 
-			var savePromise;
+			let savePromise;
 			if ( s.attachmentMeta ) {
 				savePromise = saveAttachmentMeta( s.attachmentMeta.attachmentId, s.attachmentMeta.field, value );
 			} else if ( s.itemIndex != null && s.subField ) {
@@ -645,7 +654,7 @@
 
 	function cancelSession() {
 		if ( ! session ) { return; }
-		var s = session;
+		const s = session;
 		session = null;
 
 		if ( 'text' === s.type ) {
@@ -658,10 +667,10 @@
 
 	function placeCaretEnd( node ) {
 		try {
-			var range = document.createRange();
+			const range = document.createRange();
 			range.selectNodeContents( node );
 			range.collapse( false );
-			var sel = window.getSelection();
+			const sel = window.getSelection();
 			sel.removeAllRanges();
 			sel.addRange( range );
 		} catch ( e ) {}
@@ -688,10 +697,10 @@
 	/* Toolbar                                                            */
 	/* ----------------------------------------------------------------- */
 
-	var toolbar;
+	let toolbar;
 
 	function tbButton( label, icon, handler ) {
-		var b = el( 'button', 'ri2-toolbar__btn' );
+		const b = el( 'button', 'ri2-toolbar__btn' );
 		b.type = 'button';
 		b.title = label;
 		b.innerHTML = '<span class="dashicons dashicons-' + icon + '"></span>';
@@ -708,7 +717,7 @@
 		if ( showLink ) {
 			toolbar.appendChild( tbButton( i18n.link || 'Link', 'admin-links', onToolbarLink ) );
 		}
-		var done = el( 'button', 'ri2-toolbar__done' );
+		const done = el( 'button', 'ri2-toolbar__done' );
 		done.type = 'button';
 		done.textContent = i18n.done || 'Done';
 		done.addEventListener( 'mousedown', function ( e ) { e.preventDefault(); } );
@@ -726,8 +735,8 @@
 
 	function positionToolbar() {
 		if ( ! toolbar || ! session ) { return; }
-		var r = session.node.getBoundingClientRect();
-		var top = r.top - toolbar.offsetHeight - 8;
+		const r = session.node.getBoundingClientRect();
+		let top = r.top - toolbar.offsetHeight - 8;
 		if ( top < 4 ) { top = r.bottom + 8; }
 		toolbar.style.top = Math.max( 4, top ) + 'px';
 		toolbar.style.left = Math.max( 4, r.left ) + 'px';
@@ -744,18 +753,18 @@
 	/* Link editing                                                       */
 	/* ----------------------------------------------------------------- */
 
-	var linkPop;
+	let linkPop;
 
 	function onToolbarLink() {
-		var sel = window.getSelection();
-		var hasSelection = sel && ! sel.isCollapsed && session && session.node.contains( sel.anchorNode );
+		const sel = window.getSelection();
+		const hasSelection = sel && ! sel.isCollapsed && session && session.node.contains( sel.anchorNode );
 
 		if ( hasSelection ) {
 			openLinkPop( '', false, function ( url, blank ) {
 				if ( url ) {
 					exec( 'createLink', url );
 					if ( blank ) {
-						var a = session.node.querySelector( 'a[href="' + url.replace( /"/g, '\\"' ) + '"]' );
+						const a = session.node.querySelector( 'a[href="' + url.replace( /"/g, '\\"' ) + '"]' );
 						if ( a ) { a.target = '_blank'; a.rel = 'noopener'; }
 					}
 				} else {
@@ -766,7 +775,7 @@
 		}
 
 		if ( ! session.fieldMap ) { return; }
-		var linkField = ( session.fieldMap.fields || [] ).filter( function ( f ) { return 'link' === f.kind; } )[ 0 ];
+		const linkField = ( session.fieldMap.fields || [] ).filter( function ( f ) { return 'link' === f.kind; } )[ 0 ];
 		if ( ! linkField ) {
 			openLinkPop( '', false, function ( url ) { if ( url ) { exec( 'createLink', url ); } } );
 			return;
@@ -788,17 +797,17 @@
 	function openLinkPop( url, blank, onApply, anchorRect ) {
 		closeLinkPop();
 		linkPop = el( 'div', 'ri2-linkpop ri2-ui' );
-		var input = el( 'input', 'ri2-linkpop__url' );
+		const input = el( 'input', 'ri2-linkpop__url' );
 		input.type = 'url';
 		input.placeholder = 'https://…';
 		input.value = url || '';
-		var lbl = el( 'label', 'ri2-linkpop__check' );
-		var cb = el( 'input' );
+		const lbl = el( 'label', 'ri2-linkpop__check' );
+		const cb = el( 'input' );
 		cb.type = 'checkbox';
 		cb.checked = !! blank;
 		lbl.appendChild( cb );
 		lbl.appendChild( document.createTextNode( ' ' + ( i18n.newTab || 'New tab' ) ) );
-		var apply = el( 'button', 'ri2-linkpop__apply' );
+		const apply = el( 'button', 'ri2-linkpop__apply' );
 		apply.type = 'button';
 		apply.textContent = i18n.done || 'Apply';
 		apply.addEventListener( 'mousedown', function ( e ) { e.preventDefault(); } );
@@ -811,10 +820,10 @@
 		linkPop.appendChild( apply );
 		document.body.appendChild( linkPop );
 		if ( anchorRect ) {
-			var lpW = linkPop.offsetWidth;
-			var lpH = linkPop.offsetHeight;
-			var top = anchorRect.bottom + 4;
-			var left = anchorRect.left + ( anchorRect.width - lpW ) / 2;
+			const lpW = linkPop.offsetWidth;
+			const lpH = linkPop.offsetHeight;
+			let top = anchorRect.bottom + 4;
+			let left = anchorRect.left + ( anchorRect.width - lpW ) / 2;
 			if ( top + lpH > window.innerHeight - 4 ) { top = anchorRect.top - lpH - 4; }
 			if ( top < 4 ) { top = 4; }
 			if ( left < 4 ) { left = 4; }
@@ -822,7 +831,7 @@
 			linkPop.style.top = top + 'px';
 			linkPop.style.left = left + 'px';
 		} else if ( toolbar ) {
-			var r = toolbar.getBoundingClientRect();
+			const r = toolbar.getBoundingClientRect();
 			linkPop.style.top = ( r.bottom + 6 ) + 'px';
 			linkPop.style.left = r.left + 'px';
 		} else {
@@ -844,7 +853,7 @@
 	/* ----------------------------------------------------------------- */
 
 	function openMedia( opts ) {
-		var frame = wp.media( {
+		const frame = wp.media( {
 			title:   opts.title || ( i18n.chooseImg || 'Choose image' ),
 			button:  { text: opts.buttonText || ( i18n.replaceImg || 'Replace image' ) },
 			library: { type: 'image' },
@@ -852,7 +861,7 @@
 		} );
 
 		frame.on( 'select', function () {
-			var attachment = frame.state().get( 'selection' ).first().toJSON();
+			const attachment = frame.state().get( 'selection' ).first().toJSON();
 			if ( opts.onSelect ) { opts.onSelect( attachment ); }
 		} );
 
@@ -860,7 +869,7 @@
 	}
 
 	function openGalleryMedia( opts ) {
-		var frame = wp.media( {
+		const frame = wp.media( {
 			title:   opts.title || 'Add images to gallery',
 			button:  { text: opts.buttonText || 'Add images' },
 			library: { type: 'image' },
@@ -868,8 +877,8 @@
 		} );
 
 		frame.on( 'select', function () {
-			var selection = frame.state().get( 'selection' );
-			var attachments = [];
+			const selection = frame.state().get( 'selection' );
+			const attachments = [];
 			selection.map( function ( model ) {
 				attachments.push( model.toJSON() );
 			} );
@@ -886,7 +895,7 @@
 	/* ----------------------------------------------------------------- */
 
 	function openVideoMedia( opts ) {
-		var frame = wp.media( {
+		const frame = wp.media( {
 			title:   opts.title || ( i18n.chooseVideo || 'Choose video' ),
 			button:  { text: opts.buttonText || ( i18n.chooseVideo || 'Choose video' ) },
 			library: { type: 'video' },
@@ -894,7 +903,7 @@
 		} );
 
 		frame.on( 'select', function () {
-			var attachment = frame.state().get( 'selection' ).first().toJSON();
+			const attachment = frame.state().get( 'selection' ).first().toJSON();
 			if ( opts.onSelect ) { opts.onSelect( attachment ); }
 		} );
 
@@ -905,26 +914,26 @@
 	/* Video URL popover                                                  */
 	/* ----------------------------------------------------------------- */
 
-	var vidPop;
+	let vidPop;
 
 	function openVideoPopover( field, onSave ) {
 		closeVideoPopover();
 		vidPop = el( 'div', 'ri2-vidpop ri2-ui' );
-		var inner = el( 'div', 'ri2-vidpop__inner' );
+		const inner = el( 'div', 'ri2-vidpop__inner' );
 		inner.appendChild( el( 'div', 'ri2-vidpop__title', field.label || 'Video URL' ) );
-		var row = el( 'div', 'ri2-vidpop__row' );
-		var input = el( 'input', 'ri2-vidpop__input' );
+		const row = el( 'div', 'ri2-vidpop__row' );
+		const input = el( 'input', 'ri2-vidpop__input' );
 		input.type = 'url';
 		input.value = field.value || '';
 		input.placeholder = 'https://';
 		row.appendChild( input );
 		inner.appendChild( row );
 
-		var actions = el( 'div', 'ri2-vidpop__actions' );
-		var save = el( 'button', 'ri2-vidpop__save' );
+		const actions = el( 'div', 'ri2-vidpop__actions' );
+		const save = el( 'button', 'ri2-vidpop__save' );
 		save.type = 'button';
 		save.textContent = i18n.done || 'Save';
-		var cancel = el( 'button', 'ri2-vidpop__cancel' );
+		const cancel = el( 'button', 'ri2-vidpop__cancel' );
 		cancel.type = 'button';
 		cancel.textContent = i18n.cancel || 'Cancel';
 		cancel.addEventListener( 'click', closeVideoPopover );
@@ -950,7 +959,7 @@
 	/* Floating button (for image hover, etc.)                            */
 	/* ----------------------------------------------------------------- */
 
-	var floatBtn;
+	let floatBtn;
 
 	function showButton( rect, text, icon, onClick ) {
 		if ( ! floatBtn ) {
@@ -974,11 +983,11 @@
 	/* ----------------------------------------------------------------- */
 
 	function editText( widget, node, opts ) {
-		var id = widgetId( widget );
+		const id = widgetId( widget );
 		getFields( id ).then( function ( res ) {
-			var kind = opts.kind;
+			let kind = opts.kind;
 			if ( ! kind ) {
-				var matched = ( res.fields || [] ).filter( function ( f ) { return f.key === opts.key; } )[ 0 ];
+				const matched = ( res.fields || [] ).filter( function ( f ) { return f.key === opts.key; } )[ 0 ];
 				kind = matched ? matched.kind : 'rich_text';
 			}
 			startTextEdit( widget, node, {
@@ -1004,14 +1013,14 @@
 	}
 
 	function editLink( widget, node, opts ) {
-		var id = widgetId( widget );
+		const id = widgetId( widget );
 		getFields( id ).then( function ( res ) {
-			var linkField, linkValue, linkBlank;
+			let linkField, linkValue, linkBlank;
 			if ( opts.itemIndex != null && opts.key ) {
-				var repField = ( res.fields || [] ).filter( function ( f ) { return f.key === opts.key && ( 'repeater' === f.kind || 'icon-list' === f.kind || 'social-icons' === f.kind ); } )[ 0 ];
+				const repField = ( res.fields || [] ).filter( function ( f ) { return f.key === opts.key && ( 'repeater' === f.kind || 'icon-list' === f.kind || 'social-icons' === f.kind ); } )[ 0 ];
 				if ( ! repField ) { return; }
-				var repItems = repField.items || [];
-				var repItem = repItems[ opts.itemIndex ];
+				const repItems = repField.items || [];
+				const repItem = repItems[ opts.itemIndex ];
 				if ( ! repItem ) { return; }
 				linkValue = ( repItem.link && repItem.link.url ) || '';
 				linkBlank = !! ( repItem.link && repItem.link.is_external );
@@ -1022,11 +1031,11 @@
 				linkValue = linkField.value || '';
 				linkBlank = !! linkField.target_blank;
 			}
-			var anchorRect = node && node.getBoundingClientRect ? node.getBoundingClientRect() : null;
+			const anchorRect = node && node.getBoundingClientRect ? node.getBoundingClientRect() : null;
 		openLinkPop( opts.url || linkValue, !! ( opts.targetBlank != null ? opts.targetBlank : linkBlank ), function ( url, blank ) {
 				toast( i18n.saving || 'Saving…', 'saving' );
-				var savePromise;
-				if ( opts.itemIndex != null && opts.subField ) {
+					let savePromise;
+					if ( opts.itemIndex != null && opts.subField ) {
 					savePromise = saveRepeaterItem( id, opts.key, opts.itemIndex, opts.subField, { url: url, is_external: blank, nofollow: false } );
 				} else {
 					savePromise = saveLink( id, linkField.key, url, blank );
@@ -1036,7 +1045,7 @@
 						linkField.value = url;
 						linkField.target_blank = blank;
 						toast( i18n.saved || 'Saved', 'ok' );
-						var a = node.querySelector( 'a' ) || ( node.tagName === 'A' ? node : null );
+						const a = node.querySelector( 'a' ) || ( node.tagName === 'A' ? node : null );
 						if ( a ) {
 							if ( url ) { a.setAttribute( 'href', url ); }
 							if ( blank ) { a.target = '_blank'; a.rel = 'noopener'; }
@@ -1050,7 +1059,7 @@
 	}
 
 	function replaceImage( widget, imgNode, opts ) {
-		var id = widgetId( widget );
+		const id = widgetId( widget );
 		openMedia( {
 			onSelect: function ( attachment ) {
 				toast( i18n.saving || 'Saving…', 'saving' );
@@ -1070,8 +1079,8 @@
 	}
 
 	function replaceVideo( widget, opts ) {
-		var id = widgetId( widget );
-		var sourceType = opts.source_type || 'media';
+		const id = widgetId( widget );
+		const sourceType = opts.source_type || 'media';
 
 		if ( 'media' === sourceType ) {
 			openVideoMedia( {
@@ -1109,7 +1118,7 @@
 	}
 
 	function replacePoster( widget, opts ) {
-		var id = widgetId( widget );
+		const id = widgetId( widget );
 		openMedia( {
 			onSelect: function ( attachment ) {
 				toast( i18n.saving || 'Saving…', 'saving' );
@@ -1129,12 +1138,12 @@
 	}
 
 	function replaceBackground( widget, opts ) {
-		var id = widgetId( widget );
+		const id = widgetId( widget );
 		openMedia( {
 			onSelect: function ( attachment ) {
 				toast( i18n.saving || 'Saving…', 'saving' );
 				// Snapshot for rollback.
-				var prevBg = widget.style.backgroundImage;
+				const prevBg = widget.style.backgroundImage;
 				saveBackground( id, attachment.id, opts.style_id, opts.variant_index, opts.overlay_index )
 					.then( function ( res ) {
 						delete fieldsCache[ id ];
@@ -1158,9 +1167,9 @@
 	/* ----------------------------------------------------------------- */
 
 	function createContext( widget ) {
-		var id    = widgetId( widget );
-		var type  = widgetType( widget );
-		var atomic = isAtomic( widget );
+		const id    = widgetId( widget );
+		const type  = widgetType( widget );
+		const atomic = isAtomic( widget );
 
 		return {
 			getFields:     function () { return getFields( id ); },
@@ -1183,6 +1192,7 @@
 			saveAttachmentMeta: saveAttachmentMeta,
 			saveRepeaterItem: function ( key, index, subField, value ) { return saveRepeaterItem( id, key, index, subField, value ); },
 			deleteRepeaterItem: function ( key, index ) { return deleteRepeaterItem( id, key, index ); },
+			addRepeaterItem:  function ( key, kind ) { return addRepeaterItem( id, key, kind ); },
 			refreshWidget: function () { return refreshWidget( widget ); },
 			toast:         toast,
 			showButton:    showButton,

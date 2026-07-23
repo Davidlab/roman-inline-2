@@ -12,10 +12,10 @@
 
 	if ( ! RI ) { return; }
 
-	var btn = null;
-	var btnWidget = null;
-	var leaveTimer = null;
-	var TYPE = 'e-youtube';
+	let btn = null;
+	let btnWidget = null;
+	let leaveTimer = null;
+	const TYPE = 'e-youtube';
 
 	function findVideoField( res ) {
 		return ( res.fields || [] ).filter( function ( f ) {
@@ -25,7 +25,7 @@
 
 	function doEdit( widget, ctx ) {
 		ctx.getFields().then( function ( res ) {
-			var field = findVideoField( res );
+			const field = findVideoField( res );
 			if ( ! field ) {
 				ctx.toast( ctx.i18n.nothingEditable || 'Nothing editable here', 'error' );
 				return;
@@ -55,7 +55,7 @@
 			e.stopPropagation();
 			clearTimeout( leaveTimer );
 			if ( btnWidget ) {
-				var widget = btnWidget;
+				const widget = btnWidget;
 				hideBtn();
 				doEdit( widget, RI.ctx( widget ) );
 			}
@@ -74,7 +74,7 @@
 		ensureBtn();
 		clearTimeout( leaveTimer );
 		btnWidget = widget;
-		var r = widget.getBoundingClientRect();
+		const r = widget.getBoundingClientRect();
 		if ( r.width < 24 || r.height < 24 ) { hideBtn(); return; }
 		btn.style.top = ( r.top + 8 ) + 'px';
 		btn.style.left = ( r.left + 8 ) + 'px';
@@ -93,7 +93,7 @@
 	/* --- YouTube widget hover (direct mouseover/mouseout, like image.js) --- */
 	document.addEventListener( 'mouseover', function ( e ) {
 		if ( ! RI.isActive() ) { return; }
-		var widget = widgetOf( e.target );
+		const widget = widgetOf( e.target );
 		if ( ! widget ) { return; }
 		RI.ctx( widget ).getFields().then( function ( res ) {
 			if ( findVideoField( res ) && widgetOf( e.target ) === widget ) {
@@ -115,7 +115,7 @@
 	window.addEventListener( 'scroll', function () { reallyHideBtn(); }, true );
 	window.addEventListener( 'resize', function () { reallyHideBtn(); } );
 
-	var handler = {
+	const handler = {
 		onClick: function ( event, widget, ctx ) {
 			reallyHideBtn();
 			doEdit( widget, ctx );

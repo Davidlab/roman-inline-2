@@ -14,10 +14,10 @@
 
 	if ( ! RI ) { return; }
 
-	var btn = null;
-	var btnWidget = null;
-	var leaveTimer = null;
-	var pop = null;
+	let btn = null;
+	let btnWidget = null;
+	let leaveTimer = null;
+	let pop = null;
 
 	function findAddressField( res ) {
 		return ( res.fields || [] ).filter( function ( f ) {
@@ -34,17 +34,17 @@
 		closePop();
 		pop = document.createElement( 'div' );
 		pop.className = 'ri2-vidpop ri2-ui';
-		var inner = document.createElement( 'div' );
+		const inner = document.createElement( 'div' );
 		inner.className = 'ri2-vidpop__inner';
 
-		var title = document.createElement( 'div' );
+		const title = document.createElement( 'div' );
 		title.className = 'ri2-vidpop__title';
 		title.textContent = field.label || 'Address';
 		inner.appendChild( title );
 
-		var row = document.createElement( 'div' );
+		const row = document.createElement( 'div' );
 		row.className = 'ri2-vidpop__row';
-		var input = document.createElement( 'input' );
+		const input = document.createElement( 'input' );
 		input.className = 'ri2-vidpop__input';
 		input.type = 'text';
 		input.value = field.value || '';
@@ -52,22 +52,22 @@
 		row.appendChild( input );
 		inner.appendChild( row );
 
-		var actions = document.createElement( 'div' );
+		const actions = document.createElement( 'div' );
 		actions.className = 'ri2-vidpop__actions';
 
-		var cancel = document.createElement( 'button' );
+		const cancel = document.createElement( 'button' );
 		cancel.type = 'button';
 		cancel.className = 'ri2-vidpop__cancel';
 		cancel.textContent = ctx.i18n.cancel || 'Cancel';
 		cancel.addEventListener( 'click', closePop );
 
-		var save = document.createElement( 'button' );
+		const save = document.createElement( 'button' );
 		save.type = 'button';
 		save.className = 'ri2-vidpop__save';
 		save.textContent = ctx.i18n.done || 'Save';
 		save.addEventListener( 'mousedown', function ( e ) { e.preventDefault(); } );
 		save.addEventListener( 'click', function () {
-			var val = input.value.trim();
+			const val = input.value.trim();
 			closePop();
 			ctx.toast( ctx.i18n.saving || 'Saving…', 'saving' );
 			ctx.saveText( field.key, val, field.kind )
@@ -105,7 +105,7 @@
 
 	function doEdit( widget, ctx ) {
 		ctx.getFields().then( function ( res ) {
-			var field = findAddressField( res );
+			const field = findAddressField( res );
 			if ( ! field ) {
 				ctx.toast( ctx.i18n.nothingEditable || 'Nothing editable here', 'error' );
 				return;
@@ -125,7 +125,7 @@
 			e.stopPropagation();
 			clearTimeout( leaveTimer );
 			if ( btnWidget ) {
-				var widget = btnWidget;
+				const widget = btnWidget;
 				hideBtn();
 				doEdit( widget, RI.ctx( widget ) );
 			}
@@ -138,7 +138,7 @@
 		ensureBtn();
 		clearTimeout( leaveTimer );
 		btnWidget = widget;
-		var r = widget.getBoundingClientRect();
+		const r = widget.getBoundingClientRect();
 		if ( r.width < 24 || r.height < 24 ) { hideBtn(); return; }
 		btn.style.top = ( r.top + 8 ) + 'px';
 		btn.style.left = ( r.left + 8 ) + 'px';
@@ -161,7 +161,7 @@
 	/* --- Hover detection (direct mouseover/mouseout) --- */
 	document.addEventListener( 'mouseover', function ( e ) {
 		if ( ! RI.isActive() ) { return; }
-		var widget = widgetOf( e.target );
+		const widget = widgetOf( e.target );
 		if ( ! widget ) { return; }
 
 		RI.ctx( widget ).getFields().then( function ( res ) {
@@ -193,7 +193,7 @@
 		return el.closest( '.elementor-widget-google_maps[data-id]' );
 	}
 
-	var handler = {
+	const handler = {
 		onClick: function ( event, widget, ctx ) {
 			reallyHideBtn();
 			doEdit( widget, ctx );

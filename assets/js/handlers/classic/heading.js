@@ -10,10 +10,10 @@
 
 	if ( ! RI ) { return; }
 
-	var handler = {
+	const handler = {
 		onClick: function ( event, widget, ctx ) {
 			ctx.getFields().then( function ( res ) {
-				var texts = ( res.fields || [] ).filter( function ( f ) {
+				const texts = ( res.fields || [] ).filter( function ( f ) {
 					return 'text' === f.kind || 'rich_text' === f.kind;
 				} );
 
@@ -23,8 +23,8 @@
 				}
 
 				if ( 1 === texts.length ) {
-					var field = texts[ 0 ];
-					var node = ctx.locateNode( widget, field, event.target );
+					const field = texts[ 0 ];
+					let node = ctx.locateNode( widget, field, event.target );
 					node = ctx.preferTextNode( node );
 
 					ctx.editText( node, {
@@ -34,10 +34,10 @@
 					} );
 				} else {
 					// Multiple text fields — try to match the clicked node.
-					var picked = null;
-					for ( var i = 0; i < texts.length; i++ ) {
+					let picked = null;
+					for ( let i = 0; i < texts.length; i++ ) {
 						if ( texts[ i ].match ) {
-							var n = ctx.locateNode( widget, texts[ i ], event.target );
+							const n = ctx.locateNode( widget, texts[ i ], event.target );
 							if ( n && n.contains( event.target ) ) {
 								picked = { field: texts[ i ], node: n };
 								break;
@@ -53,8 +53,8 @@
 						} );
 					} else {
 						// Fallback: edit the first text field.
-						var f = texts[ 0 ];
-						var n2 = ctx.locateNode( widget, f, event.target );
+						const f = texts[ 0 ];
+						const n2 = ctx.locateNode( widget, f, event.target );
 						ctx.editText( ctx.preferTextNode( n2 ), {
 							key:      f.key,
 							kind:     f.kind,

@@ -11,17 +11,17 @@
 
 	if ( ! RI ) { return; }
 
-	var handler = {
+	const handler = {
 		onClick: function ( event, widget, ctx ) {
 			// Prevent the button link from navigating while editing.
-			var anchor = event.target.closest && event.target.closest( 'a.elementor-button' );
+			const anchor = event.target.closest && event.target.closest( 'a.elementor-button' );
 			if ( anchor && widget.contains( anchor ) ) {
 				event.preventDefault();
 				event.stopPropagation();
 			}
 
 			ctx.getFields().then( function ( res ) {
-				var texts = ( res.fields || [] ).filter( function ( f ) {
+				const texts = ( res.fields || [] ).filter( function ( f ) {
 					return 'text' === f.kind || 'rich_text' === f.kind;
 				} );
 
@@ -30,10 +30,10 @@
 					return;
 				}
 
-				var field = texts[ 0 ];
+				const field = texts[ 0 ];
 
 				// Try to find the .elementor-button-text element.
-				var node = widget.querySelector( '.elementor-button-text' );
+				let node = widget.querySelector( '.elementor-button-text' );
 				if ( ! node ) {
 					node = widget.querySelector( '.elementor-button' ) || widget;
 				}

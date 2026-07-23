@@ -16,11 +16,11 @@
 
 	if ( ! RI ) { return; }
 
-	var SELECTOR = '.elementor-widget-slides[data-id]';
-	var imgBtn = null;
-	var hoveredBg = null;
-	var hoveredWidget = null;
-	var leaveTimer = null;
+	const SELECTOR = '.elementor-widget-slides[data-id]';
+	let imgBtn = null;
+	let hoveredBg = null;
+	let hoveredWidget = null;
+	let leaveTimer = null;
 
 	function widgetOf( el ) {
 		if ( ! el.closest ) { return null; }
@@ -36,15 +36,15 @@
 	}
 
 	function repeaterId( slide ) {
-		var cls = slide.className || '';
-		var m = cls.match( /elementor-repeater-item-([a-f0-9]+)/ );
+		const cls = slide.className || '';
+		const m = cls.match( /elementor-repeater-item-([a-f0-9]+)/ );
 		return m ? m[ 1 ] : null;
 	}
 
 	function getActiveSlide( widget ) {
-		var allSlides = getSlides( widget );
-		var activeEl = null;
-		for ( var i = 0; i < allSlides.length; i++ ) {
+		const allSlides = getSlides( widget );
+		let activeEl = null;
+		for ( let i = 0; i < allSlides.length; i++ ) {
 			if ( allSlides[ i ].classList.contains( 'swiper-slide-active' ) ) {
 				activeEl = allSlides[ i ];
 				break;
@@ -56,21 +56,21 @@
 			}
 			return null;
 		}
-		var repId = repeaterId( activeEl );
-		var realSlides = [];
-		for ( var j = 0; j < allSlides.length; j++ ) {
+		const repId = repeaterId( activeEl );
+		const realSlides = [];
+		for ( let j = 0; j < allSlides.length; j++ ) {
 			if ( ! allSlides[ j ].classList.contains( 'swiper-slide-duplicate' ) ) {
 				realSlides.push( allSlides[ j ] );
 			}
 		}
 		if ( repId ) {
-			for ( var k = 0; k < realSlides.length; k++ ) {
+			for ( let k = 0; k < realSlides.length; k++ ) {
 				if ( repeaterId( realSlides[ k ] ) === repId ) {
 					return { el: activeEl, index: k };
 				}
 			}
 		}
-		for ( var m = 0; m < realSlides.length; m++ ) {
+		for ( let m = 0; m < realSlides.length; m++ ) {
 			if ( realSlides[ m ] === activeEl ) {
 				return { el: activeEl, index: m };
 			}
@@ -80,22 +80,22 @@
 
 	/* --- Swiper helpers --- */
 	function getSwiper( widget ) {
-		var wrapper = widget.querySelector( '.elementor-slides-wrapper' );
+		const wrapper = widget.querySelector( '.elementor-slides-wrapper' );
 		if ( ! wrapper ) { return null; }
 		if ( window.jQuery ) {
-			var s = window.jQuery( wrapper ).data( 'swiper' );
+			const s = window.jQuery( wrapper ).data( 'swiper' );
 			if ( s ) { return s; }
 		}
 		return wrapper.swiper || null;
 	}
 
 	function pauseSwiper( widget ) {
-		var s = getSwiper( widget );
+		const s = getSwiper( widget );
 		if ( s && s.autoplay ) { s.autoplay.stop(); }
 	}
 
 	function resumeSwiper( widget ) {
-		var s = getSwiper( widget );
+		const s = getSwiper( widget );
 		if ( s && s.autoplay ) { s.autoplay.start(); }
 	}
 
@@ -110,21 +110,21 @@
 			e.preventDefault();
 			e.stopPropagation();
 			if ( ! hoveredBg ) { return; }
-			var widget = widgetOf( hoveredBg );
+			const widget = widgetOf( hoveredBg );
 			pauseSwiper( widget );
-			var active = getActiveSlide( widget );
+			const active = getActiveSlide( widget );
 			if ( ! active ) { return; }
-			var slideEl = active.el;
-			var itemIndex = active.index;
-			var repId = repeaterId( slideEl );
-			var ctx = RI.ctx( widget );
+			const slideEl = active.el;
+			const itemIndex = active.index;
+			const repId = repeaterId( slideEl );
+			const ctx = RI.ctx( widget );
 			ctx.getFields().then( function ( res ) {
-				var field = findSlidesField( res );
+				const field = findSlidesField( res );
 				if ( ! field ) { return; }
 				ctx.openMedia( {
 					onSelect: function ( attachment ) {
 						ctx.toast( ctx.i18n.saving || 'Saving…', 'saving' );
-						var newUrl = attachment.url || ( attachment.sizes && attachment.sizes.full && attachment.sizes.full.url ) || '';
+						const newUrl = attachment.url || ( attachment.sizes && attachment.sizes.full && attachment.sizes.full.url ) || '';
 
 						// Optimistic: update all slide bg elements with matching repeater ID
 						function applyBg( el ) {
@@ -134,8 +134,8 @@
 							}
 						}
 						if ( repId ) {
-							var all = widget.querySelectorAll( '.swiper-slide' );
-							for ( var i = 0; i < all.length; i++ ) {
+							const all = widget.querySelectorAll( '.swiper-slide' );
+							for ( let i = 0; i < all.length; i++ ) {
 								if ( repeaterId( all[ i ] ) === repId ) {
 									applyBg( all[ i ].querySelector( '.swiper-slide-bg' ) );
 								}
@@ -162,7 +162,7 @@
 	function showImgBtn( bgEl ) {
 		ensureImgBtn();
 		hoveredBg = bgEl;
-		var r = bgEl.getBoundingClientRect();
+		const r = bgEl.getBoundingClientRect();
 		if ( r.width < 24 || r.height < 24 ) { hideImgBtn(); return; }
 		imgBtn.style.top = ( r.top + 8 ) + 'px';
 		imgBtn.style.left = ( r.left + 8 ) + 'px';
@@ -176,17 +176,17 @@
 
 	/* --- Click handler for inline text/link editing --- */
 	function handleClick( e, widget, ctx ) {
-		var active = getActiveSlide( widget );
+		const active = getActiveSlide( widget );
 		if ( ! active ) { return; }
-		var slideEl = active.el;
+		const slideEl = active.el;
 
-		var heading = slideEl.querySelector( '.elementor-slide-heading' );
+		const heading = slideEl.querySelector( '.elementor-slide-heading' );
 		if ( heading && ( e.target === heading || heading.contains( e.target ) ) ) {
 			e.preventDefault();
 			e.stopPropagation();
 			pauseSwiper( widget );
 			ctx.getFields().then( function ( res ) {
-				var field = findSlidesField( res );
+				const field = findSlidesField( res );
 				if ( ! field ) { return; }
 				ctx.editText( heading, {
 					key:        field.key,
@@ -198,13 +198,13 @@
 			return;
 		}
 
-		var desc = slideEl.querySelector( '.elementor-slide-description' );
+		const desc = slideEl.querySelector( '.elementor-slide-description' );
 		if ( desc && ( e.target === desc || desc.contains( e.target ) ) ) {
 			e.preventDefault();
 			e.stopPropagation();
 			pauseSwiper( widget );
 			ctx.getFields().then( function ( res ) {
-				var field = findSlidesField( res );
+				const field = findSlidesField( res );
 				if ( ! field ) { return; }
 				ctx.editText( desc, {
 					key:        field.key,
@@ -216,13 +216,13 @@
 			return;
 		}
 
-		var btn = slideEl.querySelector( '.elementor-slide-button' );
+		const btn = slideEl.querySelector( '.elementor-slide-button' );
 		if ( btn && ( e.target === btn || btn.contains( e.target ) ) ) {
 			e.preventDefault();
 			e.stopPropagation();
 			pauseSwiper( widget );
 			ctx.getFields().then( function ( res ) {
-				var field = findSlidesField( res );
+				const field = findSlidesField( res );
 				if ( ! field ) { return; }
 				ctx.editLink( btn, {
 					key:        field.key,
@@ -234,7 +234,7 @@
 		}
 
 		// link_click=slide: the entire swiper-slide-inner is an <a>
-		var inner = slideEl.querySelector( '.swiper-slide-inner' );
+		const inner = slideEl.querySelector( '.swiper-slide-inner' );
 		if ( inner && inner.tagName === 'A' && ( e.target === inner || inner.contains( e.target ) ) ) {
 			// Don't intercept heading/description clicks (those are text edits)
 			if ( heading && ( e.target === heading || heading.contains( e.target ) ) ) { return; }
@@ -243,7 +243,7 @@
 			e.stopPropagation();
 			pauseSwiper( widget );
 			ctx.getFields().then( function ( res ) {
-				var field = findSlidesField( res );
+				const field = findSlidesField( res );
 				if ( ! field ) { return; }
 				ctx.editLink( inner, {
 					key:        field.key,
@@ -259,10 +259,10 @@
 	// Core.js also does this, but we add an extra safety net here.
 	document.addEventListener( 'click', function ( e ) {
 		if ( ! RI.isActive() ) { return; }
-		var widget = widgetOf( e.target );
+		const widget = widgetOf( e.target );
 		if ( ! widget ) { return; }
 		// If inside a slide <a> tag, prevent navigation — handleClick will open editLink
-		var anchor = e.target.closest && e.target.closest( 'a' );
+		const anchor = e.target.closest && e.target.closest( 'a' );
 		if ( anchor && widget.contains( anchor ) ) {
 			e.preventDefault();
 		}
@@ -274,7 +274,7 @@
 	// own mouseout timer doesn't interfere.
 	document.addEventListener( 'mouseover', function ( e ) {
 		if ( ! RI.isActive() ) { return; }
-		var widget = widgetOf( e.target );
+		const widget = widgetOf( e.target );
 		if ( ! widget ) { return; }
 
 		// Pause swiper when entering the widget
@@ -284,9 +284,9 @@
 		}
 
 		// Show the Change Image button on the active slide
-		var active = getActiveSlide( widget );
+		const active = getActiveSlide( widget );
 		if ( active ) {
-			var bg = active.el.querySelector( '.swiper-slide-bg' );
+			const bg = active.el.querySelector( '.swiper-slide-bg' );
 			if ( bg ) {
 				clearTimeout( leaveTimer );
 				showImgBtn( bg );
@@ -304,7 +304,7 @@
 		}
 
 		// If still inside the same widget, keep button visible
-		var widget = hoveredWidget;
+		const widget = hoveredWidget;
 		if ( widget && e.relatedTarget && widget.contains( e.relatedTarget ) ) {
 			return;
 		}
@@ -330,9 +330,9 @@
 	document.addEventListener( 'click', function ( e ) {
 		if ( ! RI.isActive() ) { return; }
 		if ( ! e.target.closest ) { return; }
-		var navBtn = e.target.closest( '.elementor-swiper-button' );
+		const navBtn = e.target.closest( '.elementor-swiper-button' );
 		if ( ! navBtn ) { return; }
-		var widget = widgetOf( navBtn );
+		const widget = widgetOf( navBtn );
 		if ( ! widget ) { return; }
 		setTimeout( function () { resumeSwiper( widget ); }, 50 );
 	}, false );
@@ -341,7 +341,7 @@
 	// onHover/onLeave are no-ops — all hover logic is handled by the
 	// document-level mouseover/mouseout listeners above, so core.js's
 	// own 100ms mouseout timer doesn't cause flicker.
-	var handler = {
+	const handler = {
 		onClick: function ( event, widget, ctx ) {
 			handleClick( event, widget, ctx );
 		},

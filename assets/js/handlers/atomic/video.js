@@ -11,11 +11,11 @@
 
 	if ( ! RI ) { return; }
 
-	var vidBtn = null;
-	var posterBtn = null;
-	var btnWidget = null;
-	var leaveTimer = null;
-	var TYPE = 'e-self-hosted-video';
+	let vidBtn = null;
+	let posterBtn = null;
+	let btnWidget = null;
+	let leaveTimer = null;
+	const TYPE = 'e-self-hosted-video';
 
 	function findVideoField( res ) {
 		return ( res.fields || [] ).filter( function ( f ) {
@@ -31,7 +31,7 @@
 
 	function doReplaceVideo( widget, ctx ) {
 		ctx.getFields().then( function ( res ) {
-			var field = findVideoField( res );
+			const field = findVideoField( res );
 			if ( ! field ) {
 				ctx.toast( ctx.i18n.nothingEditable || 'Nothing editable here', 'error' );
 				return;
@@ -46,7 +46,7 @@
 
 	function doReplacePoster( widget, ctx ) {
 		ctx.getFields().then( function ( res ) {
-			var field = findPosterField( res );
+			const field = findPosterField( res );
 			if ( ! field ) {
 				ctx.toast( ctx.i18n.nothingEditable || 'Nothing editable here', 'error' );
 				return;
@@ -63,7 +63,7 @@
 	}
 
 	function makeBtn( text, icon, onClick ) {
-		var b = document.createElement( 'button' );
+		const b = document.createElement( 'button' );
 		b.type = 'button';
 		b.className = 'ri2-vidbtn ri2-ui';
 		b.innerHTML = '<span class="dashicons dashicons-' + icon + '"></span> ' + text;
@@ -72,7 +72,7 @@
 			e.stopPropagation();
 			clearTimeout( leaveTimer );
 			if ( btnWidget ) {
-				var widget = btnWidget;
+				const widget = btnWidget;
 				hideBtns();
 				onClick( widget, RI.ctx( widget ) );
 			}
@@ -101,7 +101,7 @@
 		ensureBtns();
 		clearTimeout( leaveTimer );
 		btnWidget = widget;
-		var r = widget.getBoundingClientRect();
+		const r = widget.getBoundingClientRect();
 		if ( r.width < 24 || r.height < 24 ) { hideBtns(); return; }
 		vidBtn.style.top = ( r.top + 8 ) + 'px';
 		vidBtn.style.left = ( r.left + 8 ) + 'px';
@@ -134,11 +134,11 @@
 	/* --- Video widget hover (direct mouseover/mouseout, like image.js) --- */
 	document.addEventListener( 'mouseover', function ( e ) {
 		if ( ! RI.isActive() ) { return; }
-		var widget = widgetOf( e.target );
+		const widget = widgetOf( e.target );
 		if ( ! widget ) { return; }
 		RI.ctx( widget ).getFields().then( function ( res ) {
 			if ( widgetOf( e.target ) !== widget ) { return; }
-			var hasVideo = findVideoField( res );
+			const hasVideo = findVideoField( res );
 			if ( ! hasVideo ) { return; }
 			showBtns( widget, !! findPosterField( res ) );
 		} );
@@ -160,7 +160,7 @@
 	window.addEventListener( 'scroll', function () { reallyHideBtn(); }, true );
 	window.addEventListener( 'resize', function () { reallyHideBtn(); } );
 
-	var handler = {
+	const handler = {
 		onClick: function ( event, widget, ctx ) {
 			reallyHideBtn();
 			doReplaceVideo( widget, ctx );

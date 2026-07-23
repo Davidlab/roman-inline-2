@@ -51,6 +51,8 @@ class Plugin {
 		$this->register_handler( 'icon-box', 'handlers/classic/icon-box.js' );
 		$this->register_handler( 'icon-list', 'handlers/classic/icon-list.js' );
 		$this->register_handler( 'social-icons', 'handlers/classic/social-icons.js' );
+		$this->register_handler( 'alert', 'handlers/classic/alert.js' );
+		$this->register_handler( 'text-path', 'handlers/classic/text-path.js' );
 		$this->register_handler( 'testimonial', 'handlers/classic/testimonial.js' );
 		$this->register_handler( 'text-editor', 'handlers/classic/text.js' );
 		$this->register_handler( 'video', 'handlers/classic/video.js' );

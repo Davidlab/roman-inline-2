@@ -18,10 +18,10 @@
 
 	if ( ! RI ) { return; }
 
-	var btn = null;
-	var btnWidget = null;
-	var leaveTimer = null;
-	var SELECTOR = '[data-e-type="container"][data-id], [data-e-type="section"][data-id]';
+	let btn = null;
+	let btnWidget = null;
+	let leaveTimer = null;
+	const SELECTOR = '[data-e-type="container"][data-id], [data-e-type="section"][data-id]';
 
 	function findBgField( res ) {
 		return ( res.fields || [] ).filter( function ( f ) {
@@ -31,7 +31,7 @@
 
 	function doReplace( widget, ctx ) {
 		ctx.getFields().then( function ( res ) {
-			var field = findBgField( res );
+			const field = findBgField( res );
 			if ( ! field ) {
 				ctx.toast( ctx.i18n.nothingEditable || 'Nothing editable here', 'error' );
 				return;
@@ -60,7 +60,7 @@
 			e.stopPropagation();
 			clearTimeout( leaveTimer );
 			if ( btnWidget ) {
-				var widget = btnWidget;
+				const widget = btnWidget;
 				hideBtn();
 				doReplace( widget, RI.ctx( widget ) );
 			}
@@ -73,7 +73,7 @@
 		ensureBtn();
 		clearTimeout( leaveTimer );
 		btnWidget = widget;
-		var r = widget.getBoundingClientRect();
+		const r = widget.getBoundingClientRect();
 		if ( r.width < 24 || r.height < 24 ) { hideBtn(); return; }
 		btn.style.top = ( r.top + 6 ) + 'px';
 		btn.style.left = ( r.right - 34 ) + 'px';
@@ -93,7 +93,7 @@
 	document.addEventListener( 'mouseover', function ( e ) {
 		if ( ! RI.isActive() ) { return; }
 
-		var widget = widgetOf( e.target );
+		const widget = widgetOf( e.target );
 		if ( widget ) {
 			RI.ctx( widget ).getFields().then( function ( res ) {
 				if ( ! RI.isActive() || ! widget.matches( ':hover' ) ) { return; }
@@ -106,7 +106,7 @@
 
 		// Also check ancestors — hovering a child widget inside a container
 		// with a background should still show the bg button.
-		var ancestor = e.target.parentElement ? e.target.parentElement.closest( SELECTOR ) : null;
+		let ancestor = e.target.parentElement ? e.target.parentElement.closest( SELECTOR ) : null;
 		while ( ancestor ) {
 			(function ( anc ) {
 				RI.ctx( anc ).getFields().then( function ( res ) {
@@ -138,7 +138,7 @@
 	window.addEventListener( 'resize', function () { reallyHideBtn(); } );
 
 	/* --- Register no-op handlers for classic container and section --- */
-	var handler = {
+	const handler = {
 		onClick: function () {},
 		onHover: function () {},
 		onLeave: function () {}

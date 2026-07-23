@@ -23,12 +23,12 @@
 
 	if ( ! RI ) { return; }
 
-	var addBtn = null;
-	var addBtnWidget = null;
-	var imgBtns = [];
-	var leaveTimer = null;
-	var hoverMode = null;
-	var SELECTOR = '.elementor-widget-gallery[data-id]';
+	let addBtn = null;
+	let addBtnWidget = null;
+	let imgBtns = [];
+	let leaveTimer = null;
+	let hoverMode = null;
+	const SELECTOR = '.elementor-widget-gallery[data-id]';
 
 	function widgetOf( el ) {
 		if ( ! el.closest ) { return null; }
@@ -55,7 +55,7 @@
 			e.stopPropagation();
 			clearTimeout( leaveTimer );
 			if ( addBtnWidget ) {
-				var widget = addBtnWidget;
+				const widget = addBtnWidget;
 				hideAddBtn();
 				doAdd( widget, RI.ctx( widget ) );
 			}
@@ -70,10 +70,10 @@
 		addBtnWidget = widget;
 
 		// Update button label to show which gallery images will be added to.
-		var activeTitle = widget.querySelector( '.elementor-gallery-title.elementor-item-active' );
-		var galleryName = '';
+		const activeTitle = widget.querySelector( '.elementor-gallery-title.elementor-item-active' );
+		let galleryName = '';
 		if ( activeTitle ) {
-			var idx = activeTitle.getAttribute( 'data-gallery-index' );
+			const idx = activeTitle.getAttribute( 'data-gallery-index' );
 			if ( idx && 'all' !== idx ) {
 				galleryName = activeTitle.textContent.trim();
 			}
@@ -84,7 +84,7 @@
 			addBtn.innerHTML = '<span class="dashicons dashicons-plus-alt"></span> Add Image';
 		}
 
-		var r = widget.getBoundingClientRect();
+		const r = widget.getBoundingClientRect();
 		if ( r.width < 24 || r.height < 24 ) { hideAddBtn(); return; }
 		addBtn.classList.add( 'is-visible' );
 		addBtn.style.top = ( r.bottom - 36 ) + 'px';
@@ -98,13 +98,13 @@
 	/* --- Per-image buttons (Replace / Delete) --- */
 	function ensureImgBtns() {
 		if ( imgBtns.length ) { return; }
-		var replace = document.createElement( 'button' );
+		const replace = document.createElement( 'button' );
 		replace.type = 'button';
 		replace.className = 'ri2-gallery-btn ri2-gallery-replace ri2-ui';
 		replace.innerHTML = '<span class="dashicons dashicons-image-rotate"></span>';
 		replace.title = 'Replace';
 
-		var del = document.createElement( 'button' );
+		const del = document.createElement( 'button' );
 		del.type = 'button';
 		del.className = 'ri2-gallery-btn ri2-gallery-delete ri2-ui';
 		del.innerHTML = '<span class="dashicons dashicons-no"></span>';
@@ -119,11 +119,11 @@
 		ensureImgBtns();
 		clearTimeout( leaveTimer );
 		hoverMode = 'img';
-		var r = item.getBoundingClientRect();
+		const r = item.getBoundingClientRect();
 		if ( r.width < 20 || r.height < 20 ) { hideImgBtns(); return; }
 
-		var replace = imgBtns[ 0 ];
-		var del = imgBtns[ 1 ];
+		const replace = imgBtns[ 0 ];
+		const del = imgBtns[ 1 ];
 
 		replace.style.top = ( r.top + 4 ) + 'px';
 		replace.style.left = ( r.left + 4 ) + 'px';
@@ -160,7 +160,7 @@
 	/* --- Actions --- */
 	function doAdd( widget, ctx ) {
 		ctx.getFields().then( function ( res ) {
-			var field = findProGalleryField( res );
+			const field = findProGalleryField( res );
 			if ( ! field ) {
 				ctx.toast( ctx.i18n.nothingEditable || 'Nothing editable here', 'error' );
 				return;
@@ -168,13 +168,13 @@
 
 
 
-			var galIdx = getGalleryIndex( field, widget );
+			const galIdx = getGalleryIndex( field, widget );
 
 			function proceedWithAdd( idx ) {
 				ctx.openGalleryMedia( {
 					onSelect: function ( attachments ) {
 						ctx.toast( ctx.i18n.saving || 'Saving…', 'saving' );
-						var chain = Promise.resolve();
+						let chain = Promise.resolve();
 						attachments.forEach( function ( att ) {
 							chain = chain.then( function () {
 								return ctx.saveProGallery( field.key, 'add', att.id, -1, idx );
@@ -232,9 +232,9 @@
 		}
 
 		if ( widget ) {
-			var activeTitle = widget.querySelector( '.elementor-gallery-title.elementor-item-active' );
+			const activeTitle = widget.querySelector( '.elementor-gallery-title.elementor-item-active' );
 			if ( activeTitle ) {
-				var idx = activeTitle.getAttribute( 'data-gallery-index' );
+				const idx = activeTitle.getAttribute( 'data-gallery-index' );
 				if ( idx && 'all' !== idx ) {
 					return parseInt( idx, 10 );
 				}
@@ -246,7 +246,7 @@
 	}
 
 	/* --- Gallery picker popup (for "All" or no active filter) --- */
-	var galPicker = null;
+	let galPicker = null;
 
 	function closeGalPicker() {
 		if ( galPicker ) {
@@ -261,16 +261,16 @@
 		galPicker = document.createElement( 'div' );
 		galPicker.className = 'ri2-galpicker ri2-ui';
 
-		var title = document.createElement( 'div' );
+		const title = document.createElement( 'div' );
 		title.className = 'ri2-galpicker__title';
 		title.textContent = 'Select a gallery';
 		galPicker.appendChild( title );
 
-		var list = document.createElement( 'div' );
+		const list = document.createElement( 'div' );
 		list.className = 'ri2-galpicker__list';
 
 		( field.galleries || [] ).forEach( function ( gal ) {
-			var item = document.createElement( 'button' );
+			const item = document.createElement( 'button' );
 			item.type = 'button';
 			item.className = 'ri2-galpicker__item';
 			item.textContent = gal.title || ( 'Gallery ' + ( gal.index + 1 ) );
@@ -284,7 +284,7 @@
 
 		galPicker.appendChild( list );
 
-		var cancel = document.createElement( 'button' );
+		const cancel = document.createElement( 'button' );
 		cancel.type = 'button';
 		cancel.className = 'ri2-galpicker__cancel';
 		cancel.textContent = 'Cancel';
@@ -295,7 +295,7 @@
 		document.body.appendChild( galPicker );
 
 		// Center the picker over the widget.
-		var r = widget.getBoundingClientRect();
+		const r = widget.getBoundingClientRect();
 		galPicker.style.top = ( r.top + r.height / 2 - galPicker.offsetHeight / 2 ) + 'px';
 		galPicker.style.left = ( r.left + r.width / 2 - galPicker.offsetWidth / 2 ) + 'px';
 	}
@@ -306,8 +306,8 @@
 	}
 
 	function indexOfItem( widget, item ) {
-		var all = getGalleryItems( widget );
-		for ( var i = 0; i < all.length; i++ ) {
+		const all = getGalleryItems( widget );
+		for ( let i = 0; i < all.length; i++ ) {
 			if ( all[ i ] === item ) { return i; }
 		}
 		return -1;
@@ -315,7 +315,7 @@
 
 	/* --- Attachment ID lookup via flat_images (DOM order) --- */
 	function getAttachmentIdByIndex( field, domIndex ) {
-		var flat = field.flat_images;
+		const flat = field.flat_images;
 		if ( flat && flat[ domIndex ] ) {
 			return flat[ domIndex ];
 		}
@@ -325,7 +325,7 @@
 	/* --- Overlay metadata mapping --- */
 	// The overlay_title/overlay_description settings select which attachment
 	// metadata field to display. Map the setting value to the attachment meta field.
-	var META_MAP = {
+	const META_MAP = {
 		title:       'title',
 		caption:     'caption',
 		alt:         'alt',
@@ -335,14 +335,14 @@
 	/* --- Click handler for overlay title/description and gallery titles --- */
 	function handleClick( e, widget, ctx ) {
 		// 1. Gallery filter title (multiple mode) — inline edit gallery_title
-		var galleryTitle = e.target.closest && e.target.closest( '.elementor-gallery-title' );
+		const galleryTitle = e.target.closest && e.target.closest( '.elementor-gallery-title' );
 		if ( galleryTitle && widget.contains( galleryTitle ) ) {
-			var idx = galleryTitle.getAttribute( 'data-gallery-index' );
+			const idx = galleryTitle.getAttribute( 'data-gallery-index' );
 			if ( idx === 'all' ) { return; }
 			e.preventDefault();
 			e.stopPropagation();
 			ctx.getFields().then( function ( res ) {
-				var field = findProGalleryField( res );
+				const field = findProGalleryField( res );
 				if ( ! field || 'pro-gallery-multi' !== field.kind ) { return; }
 				ctx.editText( galleryTitle, {
 					key:        field.key,
@@ -355,7 +355,7 @@
 		}
 
 		// 2. Overlay title — edit attachment metadata
-		var overlayTitle = e.target.closest && e.target.closest( '.elementor-gallery-item__title' );
+		const overlayTitle = e.target.closest && e.target.closest( '.elementor-gallery-item__title' );
 		if ( overlayTitle && widget.contains( overlayTitle ) ) {
 			e.preventDefault();
 			e.stopPropagation();
@@ -364,7 +364,7 @@
 		}
 
 		// 3. Overlay description — edit attachment metadata
-		var overlayDesc = e.target.closest && e.target.closest( '.elementor-gallery-item__description' );
+		const overlayDesc = e.target.closest && e.target.closest( '.elementor-gallery-item__description' );
 		if ( overlayDesc && widget.contains( overlayDesc ) ) {
 			e.preventDefault();
 			e.stopPropagation();
@@ -375,24 +375,24 @@
 
 	function handleOverlayEdit( e, widget, ctx, node, type ) {
 		// Find the gallery item element (parent .e-gallery-item)
-		var itemEl = node.closest( '.e-gallery-item' );
+		const itemEl = node.closest( '.e-gallery-item' );
 		if ( ! itemEl ) { return; }
 
-		var index = indexOfItem( widget, itemEl );
+		const index = indexOfItem( widget, itemEl );
 		if ( index < 0 ) { return; }
 
 		ctx.getFields().then( function ( res ) {
-			var field = findProGalleryField( res );
+			const field = findProGalleryField( res );
 			if ( ! field ) { return; }
 
 			// Determine which attachment meta field to edit
-			var settingKey = 'title' === type ? 'overlay_title' : 'overlay_description';
-			var metaField = field[ settingKey ];
+			const settingKey = 'title' === type ? 'overlay_title' : 'overlay_description';
+			const metaField = field[ settingKey ];
 			if ( ! metaField || ! META_MAP[ metaField ] ) { return; }
-			var actualField = META_MAP[ metaField ];
+			const actualField = META_MAP[ metaField ];
 
 			// Get attachment ID from flat_images (DOM order)
-			var attId = getAttachmentIdByIndex( field, index );
+			const attId = getAttachmentIdByIndex( field, index );
 
 			if ( ! attId ) {
 				ctx.toast( 'Could not identify the image.', 'error' );
@@ -412,21 +412,21 @@
 	document.addEventListener( 'mouseover', function ( e ) {
 		if ( ! RI.isActive() ) { return; }
 
-		var widget = widgetOf( e.target );
+		const widget = widgetOf( e.target );
 		if ( ! widget ) { return; }
 
 		// Check if hovering a gallery item
-		var item = e.target.closest && e.target.closest( '.e-gallery-item' );
+		const item = e.target.closest && e.target.closest( '.e-gallery-item' );
 		if ( item && widget.contains( item ) ) {
-			var idx = indexOfItem( widget, item );
+			const idx = indexOfItem( widget, item );
 			if ( idx >= 0 ) {
-				var ctx = RI.ctx( widget );
+				const ctx = RI.ctx( widget );
 				hoverMode = 'img';
 				ctx.getFields().then( function ( res ) {
 					if ( ! RI.isActive() || ! item.matches( ':hover' ) ) { return; }
-					var field = findProGalleryField( res );
+					const field = findProGalleryField( res );
 					if ( field ) {
-						var attId = getAttachmentIdByIndex( field, idx );
+						const attId = getAttachmentIdByIndex( field, idx );
 						if ( attId ) {
 							showImgBtns( item, attId, widget, ctx, field );
 						}
@@ -454,7 +454,7 @@
 		if ( ! RI.isActive() ) { return; }
 		if ( ! addBtnWidget && ! imgBtns.some( function ( b ) { return b.classList.contains( 'is-visible' ); } ) ) { return; }
 
-		var to = e.relatedTarget;
+		const to = e.relatedTarget;
 		if ( to && ( to === addBtn || ( addBtn && addBtn.contains( to ) ) ) ) { return; }
 		if ( to && imgBtns.some( function ( b ) { return to === b || b.contains( to ); } ) ) { return; }
 		if ( addBtnWidget && to && addBtnWidget.contains( to ) ) { return; }
@@ -476,7 +476,7 @@
 		closeGalPicker();
 	}, true );
 
-	var handler = {
+	const handler = {
 		onClick: handleClick,
 		onHover: function () {},
 		onLeave: function () {}

@@ -16,12 +16,12 @@
 
 	if ( ! RI ) { return; }
 
-	var addBtn = null;
-	var addBtnWidget = null;
-	var imgBtns = [];
-	var leaveTimer = null;
-	var hoverMode = null;
-	var SELECTOR = '.elementor-widget-image-gallery[data-id], .elementor-widget-image-carousel[data-id]';
+	let addBtn = null;
+	let addBtnWidget = null;
+	let imgBtns = [];
+	let leaveTimer = null;
+	let hoverMode = null;
+	const SELECTOR = '.elementor-widget-image-gallery[data-id], .elementor-widget-image-carousel[data-id]';
 
 	function findGalleryField( res ) {
 		return ( res.fields || [] ).filter( function ( f ) {
@@ -47,7 +47,7 @@
 			e.stopPropagation();
 			clearTimeout( leaveTimer );
 			if ( addBtnWidget ) {
-				var widget = addBtnWidget;
+				const widget = addBtnWidget;
 				hideAddBtn();
 				doAdd( widget, RI.ctx( widget ) );
 			}
@@ -60,7 +60,7 @@
 		ensureAddBtn();
 		clearTimeout( leaveTimer );
 		addBtnWidget = widget;
-		var r = widget.getBoundingClientRect();
+		const r = widget.getBoundingClientRect();
 		if ( r.width < 24 || r.height < 24 ) { hideAddBtn(); return; }
 		addBtn.style.top = ( r.bottom - 36 ) + 'px';
 		addBtn.style.left = ( r.right - 140 ) + 'px';
@@ -74,13 +74,13 @@
 	/* --- Per-image buttons (Replace / Delete) --- */
 	function ensureImgBtns() {
 		if ( imgBtns.length ) { return; }
-		var replace = document.createElement( 'button' );
+		const replace = document.createElement( 'button' );
 		replace.type = 'button';
 		replace.className = 'ri2-gallery-btn ri2-gallery-replace ri2-ui';
 		replace.innerHTML = '<span class="dashicons dashicons-image-rotate"></span>';
 		replace.title = 'Replace';
 
-		var del = document.createElement( 'button' );
+		const del = document.createElement( 'button' );
 		del.type = 'button';
 		del.className = 'ri2-gallery-btn ri2-gallery-delete ri2-ui';
 		del.innerHTML = '<span class="dashicons dashicons-no"></span>';
@@ -95,11 +95,11 @@
 		ensureImgBtns();
 		clearTimeout( leaveTimer );
 		hoverMode = 'img';
-		var r = img.getBoundingClientRect();
+		const r = img.getBoundingClientRect();
 		if ( r.width < 20 || r.height < 20 ) { hideImgBtns(); return; }
 
-		var replace = imgBtns[ 0 ];
-		var del = imgBtns[ 1 ];
+		const replace = imgBtns[ 0 ];
+		const del = imgBtns[ 1 ];
 
 		replace.style.top = ( r.top + 4 ) + 'px';
 		replace.style.left = ( r.left + 4 ) + 'px';
@@ -136,7 +136,7 @@
 	/* --- Actions --- */
 	function getGalleryField( ctx, cb ) {
 		ctx.getFields().then( function ( res ) {
-			var field = findGalleryField( res );
+			const field = findGalleryField( res );
 			if ( ! field ) {
 				ctx.toast( ctx.i18n.nothingEditable || 'Nothing editable here', 'error' );
 				return;
@@ -152,7 +152,7 @@
 			onSelect: function ( attachments ) {
 				getGalleryField( ctx, function ( field ) {
 					ctx.toast( ctx.i18n.saving || 'Saving…', 'saving' );
-					var chain = Promise.resolve();
+					let chain = Promise.resolve();
 					attachments.forEach( function ( att ) {
 						chain = chain.then( function () {
 							return ctx.saveGallery( field.key, 'add', att.id );
@@ -199,14 +199,14 @@
 	/* --- Image matching: find which gallery image was hovered --- */
 	function getGalleryImages( widget ) {
 		// WordPress [gallery] shortcode renders .gallery-item img
-		var galleryImgs = widget.querySelectorAll( '.gallery-item img, .elementor-image-gallery img' );
+		const galleryImgs = widget.querySelectorAll( '.gallery-item img, .elementor-image-gallery img' );
 		if ( galleryImgs.length ) { return galleryImgs; }
 		// Carousel renders .swiper-slide-image — exclude duplicated slides
 		// (Swiper clones slides in loop mode with class swiper-slide-duplicate).
-		var all = widget.querySelectorAll( '.swiper-slide-image' );
-		var real = [];
-		for ( var i = 0; i < all.length; i++ ) {
-			var slide = all[ i ].closest( '.swiper-slide' );
+		const all = widget.querySelectorAll( '.swiper-slide-image' );
+		const real = [];
+		for ( let i = 0; i < all.length; i++ ) {
+			const slide = all[ i ].closest( '.swiper-slide' );
 			if ( slide && slide.classList.contains( 'swiper-slide-duplicate' ) ) {
 				continue;
 			}
@@ -216,8 +216,8 @@
 	}
 
 	function indexOfImg( widget, img ) {
-		var all = getGalleryImages( widget );
-		for ( var i = 0; i < all.length; i++ ) {
+		const all = getGalleryImages( widget );
+		for ( let i = 0; i < all.length; i++ ) {
 			if ( all[ i ] === img ) { return i; }
 		}
 		return -1;
@@ -227,17 +227,17 @@
 	document.addEventListener( 'mouseover', function ( e ) {
 		if ( ! RI.isActive() ) { return; }
 
-		var widget = widgetOf( e.target );
+		const widget = widgetOf( e.target );
 		if ( ! widget ) { return; }
 
 		// Check if hovering a gallery image
-		var img = e.target.closest && e.target.closest( 'img' );
+		const img = e.target.closest && e.target.closest( 'img' );
 		if ( img && widget.contains( img ) ) {
-			var allImgs = getGalleryImages( widget );
+			const allImgs = getGalleryImages( widget );
 			if ( Array.prototype.indexOf.call( allImgs, img ) >= 0 ) {
-				var idx = indexOfImg( widget, img );
+				const idx = indexOfImg( widget, img );
 				if ( idx >= 0 ) {
-					var ctx = RI.ctx( widget );
+					const ctx = RI.ctx( widget );
 					hoverMode = 'img';
 					ctx.getFields().then( function ( res ) {
 						if ( ! RI.isActive() || ! img.matches( ':hover' ) ) { return; }
@@ -269,7 +269,7 @@
 		if ( ! RI.isActive() ) { return; }
 		if ( ! addBtnWidget && ! imgBtns.some( function ( b ) { return b.classList.contains( 'is-visible' ); } ) ) { return; }
 
-		var to = e.relatedTarget;
+		const to = e.relatedTarget;
 		if ( to && ( to === addBtn || ( addBtn && addBtn.contains( to ) ) ) ) { return; }
 		if ( to && imgBtns.some( function ( b ) { return to === b || b.contains( to ); } ) ) { return; }
 		if ( addBtnWidget && to && addBtnWidget.contains( to ) ) { return; }
@@ -285,14 +285,14 @@
 	window.addEventListener( 'scroll', function () { hideAll(); }, true );
 	window.addEventListener( 'resize', function () { hideAll(); } );
 
-	var handler = {
+	const handler = {
 		onClick: function ( event, widget, ctx ) {
 			// Click on a gallery image → replace it.
-			var img = event.target.closest && event.target.closest( 'img' );
+			const img = event.target.closest && event.target.closest( 'img' );
 			if ( img && widget.contains( img ) ) {
-				var allImgs = getGalleryImages( widget );
-				var idx = -1;
-				for ( var i = 0; i < allImgs.length; i++ ) {
+				const allImgs = getGalleryImages( widget );
+				let idx = -1;
+				for ( let i = 0; i < allImgs.length; i++ ) {
 					if ( allImgs[ i ] === img ) { idx = i; break; }
 				}
 				if ( idx >= 0 ) {
