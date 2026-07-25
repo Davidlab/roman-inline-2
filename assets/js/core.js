@@ -272,6 +272,15 @@
 		} );
 	}
 
+	function saveSetting( id, key, value ) {
+		return apiPost( 'setting', {
+			post_id:    cfg.postId,
+			element_id: id,
+			key:        key,
+			value:      value
+		} );
+	}
+
 	/* ----------------------------------------------------------------- */
 	/* Icon picker                                                        */
 	/* ----------------------------------------------------------------- */
@@ -626,7 +635,12 @@
 			hideToolbar();
 
 			const raw = s.node.innerHTML;
-			if ( raw === s.original ) { return; }
+			if ( raw === s.original ) {
+				if ( s.linkChanged ) {
+					refreshWidget( s.widget );
+				}
+				return;
+			}
 
 			const value = ( 'rich_text' === s.kind ) ? raw : raw.trim();
 			toast( i18n.saving || 'Saving…', 'saving' );
@@ -644,6 +658,9 @@
 				.then( function ( r ) {
 					toast( i18n.saved || 'Saved', 'ok' );
 					if ( s.fieldMap ) { s.fieldMap.value = ( r && r.value ) != null ? r.value : value; }
+					if ( s.linkChanged ) {
+						refreshWidget( s.widget );
+					}
 				} )
 				.catch( function ( err ) {
 					s.node.innerHTML = s.original;
@@ -662,6 +679,9 @@
 			s.node.removeAttribute( 'contenteditable' );
 			s.node.classList.remove( 'ri2-editing' );
 			hideToolbar();
+			if ( s.linkChanged ) {
+				refreshWidget( s.widget );
+			}
 		}
 	}
 
@@ -714,7 +734,8 @@
 		toolbar = el( 'div', 'ri2-toolbar ri2-ui' );
 		toolbar.appendChild( tbButton( i18n.bold || 'Bold', 'editor-bold', function () { exec( 'bold' ); } ) );
 		toolbar.appendChild( tbButton( i18n.italic || 'Italic', 'editor-italic', function () { exec( 'italic' ); } ) );
-		if ( showLink ) {
+		var hasLinkField = showLink || ( session && session.fieldMap && ( session.fieldMap.fields || [] ).some( function ( f ) { return 'link' === f.kind; } ) );
+		if ( hasLinkField ) {
 			toolbar.appendChild( tbButton( i18n.link || 'Link', 'admin-links', onToolbarLink ) );
 		}
 		const done = el( 'button', 'ri2-toolbar__done' );
@@ -782,10 +803,13 @@
 		}
 		openLinkPop( linkField.value || '', !! linkField.target_blank, function ( url, blank ) {
 			toast( i18n.saving || 'Saving…', 'saving' );
-			saveLink( widgetId( session.widget ), linkField.key, url, blank )
+			const wid = widgetId( session.widget );
+			saveLink( wid, linkField.key, url, blank )
 				.then( function () {
 					linkField.value = url;
 					linkField.target_blank = blank;
+					delete fieldsCache[ wid ];
+					if ( session ) { session.linkChanged = true; }
 					toast( i18n.saved || 'Saved', 'ok' );
 				} )
 				.catch( function ( err ) {
@@ -1022,8 +1046,9 @@
 				const repItems = repField.items || [];
 				const repItem = repItems[ opts.itemIndex ];
 				if ( ! repItem ) { return; }
-				linkValue = ( repItem.link && repItem.link.url ) || '';
-				linkBlank = !! ( repItem.link && repItem.link.is_external );
+				var linkKey = opts.linkKey || 'link';
+				linkValue = ( repItem[ linkKey ] && repItem[ linkKey ].url ) || '';
+				linkBlank = !! ( repItem[ linkKey ] && repItem[ linkKey ].is_external );
 				linkField = { key: opts.key, value: linkValue, target_blank: linkBlank };
 			} else {
 				linkField = ( res.fields || [] ).filter( function ( f ) { return 'link' === f.kind; } )[ 0 ];
@@ -1181,6 +1206,7 @@
 			replaceBackground: function ( opts ) { return replaceBackground( widget, opts ); },
 			replaceIcon:    function ( opts ) { return replaceIcon( widget, opts ); },
 			saveIcon:       function ( key, value, library ) { return saveIcon( id, key, value, library ); },
+			saveSetting:    function ( key, value ) { return saveSetting( id, key, value ); },
 			saveText:      function ( key, value, kind ) { return saveText( id, key, value, kind ); },
 			saveLink:      function ( key, url, blank ) { return saveLink( id, key, url, blank ); },
 			saveImage:     function ( key, attId ) { return saveImage( id, key, attId ); },

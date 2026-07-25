@@ -59,10 +59,11 @@ class Plugin {
 		$this->register_handler( 'google_maps', 'handlers/classic/google-maps.js' );
 		$this->register_handler( 'image-gallery', 'handlers/classic/gallery.js' );
 		$this->register_handler( 'image-carousel', 'handlers/classic/gallery.js' );
-		$this->register_handler( 'gallery', 'handlers/classic/pro-gallery.js' );
-		$this->register_handler( 'slides', 'handlers/classic/slides.js' );
 		$this->register_handler( 'container', 'handlers/classic/background.js' );
 		$this->register_handler( 'section', 'handlers/classic/background.js' );
+
+		// Register Elementor Pro widget handlers (only when Pro is active).
+		$this->register_pro_handlers();
 
 		// Allow 3rd-party code to register custom handlers.
 		$this->handlers = apply_filters( 'roman_inline_2_handlers', $this->handlers );
@@ -76,6 +77,37 @@ class Plugin {
 	 */
 	public function register_handler( $widget_type, $js_path ) {
 		$this->handlers[ $widget_type ] = $js_path;
+	}
+
+	/**
+	 * Register Elementor Pro widget handlers, but only when Elementor Pro
+	 * is active. This keeps Pro handler scripts from loading on sites that
+	 * only run free Elementor.
+	 */
+	private function register_pro_handlers() {
+		if ( ! class_exists( '\ElementorPro\Plugin' ) ) {
+			return;
+		}
+
+		$this->register_handler( 'gallery', 'handlers/pro/gallery.js' );
+		$this->register_handler( 'slides', 'handlers/pro/slides.js' );
+		$this->register_handler( 'animated-headline', 'handlers/pro/animated-headline.js' );
+		$this->register_handler( 'call-to-action', 'handlers/pro/call-to-action.js' );
+		$this->register_handler( 'flip-box', 'handlers/pro/flip-box.js' );
+		$this->register_handler( 'price-list', 'handlers/pro/price-list.js' );
+		$this->register_handler( 'price-table', 'handlers/pro/price-table.js' );
+		$this->register_handler( 'blockquote', 'handlers/pro/blockquote.js' );
+		$this->register_handler( 'code-highlight', 'handlers/pro/code-highlight.js' );
+		$this->register_handler( 'media-carousel', 'handlers/pro/media-carousel.js' );
+		$this->register_handler( 'hotspot', 'handlers/pro/hotspots.js' );
+		$this->register_handler( 'testimonial-carousel', 'handlers/pro/testimonial-carousel.js' );
+
+		/**
+		 * Allow 3rd-party code to register additional Pro handlers.
+		 *
+		 * @param array $handlers Existing handlers (type -> relative path).
+		 */
+		$this->handlers = apply_filters( 'roman_inline_2_pro_handlers', $this->handlers );
 	}
 
 	/**
@@ -256,6 +288,9 @@ class Plugin {
 					'editVideo'    => __( 'Edit video', 'roman-inline-2' ),
 					'changeBg'     => __( 'Change background', 'roman-inline-2' ),
 					'changeImage'  => __( 'Change Image', 'roman-inline-2' ),
+					'changeVideo'  => __( 'Change Video', 'roman-inline-2' ),
+					'deleteSlide'  => __( 'Delete Slide', 'roman-inline-2' ),
+					'addSlide'     => __( 'Add Slide', 'roman-inline-2' ),
 					'editLink'     => __( 'Edit Link', 'roman-inline-2' ),
 					'searchIcons'  => __( 'Search icons…', 'roman-inline-2' ),
 					'noIcons'      => __( 'No icons found', 'roman-inline-2' ),

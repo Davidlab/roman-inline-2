@@ -600,6 +600,113 @@ class Field_Resolver {
 	}
 
 	/**
+	 * Detect generic repeater fields for Pro widgets not covered by the
+	 * specific detectors above (slides, icon-list, social-icons).
+	 *
+	 * This catches repeaters used by:
+	 *   - Price List      (price_list: title, item_description, price, image, link)
+	 *   - Price Table     (features_list: item_text)
+	 *   - Hotspot         (hotspots: hotspot_label, hotspot_tooltip_content, hotspot_link)
+	 *   - Media Carousel  (slides: image, video, image_link_to)
+	 *   - Testimonial Carousel (slides: content, name, title, image)
+	 *
+	 * Any repeater with at least one editable sub-control (text, textarea,
+	 * url, media, wysiwyg) is included.
+	 *
+	 * @param array       $node
+	 * @param object|null $instance
+	 * @param array       $exclude_keys  Repeater keys already detected.
+	 * @return array
+	 */
+	private static function classic_generic_repeater_fields( array $node, $instance, array $exclude_keys = [] ) {
+		if ( ! $instance ) {
+			return [];
+		}
+
+		try {
+			$controls = $instance->get_controls();
+		} catch ( \Throwable $e ) {
+			return [];
+		}
+		if ( ! is_array( $controls ) ) {
+			return [];
+		}
+
+		$settings      = isset( $node['settings'] ) && is_array( $node['settings'] ) ? $node['settings'] : [];
+		$fields        = [];
+		$editable_types = [ 'text', 'textarea', 'url', 'media', 'wysiwyg' ];
+
+		foreach ( $controls as $control ) {
+			$ctype = isset( $control['type'] ) ? (string) $control['type'] : '';
+			$name  = isset( $control['name'] ) ? (string) $control['name'] : '';
+			if ( 'repeater' !== $ctype || '' === $name ) {
+				continue;
+			}
+
+			if ( in_array( $name, $exclude_keys, true ) ) {
+				continue;
+			}
+
+			$items = isset( $settings[ $name ] ) && is_array( $settings[ $name ] ) ? $settings[ $name ] : [];
+			if ( ! $items ) {
+				continue;
+			}
+
+			$sub_controls    = isset( $control['fields'] ) && is_array( $control['fields'] ) ? $control['fields'] : [];
+			$sub_field_names = [];
+			$has_editable    = false;
+			foreach ( $sub_controls as $sub ) {
+				$sub_type = isset( $sub['type'] ) ? (string) $sub['type'] : '';
+				$sub_name = isset( $sub['name'] ) ? (string) $sub['name'] : '';
+				if ( in_array( $sub_type, $editable_types, true ) ) {
+					$has_editable    = true;
+					$sub_field_names[] = $sub_name;
+				}
+			}
+			if ( ! $has_editable ) {
+				continue;
+			}
+
+			$item_list = [];
+			foreach ( $items as $i => $item ) {
+				if ( ! is_array( $item ) ) {
+					continue;
+				}
+				$item_data = [ 'index' => $i ];
+				// Include link-like sub-fields so JS can pre-fill popovers.
+				foreach ( [ 'link', 'image_link_to', 'video', 'hotspot_link' ] as $link_key ) {
+					if ( isset( $item[ $link_key ] ) && is_array( $item[ $link_key ] ) ) {
+						$item_data[ $link_key ] = [
+							'url'         => isset( $item[ $link_key ]['url'] ) ? (string) $item[ $link_key ]['url'] : '',
+							'is_external' => ! empty( $item[ $link_key ]['is_external'] ),
+						];
+					}
+				}
+				// Include slide type for media carousel.
+				if ( isset( $item['type'] ) ) {
+					$item_data['type'] = (string) $item['type'];
+				}
+				$item_list[] = $item_data;
+			}
+
+			if ( ! $item_list ) {
+				continue;
+			}
+
+			$fields[] = [
+				'kind'       => 'repeater',
+				'key'        => $name,
+				'label'      => isset( $control['label'] ) && $control['label'] ? (string) $control['label'] : self::humanize( $name ),
+				'value'      => count( $item_list ),
+				'items'      => $item_list,
+				'sub_fields' => $sub_field_names,
+			];
+		}
+
+		return $fields;
+	}
+
+	/**
 	 * Detect background images in atomic container styles.
 	 *
 	 * Atomic containers (e-flexbox, e-div-block) store background images
@@ -812,7 +919,7 @@ class Field_Resolver {
 			}
 		}
 
-		$link = self::classic_link( $node );
+		$link = self::classic_link( $node, $instance );
 		if ( $link ) {
 			$fields[] = $link;
 		}
@@ -859,10 +966,20 @@ class Field_Resolver {
 			$social_keys[] = $sf['key'];
 		}
 
+		// Detect generic repeater fields for Pro widgets (price-list, hotspot,
+		// media-carousel, testimonial-carousel, price-table features).
+		$all_repeater_keys = array_merge( $repeater_keys, $icon_list_keys, $social_keys );
+		$generic_repeater_fields = self::classic_generic_repeater_fields( $node, $instance, $all_repeater_keys );
+		$generic_repeater_keys   = [];
+		foreach ( $generic_repeater_fields as $grf ) {
+			$fields[]              = $grf;
+			$generic_repeater_keys[] = $grf['key'];
+		}
+
 		// Detect classic image fields (settings with {id, url} shape).
-		// Pass gallery + slides + icon-list + social-icons + link keys so
+		// Pass gallery + slides + icon-list + social-icons + generic-repeater + link keys so
 		// repeater images and URL controls aren't double-counted as images.
-		$exclude_keys = array_merge( $gallery_keys, $repeater_keys, $icon_list_keys, $social_keys, [ 'link' ] );
+		$exclude_keys = array_merge( $gallery_keys, $repeater_keys, $icon_list_keys, $social_keys, $generic_repeater_keys, [ 'link' ] );
 		$images = self::classic_image_fields( $node, $exclude_keys );
 		$found_image_keys = [];
 		foreach ( $images as $img ) {
@@ -1150,7 +1267,7 @@ class Field_Resolver {
 		return $fields;
 	}
 
-	private static function classic_link( array $node ) {
+	private static function classic_link( array $node, $instance = null ) {
 		$settings = isset( $node['settings'] ) && is_array( $node['settings'] ) ? $node['settings'] : [];
 
 		if ( isset( $settings['link'] ) && is_array( $settings['link'] ) && array_key_exists( 'url', $settings['link'] ) ) {
@@ -1161,6 +1278,31 @@ class Field_Resolver {
 				'value'        => is_string( $settings['link']['url'] ) ? $settings['link']['url'] : '',
 				'target_blank' => ! empty( $settings['link']['is_external'] ),
 			];
+		}
+
+		// Fallback: introspect URL controls named 'link' when the setting
+		// is empty or missing (e.g. CTA widget with no link set yet).
+		if ( $instance ) {
+			try {
+				$controls = $instance->get_controls();
+			} catch ( \Throwable $e ) {
+				$controls = [];
+			}
+			if ( is_array( $controls ) ) {
+				foreach ( $controls as $control ) {
+					$ctype = isset( $control['type'] ) ? (string) $control['type'] : '';
+					$name  = isset( $control['name'] ) ? (string) $control['name'] : '';
+					if ( 'url' === $ctype && 'link' === $name ) {
+						return [
+							'key'          => 'link',
+							'kind'         => 'link',
+							'label'        => __( 'Link', 'roman-inline-2' ),
+							'value'        => '',
+							'target_blank' => false,
+						];
+					}
+				}
+			}
 		}
 
 		return null;

@@ -77,6 +77,87 @@
 	height: 14px;
 }
 
+/* Per-slide action toolbar for media carousel — compact horizontal icon buttons */
+.ri2-carousel-actions {
+	position: fixed !important;
+	z-index: 99989 !important;
+	display: flex !important;
+	flex-direction: row !important;
+	gap: 2px !important;
+	margin: 0 !important;
+	padding: 3px !important;
+	background: #fff !important;
+	border: 1px solid rgba( 0, 0, 0, 0.12 ) !important;
+	border-radius: 4px !important;
+	box-shadow: 0 2px 8px rgba( 0, 0, 0, 0.25 ) !important;
+}
+.ri2-carousel-actbtn {
+	display: flex !important;
+	align-items: center !important;
+	justify-content: center !important;
+	width: 26px !important;
+	height: 26px !important;
+	padding: 0 !important;
+	background: var(--ri2-accent) !important;
+	color: #fff !important;
+	border: 0 !important;
+	border-radius: 3px !important;
+	cursor: pointer !important;
+	margin: 0 !important;
+	line-height: 1 !important;
+}
+.ri2-carousel-actbtn:hover {
+	background: var(--ri2-accent-dark);
+}
+.ri2-carousel-actbtn .dashicons {
+	font-size: 14px;
+	width: 14px;
+	height: 14px;
+}
+.ri2-carousel-actbtn--delete {
+	background: #b54141 !important;
+}
+.ri2-carousel-actbtn--delete:hover {
+	background: #963030 !important;
+}
+.ri2-carousel-actbtn--add {
+	background: #2d8a4e !important;
+}
+.ri2-carousel-actbtn--add:hover {
+	background: #236b3d !important;
+}
+
+/* Separate "Add Slide" button — positioned at top-right of carousel widget */
+.ri2-carousel-addbtn {
+	position: fixed !important;
+	z-index: 99989 !important;
+	display: none;
+	align-items: center !important;
+	gap: 6px !important;
+	padding: 6px 12px !important;
+	background: #2d8a4e !important;
+	color: #fff !important;
+	border: 0 !important;
+	border-radius: 4px !important;
+	cursor: pointer !important;
+	font: 600 12px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+	box-shadow: 0 2px 8px rgba( 0, 0, 0, 0.3 ) !important;
+	white-space: nowrap !important;
+	margin: 0 !important;
+	line-height: 1.2 !important;
+}
+.ri2-carousel-addbtn.is-visible {
+	display: inline-flex;
+}
+.ri2-carousel-addbtn:hover {
+	background: #236b3d !important;
+}
+.ri2-carousel-addbtn .dashicons {
+	font-size: 14px;
+	width: 14px;
+	height: 14px;
+}
+
 /* ------------------------------------------------------------------ */
 /* Control bar                                                         */
 /* ------------------------------------------------------------------ */
@@ -827,4 +908,135 @@
 	padding: 24px !important;
 	color: #999 !important;
 	font-size: 14px !important;
+}
+
+/* ------------------------------------------------------------------ */
+/* Flip-box: disable hover flip when RI2 is active                    */
+/* ------------------------------------------------------------------ */
+
+/* Prevent hover/focus-visible from flipping when not manually flipped */
+.ri2-active .elementor-widget-flip-box:not(.elementor-flip-box--flipped) .elementor-flip-box:hover .elementor-flip-box__front,
+.ri2-active .elementor-widget-flip-box:not(.elementor-flip-box--flipped) .elementor-flip-box:focus-visible .elementor-flip-box__front {
+	transform: none !important;
+	opacity: 1 !important;
+	width: 100% !important;
+}
+.ri2-active .elementor-widget-flip-box:not(.elementor-flip-box--flipped) .elementor-flip-box:hover .elementor-flip-box__back,
+.ri2-active .elementor-widget-flip-box:not(.elementor-flip-box--flipped) .elementor-flip-box:focus-visible .elementor-flip-box__back {
+	opacity: 0 !important;
+}
+
+/* Disable pointer events on the hidden side so it doesn't block clicks */
+.ri2-active .elementor-widget-flip-box:not(.elementor-flip-box--flipped) .elementor-flip-box__back {
+	pointer-events: none !important;
+}
+.ri2-active .elementor-widget-flip-box.elementor-flip-box--flipped .elementor-flip-box__front {
+	pointer-events: none !important;
+}
+
+/* Floating flip button — positioned at top-left of hovered widget */
+.ri2-flipbtn {
+	position: fixed !important;
+	z-index: 99989 !important;
+	display: none;
+	align-items: center !important;
+	gap: 4px !important;
+	padding: 4px 10px !important;
+	background: var( --ri2-accent ) !important;
+	color: #fff !important;
+	border: 0 !important;
+	border-radius: 4px !important;
+	cursor: pointer !important;
+	box-shadow: 0 2px 8px rgba( 0, 0, 0, 0.3 ) !important;
+	margin: 0 !important;
+	font: 600 12px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+	line-height: 1.2 !important;
+	white-space: nowrap !important;
+}
+
+.ri2-flipbtn.is-visible {
+	display: inline-flex;
+}
+
+.ri2-flipbtn:hover {
+	background: var( --ri2-accent-dark );
+}
+
+.ri2-flipbtn .dashicons {
+	font-size: 14px;
+	width: 14px;
+	height: 14px;
+}
+
+/* Floating graphic button for flip-box (change icon/image) */
+.ri2-graphicbtn {
+	position: fixed !important;
+	z-index: 99989 !important;
+	display: none;
+	align-items: center !important;
+	gap: 4px !important;
+	padding: 4px 10px !important;
+	background: var( --ri2-accent ) !important;
+	color: #fff !important;
+	border: 0 !important;
+	border-radius: 4px !important;
+	cursor: pointer !important;
+	box-shadow: 0 2px 8px rgba( 0, 0, 0, 0.3 ) !important;
+	margin: 0 !important;
+	font: 600 12px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+	line-height: 1.2 !important;
+	white-space: nowrap !important;
+}
+
+.ri2-graphicbtn.is-visible {
+	display: inline-flex;
+}
+
+.ri2-graphicbtn:hover {
+	background: var( --ri2-accent-dark );
+}
+
+.ri2-graphicbtn .dashicons {
+	font-size: 14px;
+	width: 14px;
+	height: 14px;
+}
+
+/* Graphic chooser popup (icon/image/none) */
+.ri2-graphicpop {
+	position: fixed !important;
+	z-index: 99992 !important;
+	background: #fff !important;
+	border-radius: 6px !important;
+	box-shadow: 0 4px 20px rgba( 0, 0, 0, 0.18 ) !important;
+	overflow: hidden !important;
+	min-width: 140px;
+	font: 13px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+}
+
+.ri2-graphicpop__item {
+	all: revert;
+	display: flex !important;
+	align-items: center !important;
+	gap: 8px !important;
+	padding: 10px 14px !important;
+	border: none !important;
+	background: #fff !important;
+	color: #333 !important;
+	font-size: 13px !important;
+	cursor: pointer !important;
+	white-space: nowrap !important;
+	width: 100% !important;
+	text-align: left !important;
+}
+
+.ri2-graphicpop__item:hover {
+	background: #f0f0f0 !important;
+}
+
+.ri2-graphicpop__item .dashicons {
+	font-size: 16px !important;
+	width: 16px !important;
+	height: 16px !important;
+	color: var( --ri2-accent, #0073aa ) !important;
 }

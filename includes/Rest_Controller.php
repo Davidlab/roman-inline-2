@@ -133,6 +133,16 @@ class Rest_Controller {
 
 		register_rest_route(
 			self::NS,
+			'/setting',
+			[
+				'methods'             => \WP_REST_Server::CREATABLE,
+				'callback'            => [ __CLASS__, 'save_setting' ],
+				'permission_callback' => [ __CLASS__, 'can_edit' ],
+			]
+		);
+
+		register_rest_route(
+			self::NS,
 			'/attachment-meta',
 			[
 				'methods'             => \WP_REST_Server::CREATABLE,
@@ -450,6 +460,51 @@ class Rest_Controller {
 		}
 
 		$result = Saver::save_icon( $post_id, $element_id, $key, $value, $library );
+		return is_wp_error( $result ) ? $result : rest_ensure_response( $result );
+	}
+
+	public static function save_setting( $request ) {
+		$post_id    = (int) $request->get_param( 'post_id' );
+		$element_id = (string) $request->get_param( 'element_id' );
+		$key        = (string) $request->get_param( 'key' );
+		$value      = (string) $request->get_param( 'value' );
+
+		if ( '' === $key ) {
+			return new \WP_Error( 'ri2_no_key', __( 'Missing key.', 'roman-inline-2' ), [ 'status' => 400 ] );
+		}
+
+		// Verify the key is a real control on this widget instance.
+		$document = new Document( $post_id );
+		$read     = $document->read_node( $element_id );
+		if ( is_wp_error( $read ) ) {
+			return $read;
+		}
+
+		$instance = Document::create_instance( $read['node'] );
+		if ( ! $instance ) {
+			return new \WP_Error( 'ri2_no_instance', __( 'Cannot create widget instance.', 'roman-inline-2' ), [ 'status' => 500 ] );
+		}
+
+		$valid = false;
+		try {
+			$controls = $instance->get_controls();
+			if ( is_array( $controls ) ) {
+				foreach ( $controls as $control ) {
+					if ( isset( $control['name'] ) && $control['name'] === $key ) {
+						$valid = true;
+						break;
+					}
+				}
+			}
+		} catch ( \Throwable $e ) {
+			// ignore
+		}
+
+		if ( ! $valid ) {
+			return new \WP_Error( 'ri2_invalid_setting', __( 'That setting is not editable.', 'roman-inline-2' ), [ 'status' => 400 ] );
+		}
+
+		$result = Saver::save_setting( $post_id, $element_id, $key, $value );
 		return is_wp_error( $result ) ? $result : rest_ensure_response( $result );
 	}
 

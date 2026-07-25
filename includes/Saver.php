@@ -490,6 +490,37 @@ class Saver {
 		);
 	}
 
+	/**
+	 * Save a simple scalar setting (e.g. graphic_element choose control).
+	 *
+	 * @param int    $post_id
+	 * @param string $element_id
+	 * @param string $key
+	 * @param string $value
+	 * @return array|\WP_Error
+	 */
+	public static function save_setting( $post_id, $element_id, $key, $value ) {
+		$key   = (string) $key;
+		$value = (string) $value;
+
+		$document = new Document( $post_id );
+
+		return $document->mutate_node(
+			$element_id,
+			function ( array &$node ) use ( $key, $value ) {
+				if ( ! isset( $node['settings'] ) || ! is_array( $node['settings'] ) ) {
+					$node['settings'] = [];
+				}
+				$node['settings'][ $key ] = $value;
+				return [
+					'success' => true,
+					'key'     => $key,
+					'value'   => $value,
+				];
+			}
+		);
+	}
+
 	private static function inline_allowed_tags() {
 		return [
 			'a'      => [ 'href' => true, 'target' => true, 'rel' => true, 'class' => true, 'id' => true ],
@@ -743,7 +774,41 @@ class Saver {
 					case 'description':
 					case 'gallery_title':
 					case 'text':
+					case 'title':
+					case 'item_description':
+					case 'price':
+					case 'item_text':
+					case 'hotspot_label':
+					case 'hotspot_tooltip_content':
+					case 'content':
+					case 'name':
 						$items[ $index ][ $sub_field ] = (string) $value;
+						break;
+
+					case 'image':
+						$attachment_id = absint( $value );
+						if ( ! $attachment_id ) {
+							return new \WP_Error( 'ri2_invalid_attachment', __( 'Please choose a valid image.', 'roman-inline-2' ), [ 'status' => 400 ] );
+						}
+						$url = wp_get_attachment_url( $attachment_id );
+						if ( ! $url ) {
+							return new \WP_Error( 'ri2_no_url', __( 'Could not resolve the image URL.', 'roman-inline-2' ), [ 'status' => 400 ] );
+						}
+						$items[ $index ]['image'] = [
+							'id'  => $attachment_id,
+							'url' => $url,
+						];
+						break;
+
+					case 'hotspot_link':
+						if ( ! is_array( $value ) ) {
+							return new \WP_Error( 'ri2_bad_link', __( 'Invalid link data.', 'roman-inline-2' ), [ 'status' => 400 ] );
+						}
+						$items[ $index ]['hotspot_link'] = [
+							'url'         => isset( $value['url'] ) ? (string) $value['url'] : '',
+							'is_external' => ! empty( $value['is_external'] ) ? true : '',
+							'nofollow'    => ! empty( $value['nofollow'] ) ? true : '',
+						];
 						break;
 
 					case 'selected_icon':
@@ -771,6 +836,31 @@ class Saver {
 							return new \WP_Error( 'ri2_bad_link', __( 'Invalid link data.', 'roman-inline-2' ), [ 'status' => 400 ] );
 						}
 						$items[ $index ]['link'] = [
+							'url'         => isset( $value['url'] ) ? (string) $value['url'] : '',
+							'is_external' => ! empty( $value['is_external'] ) ? true : '',
+							'nofollow'    => ! empty( $value['nofollow'] ) ? true : '',
+						];
+						break;
+
+					case 'image_link_to':
+						if ( ! is_array( $value ) ) {
+							return new \WP_Error( 'ri2_bad_link', __( 'Invalid link data.', 'roman-inline-2' ), [ 'status' => 400 ] );
+						}
+						$items[ $index ]['image_link_to'] = [
+							'url'         => isset( $value['url'] ) ? (string) $value['url'] : '',
+							'is_external' => ! empty( $value['is_external'] ) ? true : '',
+							'nofollow'    => ! empty( $value['nofollow'] ) ? true : '',
+						];
+						if ( ! isset( $items[ $index ]['image_link_to_type'] ) || 'custom' !== $items[ $index ]['image_link_to_type'] ) {
+							$items[ $index ]['image_link_to_type'] = 'custom';
+						}
+						break;
+
+					case 'video':
+						if ( ! is_array( $value ) ) {
+							return new \WP_Error( 'ri2_bad_link', __( 'Invalid video link data.', 'roman-inline-2' ), [ 'status' => 400 ] );
+						}
+						$items[ $index ]['video'] = [
 							'url'         => isset( $value['url'] ) ? (string) $value['url'] : '',
 							'is_external' => ! empty( $value['is_external'] ) ? true : '',
 							'nofollow'    => ! empty( $value['nofollow'] ) ? true : '',
@@ -900,6 +990,17 @@ class Saver {
 								'is_external' => '',
 								'nofollow'    => '',
 							],
+						];
+						break;
+
+					case 'media-carousel':
+						$placeholder = \Elementor\Utils::get_placeholder_image_src();
+						$items[] = [
+							'type'               => 'image',
+							'image'              => [
+								'url' => $placeholder,
+							],
+							'image_link_to_type' => '',
 						];
 						break;
 
