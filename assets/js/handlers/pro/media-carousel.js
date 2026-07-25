@@ -365,11 +365,12 @@
 
 	function showAddBtn( widget ) {
 		ensureAddBtn();
-		var r = widget.getBoundingClientRect();
+		var clipEl = widget.querySelector( '.elementor-main-swiper' ) || widget;
+		var r = clipEl.getBoundingClientRect();
 		if ( r.width < 24 ) { hideAddBtn(); return; }
-		addBtn.style.top = ( r.top + 8 ) + 'px';
-		addBtn.style.left = ( r.right - addBtn.offsetWidth - 8 ) + 'px';
 		addBtn.classList.add( 'is-visible' );
+		addBtn.style.top = r.top + 'px';
+		addBtn.style.left = ( r.right - addBtn.offsetWidth ) + 'px';
 	}
 
 	function hideAddBtn() {

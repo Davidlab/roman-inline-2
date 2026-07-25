@@ -34,12 +34,6 @@
 		return ( res.fields || [] ).filter( function ( f ) { return kind === f.kind; } )[ 0 ];
 	}
 
-	function repeaterId( hotspot ) {
-		const cls = hotspot.className || '';
-		const m = cls.match( /elementor-repeater-item-([a-f0-9]+)/ );
-		return m ? m[ 1 ] : null;
-	}
-
 	function getHotspots( widget ) {
 		return widget.querySelectorAll( '.e-hotspot' );
 	}

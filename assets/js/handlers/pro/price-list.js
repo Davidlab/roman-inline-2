@@ -31,12 +31,6 @@
 		return ( res.fields || [] ).filter( function ( f ) { return 'repeater' === f.kind; } )[ 0 ];
 	}
 
-	function repeaterId( li ) {
-		const cls = li.className || '';
-		const m = cls.match( /elementor-repeater-item-([a-f0-9]+)/ );
-		return m ? m[ 1 ] : null;
-	}
-
 	function getItems( widget ) {
 		return widget.querySelectorAll( '.elementor-price-list > li' );
 	}
@@ -77,6 +71,7 @@
 					onSelect: function ( attachment ) {
 						ctx.toast( ctx.i18n.saving || 'Saving…', 'saving' );
 						ctx.saveRepeaterItem( field.key, item.index, 'image', attachment.id )
+							.then( function () { return ctx.refreshWidget(); } )
 							.then( function () {
 								ctx.toast( ctx.i18n.saved || 'Saved', 'ok' );
 							} )
@@ -167,6 +162,7 @@
 						onSelect: function ( attachment ) {
 							ctx.toast( ctx.i18n.saving || 'Saving…', 'saving' );
 							ctx.saveRepeaterItem( field.key, item.index, 'image', attachment.id )
+								.then( function () { return ctx.refreshWidget(); } )
 								.then( function () { ctx.toast( ctx.i18n.saved || 'Saved', 'ok' ); } )
 								.catch( function ( err ) { ctx.toast( ( err && err.message ) || ctx.i18n.saveFailed || 'Save failed', 'error' ); } );
 						}
