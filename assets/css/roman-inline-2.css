@@ -5,9 +5,16 @@
 :root {
 	--ri2-accent: #6d4aff;
 	--ri2-accent-dark: #5638d6;
-	--ri2-bg: #1e1e2e;
+	--ri2-bg: #ffffff;
 	--ri2-ok: #1db954;
 	--ri2-err: #e5484d;
+	--ri2-shadow: 0 1px 2px rgba( 0, 0, 0, 0.2 ), 0 2px 8px rgba( 0, 0, 0, 0.15 );
+	--ri2-shadow-lg: 0 1px 2px rgba( 0, 0, 0, 0.2 ), 0 4px 12px rgba( 0, 0, 0, 0.2 );
+	--ri2-shadow-hover: 0 2px 4px rgba( 0, 0, 0, 0.25 ), 0 6px 16px rgba( 0, 0, 0, 0.2 );
+	--ri2-text: #333;
+	--ri2-text-muted: #666;
+	--ri2-border: rgba( 0, 0, 0, 0.08 );
+	--ri2-hover: rgba( 0, 0, 0, 0.04 );
 }
 
 /* Hover affordance on editable widgets while editing is active. */
@@ -52,29 +59,31 @@
 	display: none;
 	align-items: center !important;
 	gap: 6px !important;
-	padding: 6px 12px !important;
-	background: var(--ri2-accent) !important;
-	color: #fff !important;
-	border: 0 !important;
-	border-radius: 4px !important;
+	padding: 7px 14px !important;
+	background: #fff !important;
+	color: var(--ri2-text) !important;
+	border: 1px solid var(--ri2-border) !important;
+	border-radius: 8px !important;
 	cursor: pointer !important;
 	font: 600 12px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
-	box-shadow: 0 2px 8px rgba( 0, 0, 0, 0.3 ) !important;
+	box-shadow: var(--ri2-shadow-lg) !important;
 	white-space: nowrap !important;
 	margin: 0 !important;
 	line-height: 1.2 !important;
 	text-decoration: none !important;
+	transition: box-shadow 0.15s ease !important;
 }
 .ri2-imgbtn.is-visible {
 	display: inline-flex;
 }
 .ri2-imgbtn:hover {
-	background: var(--ri2-accent-dark);
+	box-shadow: var( --ri2-shadow-hover ) !important;
 }
 .ri2-imgbtn .dashicons {
-	font-size: 14px;
-	width: 14px;
-	height: 14px;
+	font-size: 15px;
+	width: 15px;
+	height: 15px;
+	color: var(--ri2-accent) !important;
 }
 
 /* Per-slide action toolbar for media carousel — compact horizontal icon buttons */
@@ -83,48 +92,50 @@
 	z-index: 99989 !important;
 	display: flex !important;
 	flex-direction: row !important;
-	gap: 2px !important;
+	gap: 1px !important;
 	margin: 0 !important;
-	padding: 3px !important;
+	padding: 4px !important;
 	background: #fff !important;
-	border: 1px solid rgba( 0, 0, 0, 0.12 ) !important;
-	border-radius: 4px !important;
-	box-shadow: 0 2px 8px rgba( 0, 0, 0, 0.25 ) !important;
+	border: 1px solid var(--ri2-border) !important;
+	border-radius: 8px !important;
+	box-shadow: var(--ri2-shadow-lg) !important;
 }
 .ri2-carousel-actbtn {
 	display: flex !important;
 	align-items: center !important;
 	justify-content: center !important;
-	width: 26px !important;
-	height: 26px !important;
+	width: 28px !important;
+	height: 28px !important;
 	padding: 0 !important;
-	background: var(--ri2-accent) !important;
-	color: #fff !important;
+	background: transparent !important;
+	color: var(--ri2-text) !important;
 	border: 0 !important;
-	border-radius: 3px !important;
+	border-radius: 6px !important;
 	cursor: pointer !important;
 	margin: 0 !important;
 	line-height: 1 !important;
+	transition: background 0.15s ease !important;
 }
 .ri2-carousel-actbtn:hover {
-	background: var(--ri2-accent-dark);
+	background: var(--ri2-hover) !important;
 }
 .ri2-carousel-actbtn .dashicons {
-	font-size: 14px;
-	width: 14px;
-	height: 14px;
+	font-size: 15px;
+	width: 15px;
+	height: 15px;
 }
 .ri2-carousel-actbtn--delete {
-	background: #b54141 !important;
+	color: var(--ri2-err) !important;
+	background: rgba( 229, 72, 77, 0.08 ) !important;
 }
 .ri2-carousel-actbtn--delete:hover {
-	background: #963030 !important;
+	background: rgba( 229, 72, 77, 0.15 ) !important;
 }
 .ri2-carousel-actbtn--add {
-	background: #2d8a4e !important;
+	color: var(--ri2-accent) !important;
 }
 .ri2-carousel-actbtn--add:hover {
-	background: #236b3d !important;
+	background: rgba( 109, 74, 255, 0.08 ) !important;
 }
 
 /* Separate "Add Slide" button — positioned at top-right of carousel widget */
@@ -134,28 +145,30 @@
 	display: none;
 	align-items: center !important;
 	gap: 6px !important;
-	padding: 6px 12px !important;
-	background: #2d8a4e !important;
-	color: #fff !important;
-	border: 0 !important;
-	border-radius: 4px !important;
+	padding: 7px 14px !important;
+	background: #fff !important;
+	color: var(--ri2-text) !important;
+	border: 1px solid var(--ri2-border) !important;
+	border-radius: 8px !important;
 	cursor: pointer !important;
 	font: 600 12px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
-	box-shadow: 0 2px 8px rgba( 0, 0, 0, 0.3 ) !important;
+	box-shadow: var(--ri2-shadow-lg) !important;
 	white-space: nowrap !important;
 	margin: 0 !important;
 	line-height: 1.2 !important;
+	transition: box-shadow 0.15s ease !important;
 }
 .ri2-carousel-addbtn.is-visible {
 	display: inline-flex;
 }
 .ri2-carousel-addbtn:hover {
-	background: #236b3d !important;
+	box-shadow: var( --ri2-shadow-hover ) !important;
 }
 .ri2-carousel-addbtn .dashicons {
-	font-size: 14px;
-	width: 14px;
-	height: 14px;
+	font-size: 15px;
+	width: 15px;
+	height: 15px;
+	color: var(--ri2-accent) !important;
 }
 
 /* ------------------------------------------------------------------ */
@@ -171,11 +184,11 @@
 	align-items: center !important;
 	gap: 14px !important;
 	padding: 8px 10px 8px 16px !important;
-	background: var(--ri2-bg) !important;
-	color: #fff !important;
-	border: 0 !important;
+	background: #fff !important;
+	color: var(--ri2-text) !important;
+	border: 1px solid var(--ri2-border) !important;
 	border-radius: 999px !important;
-	box-shadow: 0 8px 30px rgba( 0, 0, 0, 0.35 ) !important;
+	box-shadow: 0 2px 4px rgba( 0, 0, 0, 0.2 ), 0 8px 24px rgba( 0, 0, 0, 0.15 ) !important;
 	z-index: 99980 !important;
 	font: 13px/1.4 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
 	transition: transform 0.25s ease;
@@ -187,16 +200,16 @@
 .ri2-bar__label { display: flex !important; align-items: center !important; gap: 6px !important; font-weight: 600 !important; margin: 0 !important; padding: 0 !important; }
 .ri2-bar__label .dashicons { font-size: 18px !important; width: 18px !important; height: 18px !important; line-height: 18px !important; }
 
-.ri2-bar__toast { min-width: 0; opacity: 0; transition: opacity 0.2s; color: #c9c9e3 !important; margin: 0 !important; padding: 0 !important; }
+.ri2-bar__toast { min-width: 0; opacity: 0; transition: opacity 0.2s; color: var(--ri2-text-muted) !important; margin: 0 !important; padding: 0 !important; }
 .ri2-bar__toast.is-visible { opacity: 1; }
-.ri2-bar__toast.is-ok { color: #5ce58f; }
-.ri2-bar__toast.is-error { color: #ff8a8d; }
-.ri2-bar__toast.is-saving { color: #c9c9e3; }
+.ri2-bar__toast.is-ok { color: var(--ri2-ok); }
+.ri2-bar__toast.is-error { color: var(--ri2-err); }
+.ri2-bar__toast.is-saving { color: var(--ri2-text-muted); }
 
 .ri2-bar__exit {
 	border: 0 !important;
-	background: rgba( 255, 255, 255, 0.12 ) !important;
-	color: #fff !important;
+	background: var(--ri2-hover) !important;
+	color: var(--ri2-text) !important;
 	padding: 6px 14px !important;
 	border-radius: 999px !important;
 	cursor: pointer !important;
@@ -207,7 +220,7 @@
 	text-decoration: none !important;
 	display: inline-block !important;
 }
-.ri2-bar__exit:hover { background: rgba( 255, 255, 255, 0.22 ); }
+.ri2-bar__exit:hover { background: rgba( 0, 0, 0, 0.08 ); }
 
 /* ------------------------------------------------------------------ */
 /* Floating text toolbar                                              */
@@ -220,16 +233,16 @@
 	align-items: center !important;
 	gap: 2px !important;
 	padding: 4px !important;
-	background: var(--ri2-bg) !important;
-	border: 0 !important;
-	border-radius: 8px !important;
-	box-shadow: 0 6px 24px rgba( 0, 0, 0, 0.3 ) !important;
+	background: #fff !important;
+	border: 1px solid var(--ri2-border) !important;
+	border-radius: 10px !important;
+	box-shadow: var(--ri2-shadow-lg) !important;
 	margin: 0 !important;
 }
 .ri2-toolbar__btn {
 	border: 0 !important;
 	background: transparent !important;
-	color: #fff !important;
+	color: var(--ri2-text) !important;
 	width: 30px !important;
 	height: 30px !important;
 	border-radius: 6px !important;
@@ -241,7 +254,7 @@
 	margin: 0 !important;
 	line-height: 1 !important;
 }
-.ri2-toolbar__btn:hover { background: rgba( 255, 255, 255, 0.15 ); }
+.ri2-toolbar__btn:hover { background: var(--ri2-hover); }
 .ri2-toolbar__btn .dashicons { font-size: 18px; width: 18px; height: 18px; }
 .ri2-toolbar__done {
 	border: 0 !important;
@@ -272,23 +285,23 @@
 	gap: 8px !important;
 	padding: 8px !important;
 	background: #fff !important;
-	border: 0 !important;
-	border-radius: 8px !important;
-	box-shadow: 0 6px 24px rgba( 0, 0, 0, 0.25 ) !important;
+	border: 1px solid var(--ri2-border) !important;
+	border-radius: 10px !important;
+	box-shadow: var(--ri2-shadow-lg) !important;
 	font: 13px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
 	margin: 0 !important;
 }
 .ri2-linkpop__url {
 	width: 240px !important;
 	padding: 6px 8px !important;
-	border: 1px solid #d0d0e0 !important;
+	border: 1px solid var(--ri2-border) !important;
 	border-radius: 6px !important;
 	margin: 0 !important;
 	font-size: 13px !important;
 	background: #fff !important;
-	color: #333 !important;
+	color: var(--ri2-text) !important;
 }
-.ri2-linkpop__check { display: flex; align-items: center; gap: 4px; white-space: nowrap; color: #333; }
+.ri2-linkpop__check { display: flex; align-items: center; gap: 4px; white-space: nowrap; color: var(--ri2-text); }
 .ri2-linkpop__apply {
 	border: 0 !important;
 	background: var(--ri2-accent) !important;
@@ -302,6 +315,7 @@
 	text-decoration: none !important;
 	display: inline-block !important;
 }
+.ri2-linkpop__apply:hover { background: var(--ri2-accent-dark); }
 
 /* ------------------------------------------------------------------ */
 /* Floating button (image replace, etc.)                              */
@@ -313,21 +327,22 @@
 	display: none;
 	align-items: center !important;
 	gap: 6px !important;
-	padding: 6px 12px !important;
-	background: var(--ri2-accent) !important;
-	color: #fff !important;
-	border: 0 !important;
-	border-radius: 999px !important;
+	padding: 7px 14px !important;
+	background: #fff !important;
+	color: var(--ri2-text) !important;
+	border: 1px solid var(--ri2-border) !important;
+	border-radius: 8px !important;
 	cursor: pointer !important;
 	font: 600 12px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
-	box-shadow: 0 4px 16px rgba( 0, 0, 0, 0.3 ) !important;
+	box-shadow: var(--ri2-shadow-lg) !important;
 	margin: 0 !important;
 	line-height: 1.2 !important;
 	text-decoration: none !important;
+	transition: box-shadow 0.15s ease !important;
 }
 .ri2-floatbtn.is-visible { display: inline-flex; }
-.ri2-floatbtn:hover { background: var(--ri2-accent-dark); }
-.ri2-floatbtn .dashicons { font-size: 16px; width: 16px; height: 16px; }
+.ri2-floatbtn:hover { box-shadow: var( --ri2-shadow-hover ) !important; }
+.ri2-floatbtn .dashicons { font-size: 15px; width: 15px; height: 15px; color: var(--ri2-accent) !important; }
 
 /* ------------------------------------------------------------------ */
 /* Video floating button                                              */
@@ -339,22 +354,23 @@
 	display: none;
 	align-items: center !important;
 	gap: 6px !important;
-	padding: 6px 12px !important;
-	background: var(--ri2-accent) !important;
-	color: #fff !important;
-	border: 0 !important;
-	border-radius: 4px !important;
+	padding: 7px 14px !important;
+	background: #fff !important;
+	color: var(--ri2-text) !important;
+	border: 1px solid var(--ri2-border) !important;
+	border-radius: 8px !important;
 	cursor: pointer !important;
 	font: 600 12px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
-	box-shadow: 0 2px 8px rgba( 0, 0, 0, 0.3 ) !important;
+	box-shadow: var(--ri2-shadow-lg) !important;
 	white-space: nowrap !important;
 	margin: 0 !important;
 	line-height: 1.2 !important;
 	text-decoration: none !important;
+	transition: box-shadow 0.15s ease !important;
 }
 .ri2-vidbtn.is-visible { display: inline-flex; }
-.ri2-vidbtn:hover { background: var(--ri2-accent-dark); }
-.ri2-vidbtn .dashicons { font-size: 14px; width: 14px; height: 14px; }
+.ri2-vidbtn:hover { box-shadow: var( --ri2-shadow-hover ) !important; }
+.ri2-vidbtn .dashicons { font-size: 15px; width: 15px; height: 15px; color: var(--ri2-accent) !important; }
 
 /* ------------------------------------------------------------------ */
 /* Video URL popover                                                  */
@@ -367,46 +383,46 @@
 	left: 50% !important;
 	transform: translate( -50%, -50% );
 	background: #fff !important;
-	border: 0 !important;
-	border-radius: 10px !important;
-	box-shadow: 0 12px 40px rgba( 0, 0, 0, 0.3 ) !important;
+	border: 1px solid var(--ri2-border) !important;
+	border-radius: 12px !important;
+	box-shadow: 0 2px 4px rgba( 0, 0, 0, 0.2 ), 0 8px 32px rgba( 0, 0, 0, 0.2 ) !important;
 	font: 14px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
 	margin: 0 !important;
 	padding: 0 !important;
 }
 .ri2-vidpop__inner { padding: 20px 24px !important; min-width: 340px; }
-.ri2-vidpop__title { font-weight: 700 !important; margin-bottom: 12px !important; color: #333 !important; font-size: 15px !important; }
+.ri2-vidpop__title { font-weight: 700 !important; margin-bottom: 12px !important; color: var(--ri2-text) !important; font-size: 15px !important; }
 .ri2-vidpop__row { margin-bottom: 16px !important; }
 .ri2-vidpop__input {
 	width: 100% !important;
 	padding: 8px 10px !important;
-	border: 1px solid #d0d0e0 !important;
-	border-radius: 6px !important;
+	border: 1px solid var(--ri2-border) !important;
+	border-radius: 8px !important;
 	margin: 0 !important;
 	font-size: 14px !important;
 	background: #fff !important;
-	color: #333 !important;
+	color: var(--ri2-text) !important;
 	box-sizing: border-box !important;
 }
 .ri2-vidpop__actions { display: flex !important; justify-content: flex-end !important; gap: 8px !important; }
 .ri2-vidpop__cancel {
-	border: 1px solid #d0d0e0 !important;
+	border: 1px solid var(--ri2-border) !important;
 	background: #fff !important;
-	color: #666 !important;
+	color: var(--ri2-text-muted) !important;
 	padding: 8px 16px !important;
-	border-radius: 6px !important;
+	border-radius: 8px !important;
 	cursor: pointer !important;
 	font-weight: 600 !important;
 	font-size: 13px !important;
 	margin: 0 !important;
 }
-.ri2-vidpop__cancel:hover { background: #f5f5f5; }
+.ri2-vidpop__cancel:hover { background: var(--ri2-hover); }
 .ri2-vidpop__save {
 	border: 0 !important;
 	background: var(--ri2-accent) !important;
 	color: #fff !important;
 	padding: 8px 16px !important;
-	border-radius: 6px !important;
+	border-radius: 8px !important;
 	cursor: pointer !important;
 	font-weight: 600 !important;
 	font-size: 13px !important;
@@ -422,20 +438,20 @@
 	gap: 8px !important;
 	width: 100% !important;
 	padding: 10px 14px !important;
-	border: 1px solid #d0d0e0 !important;
+	border: 1px solid var(--ri2-border) !important;
 	background: #fff !important;
-	color: #333 !important;
+	color: var(--ri2-text) !important;
 	font-size: 14px !important;
 	cursor: pointer !important;
 	margin: 0 0 8px 0 !important;
-	border-radius: 4px !important;
+	border-radius: 8px !important;
 	text-align: left !important;
 }
 .ri2-srcpop__opt:hover {
 	border-color: var(--ri2-accent) !important;
-	background: #f8f8ff !important;
+	background: rgba( 109, 74, 255, 0.04 ) !important;
 }
-.ri2-srcpop__opt .dashicons { font-size: 18px !important; width: 18px !important; height: 18px !important; }
+.ri2-srcpop__opt .dashicons { font-size: 18px !important; width: 18px !important; height: 18px !important; color: var(--ri2-accent) !important; }
 
 /* Keep our UI clickable above Elementor overlays. */
 .ri2-ui { box-sizing: border-box !important; }
@@ -450,87 +466,91 @@
 	display: none !important;
 	align-items: center !important;
 	justify-content: center !important;
-	width: 28px !important;
-	height: 28px !important;
-	border: 0 !important;
-	border-radius: 4px !important;
-	background: var(--ri2-accent) !important;
-	color: #fff !important;
+	width: 32px !important;
+	height: 32px !important;
+	border: 1px solid var(--ri2-border) !important;
+	border-radius: 8px !important;
+	background: #fff !important;
+	color: var(--ri2-text) !important;
 	cursor: pointer !important;
 	font-size: 16px !important;
 	line-height: 1 !important;
 	padding: 0 !important;
-	box-shadow: 0 2px 8px rgba(0,0,0,.25) !important;
+	box-shadow: var(--ri2-shadow) !important;
 	opacity: 0 !important;
-	transition: opacity .15s ease !important;
+	transition: opacity .15s ease, box-shadow .15s ease !important;
 }
 .ri2-bgbtn.is-visible {
 	display: flex !important;
 	opacity: 1 !important;
 }
 .ri2-bgbtn:hover {
-	background: var(--ri2-accent-dark) !important;
+	box-shadow: var( --ri2-shadow-hover ) !important;
 }
 .ri2-bgbtn .dashicons {
 	font-family: dashicons !important;
 	font-size: 16px !important;
 	width: 16px !important;
 	height: 16px !important;
+	color: var(--ri2-accent) !important;
 }
 
 /* ------------------------------------------------------------------ */
-/* Gallery per-image buttons (Replace / Delete)                        */
+/* Gallery per-image inline toolbar (Replace / Delete)                */
 /* ------------------------------------------------------------------ */
 
-.ri2-gallery-btn {
+.ri2-gallery-actions {
 	position: fixed !important;
 	z-index: 99999 !important;
 	display: none !important;
+	flex-direction: row !important;
+	gap: 1px !important;
+	margin: 0 !important;
+	padding: 4px !important;
+	background: #fff !important;
+	border: 1px solid var(--ri2-border) !important;
+	border-radius: 8px !important;
+	box-shadow: var(--ri2-shadow-lg) !important;
+}
+
+.ri2-gallery-actions.is-visible {
+	display: flex !important;
+}
+
+.ri2-gallery-actbtn {
+	display: flex !important;
 	align-items: center !important;
 	justify-content: center !important;
 	width: 28px !important;
 	height: 28px !important;
-	min-width: 28px !important;
-	max-width: 28px !important;
 	padding: 0 !important;
-	margin: 0 !important;
-	box-sizing: border-box !important;
-	border: none !important;
-	border-radius: 4px !important;
+	background: transparent !important;
+	color: var(--ri2-text) !important;
+	border: 0 !important;
+	border-radius: 6px !important;
 	cursor: pointer !important;
-	font-family: dashicons !important;
-	font-size: 16px !important;
-	color: #fff !important;
-	opacity: 0 !important;
-	transition: opacity .15s ease !important;
+	margin: 0 !important;
+	line-height: 1 !important;
+	transition: background 0.15s ease !important;
 }
 
-.ri2-gallery-btn .dashicons {
-	font-family: dashicons !important;
-	font-size: 16px !important;
-	width: 16px !important;
-	height: 16px !important;
+.ri2-gallery-actbtn:hover {
+	background: var(--ri2-hover) !important;
 }
 
-.ri2-gallery-btn.is-visible {
-	display: flex !important;
-	opacity: 1 !important;
+.ri2-gallery-actbtn .dashicons {
+	font-size: 15px !important;
+	width: 15px !important;
+	height: 15px !important;
 }
 
-.ri2-gallery-replace {
-	background: var(--ri2-accent, #007cba) !important;
+.ri2-gallery-actbtn--delete {
+	color: var(--ri2-err) !important;
+	background: rgba( 229, 72, 77, 0.08 ) !important;
 }
 
-.ri2-gallery-replace:hover {
-	background: var(--ri2-accent-dark, #006ba1) !important;
-}
-
-.ri2-gallery-delete {
-	background: #d63638 !important;
-}
-
-.ri2-gallery-delete:hover {
-	background: #b32d2e !important;
+.ri2-gallery-actbtn--delete:hover {
+	background: rgba( 229, 72, 77, 0.15 ) !important;
 }
 
 .ri2-gallery-add-btn {
@@ -539,19 +559,19 @@
 	display: none !important;
 	align-items: center !important;
 	gap: 4px !important;
-	height: 28px !important;
-	padding: 0 10px !important;
+	height: 32px !important;
+	padding: 0 12px !important;
 	margin: 0 !important;
 	box-sizing: border-box !important;
-	border: none !important;
-	border-radius: 4px !important;
+	border: 1px solid var(--ri2-border) !important;
+	border-radius: 8px !important;
 	cursor: pointer !important;
 	font-size: 12px !important;
 	font-weight: 600 !important;
-	color: #fff !important;
-	background: #00a32a !important;
+	color: var(--ri2-text) !important;
+	background: #fff !important;
 	opacity: 0 !important;
-	transition: opacity .15s ease !important;
+	transition: opacity .15s ease, box-shadow .15s ease !important;
 	white-space: nowrap !important;
 }
 
@@ -559,6 +579,7 @@
 	font-size: 14px !important;
 	width: 14px !important;
 	height: 14px !important;
+	color: var(--ri2-accent) !important;
 }
 
 .ri2-gallery-add-btn.is-visible {
@@ -567,15 +588,15 @@
 }
 
 .ri2-gallery-add-btn:hover {
-	background: #008a20 !important;
+	box-shadow: var( --ri2-shadow-hover ) !important;
 }
 
 .ri2-gallery-add {
-	background: #00a32a !important;
+	background: #fff !important;
 }
 
 .ri2-gallery-add:hover {
-	background: #008a20 !important;
+	box-shadow: var( --ri2-shadow-hover ) !important;
 }
 
 /* ------------------------------------------------------------------ */
@@ -586,9 +607,9 @@
 	position: fixed !important;
 	z-index: 99999 !important;
 	background: #fff !important;
-	border: 1px solid #d0d0e0 !important;
-	border-radius: 6px !important;
-	box-shadow: 0 4px 20px rgba( 0, 0, 0, 0.15 ) !important;
+	border: 1px solid var(--ri2-border) !important;
+	border-radius: 10px !important;
+	box-shadow: var(--ri2-shadow-lg) !important;
 	padding: 12px !important;
 	min-width: 200px !important;
 	font: 13px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
@@ -596,7 +617,7 @@
 
 .ri2-galpicker__title {
 	font-weight: 600 !important;
-	color: #333 !important;
+	color: var(--ri2-text) !important;
 	margin-bottom: 8px !important;
 	font-size: 13px !important;
 }
@@ -612,10 +633,10 @@
 	display: block !important;
 	width: 100% !important;
 	padding: 8px 12px !important;
-	border: 1px solid #d0d0e0 !important;
-	border-radius: 4px !important;
-	background: #f7f7f7 !important;
-	color: #333 !important;
+	border: 1px solid var(--ri2-border) !important;
+	border-radius: 8px !important;
+	background: #fff !important;
+	color: var(--ri2-text) !important;
 	font-size: 13px !important;
 	text-align: left !important;
 	cursor: pointer !important;
@@ -632,17 +653,17 @@
 	display: block !important;
 	width: 100% !important;
 	padding: 6px 12px !important;
-	border: 0 !important;
-	border-radius: 4px !important;
-	background: #e0e0e0 !important;
-	color: #555 !important;
+	border: 1px solid var(--ri2-border) !important;
+	border-radius: 8px !important;
+	background: #fff !important;
+	color: var(--ri2-text-muted) !important;
 	font-size: 12px !important;
 	text-align: center !important;
 	cursor: pointer !important;
 }
 
 .ri2-galpicker__cancel:hover {
-	background: #d0d0d0 !important;
+	background: var(--ri2-hover) !important;
 }
 
 /* Floating link icon button — positioned at top-right of hovered widget */
@@ -652,16 +673,17 @@
 	display: none;
 	align-items: center !important;
 	justify-content: center !important;
-	width: 28px !important;
-	height: 28px !important;
+	width: 32px !important;
+	height: 32px !important;
 	padding: 0 !important;
-	background: var( --ri2-accent ) !important;
-	color: #fff !important;
-	border: 0 !important;
-	border-radius: 4px !important;
+	background: #fff !important;
+	color: var(--ri2-text) !important;
+	border: 1px solid var(--ri2-border) !important;
+	border-radius: 8px !important;
 	cursor: pointer !important;
-	box-shadow: 0 2px 8px rgba( 0, 0, 0, 0.3 ) !important;
+	box-shadow: var(--ri2-shadow) !important;
 	margin: 0 !important;
+	transition: box-shadow 0.15s ease !important;
 }
 
 .ri2-linkbtn.is-visible {
@@ -669,13 +691,14 @@
 }
 
 .ri2-linkbtn:hover {
-	background: var( --ri2-accent-dark );
+	box-shadow: var( --ri2-shadow-hover ) !important;
 }
 
 .ri2-linkbtn .dashicons {
 	font-size: 16px;
 	width: 16px;
 	height: 16px;
+	color: var(--ri2-accent) !important;
 }
 
 /* Social icons — centered edit pencil overlay */
@@ -685,11 +708,13 @@
 	display: none;
 	align-items: center;
 	justify-content: center;
-	background: var( --ri2-accent ) !important;
-	border-radius: 50% !important;
+	background: #fff !important;
+	border: 1px solid var(--ri2-border) !important;
+	border-radius: 8px !important;
 	cursor: pointer !important;
 	opacity: 0;
-	transition: opacity 0.12s ease;
+	transition: opacity 0.12s ease, box-shadow 0.12s ease;
+	box-shadow: var(--ri2-shadow);
 }
 
 .ri2-edit-overlay.is-visible {
@@ -698,11 +723,11 @@
 }
 
 .ri2-edit-overlay:hover {
-	background: var( --ri2-accent-dark ) !important;
+	box-shadow: var( --ri2-shadow-hover );
 }
 
 .ri2-edit-overlay .dashicons {
-	color: #fff !important;
+	color: var(--ri2-accent) !important;
 	font-size: 16px;
 	width: 16px;
 	height: 16px;
@@ -715,8 +740,9 @@
 	display: none;
 	flex-direction: column;
 	background: #fff !important;
-	border-radius: 6px !important;
-	box-shadow: 0 4px 20px rgba( 0, 0, 0, 0.18 ) !important;
+	border: 1px solid var(--ri2-border) !important;
+	border-radius: 10px !important;
+	box-shadow: var(--ri2-shadow-lg) !important;
 	overflow: hidden;
 	min-width: 150px;
 }
@@ -733,33 +759,34 @@
 	padding: 10px 14px !important;
 	border: none !important;
 	background: #fff !important;
-	color: #333 !important;
+	color: var(--ri2-text) !important;
 	font-size: 13px !important;
 	cursor: pointer !important;
 	white-space: nowrap !important;
 }
 
 .ri2-action-item:hover {
-	background: #f0f0f0 !important;
+	background: var(--ri2-hover) !important;
 }
 
 .ri2-action-item .dashicons {
 	font-size: 16px !important;
 	width: 16px !important;
 	height: 16px !important;
-	color: var( --ri2-accent, #0073aa ) !important;
+	color: var(--ri2-accent) !important;
 }
 
 .ri2-action-delete {
-	color: #e5484d !important;
+	color: var(--ri2-err) !important;
+	background: rgba( 229, 72, 77, 0.06 ) !important;
 }
 
 .ri2-action-delete:hover {
-	background: #fef0f0 !important;
+	background: rgba( 229, 72, 77, 0.12 ) !important;
 }
 
 .ri2-action-delete .dashicons {
-	color: #e5484d !important;
+	color: var(--ri2-err) !important;
 }
 
 /* Social icons — add-icon floating button */
@@ -771,14 +798,15 @@
 	justify-content: center;
 	width: 32px !important;
 	height: 32px !important;
-	border: 2px dashed var( --ri2-accent, #0073aa ) !important;
-	border-radius: 50% !important;
+	border: 1px solid var(--ri2-border) !important;
+	border-radius: 8px !important;
 	background: #fff !important;
 	cursor: pointer !important;
-	color: var( --ri2-accent, #0073aa ) !important;
+	color: var(--ri2-accent) !important;
 	font-size: 16px !important;
 	padding: 0 !important;
-	transition: background 0.12s ease, color 0.12s ease;
+	box-shadow: var(--ri2-shadow);
+	transition: box-shadow 0.12s ease;
 }
 
 .ri2-add-btn.is-visible {
@@ -786,8 +814,7 @@
 }
 
 .ri2-add-btn:hover {
-	background: var( --ri2-accent, #0073aa ) !important;
-	color: #fff !important;
+	box-shadow: var( --ri2-shadow-hover );
 }
 
 .ri2-add-btn .dashicons {
@@ -809,8 +836,9 @@
 	display: flex !important;
 	flex-direction: column !important;
 	background: #fff !important;
-	border-radius: 8px !important;
-	box-shadow: 0 8px 32px rgba( 0, 0, 0, 0.25 ) !important;
+	border: 1px solid var(--ri2-border) !important;
+	border-radius: 12px !important;
+	box-shadow: 0 2px 4px rgba( 0, 0, 0, 0.2 ), 0 8px 32px rgba( 0, 0, 0, 0.2 ) !important;
 	overflow: hidden !important;
 }
 
@@ -825,18 +853,18 @@
 	background: transparent !important;
 	font-size: 20px !important;
 	cursor: pointer !important;
-	color: #666 !important;
-	border-radius: 4px !important;
+	color: var(--ri2-text-muted) !important;
+	border-radius: 6px !important;
 }
 
 .ri2-iconpop__close:hover {
-	background: #eee !important;
+	background: var(--ri2-hover) !important;
 }
 
 .ri2-iconpop__tabs {
 	display: flex !important;
 	gap: 0 !important;
-	border-bottom: 1px solid #ddd !important;
+	border-bottom: 1px solid var(--ri2-border) !important;
 	padding: 0 !important;
 	margin: 0 !important;
 }
@@ -847,12 +875,12 @@
 	background: transparent !important;
 	cursor: pointer !important;
 	font-size: 13px !important;
-	color: #666 !important;
+	color: var(--ri2-text-muted) !important;
 	border-bottom: 2px solid transparent !important;
 }
 
 .ri2-iconpop__tab.is-active {
-	color: var( --ri2-accent ) !important;
+	color: var(--ri2-accent) !important;
 	border-bottom-color: var( --ri2-accent ) !important;
 	font-weight: 600 !important;
 }
@@ -860,11 +888,13 @@
 .ri2-iconpop__search {
 	margin: 12px !important;
 	padding: 8px 12px !important;
-	border: 1px solid #ddd !important;
-	border-radius: 4px !important;
+	border: 1px solid var(--ri2-border) !important;
+	border-radius: 8px !important;
 	font-size: 14px !important;
 	width: calc( 100% - 24px ) !important;
 	box-sizing: border-box !important;
+	background: #fff !important;
+	color: var(--ri2-text) !important;
 }
 
 .ri2-iconpop__search:focus {
@@ -888,12 +918,12 @@
 	width: 40px !important;
 	height: 40px !important;
 	padding: 0 !important;
-	border: 1px solid #eee !important;
-	border-radius: 4px !important;
+	border: 1px solid var(--ri2-border) !important;
+	border-radius: 8px !important;
 	background: #fff !important;
 	cursor: pointer !important;
 	font-size: 18px !important;
-	color: #444 !important;
+	color: var(--ri2-text) !important;
 }
 
 .ri2-iconpop__icon:hover {
@@ -906,7 +936,7 @@
 	grid-column: 1 / -1 !important;
 	text-align: center !important;
 	padding: 24px !important;
-	color: #999 !important;
+	color: var(--ri2-text-muted) !important;
 	font-size: 14px !important;
 }
 
@@ -941,17 +971,18 @@
 	display: none;
 	align-items: center !important;
 	gap: 4px !important;
-	padding: 4px 10px !important;
-	background: var( --ri2-accent ) !important;
-	color: #fff !important;
-	border: 0 !important;
-	border-radius: 4px !important;
+	padding: 6px 12px !important;
+	background: #fff !important;
+	color: var(--ri2-text) !important;
+	border: 1px solid var(--ri2-border) !important;
+	border-radius: 8px !important;
 	cursor: pointer !important;
-	box-shadow: 0 2px 8px rgba( 0, 0, 0, 0.3 ) !important;
+	box-shadow: var(--ri2-shadow) !important;
 	margin: 0 !important;
 	font: 600 12px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
 	line-height: 1.2 !important;
 	white-space: nowrap !important;
+	transition: box-shadow 0.15s ease !important;
 }
 
 .ri2-flipbtn.is-visible {
@@ -959,13 +990,14 @@
 }
 
 .ri2-flipbtn:hover {
-	background: var( --ri2-accent-dark );
+	box-shadow: var( --ri2-shadow-hover ) !important;
 }
 
 .ri2-flipbtn .dashicons {
-	font-size: 14px;
-	width: 14px;
-	height: 14px;
+	font-size: 15px;
+	width: 15px;
+	height: 15px;
+	color: var(--ri2-accent) !important;
 }
 
 /* Floating graphic button for flip-box (change icon/image) */
@@ -975,17 +1007,18 @@
 	display: none;
 	align-items: center !important;
 	gap: 4px !important;
-	padding: 4px 10px !important;
-	background: var( --ri2-accent ) !important;
-	color: #fff !important;
-	border: 0 !important;
-	border-radius: 4px !important;
+	padding: 6px 12px !important;
+	background: #fff !important;
+	color: var(--ri2-text) !important;
+	border: 1px solid var(--ri2-border) !important;
+	border-radius: 8px !important;
 	cursor: pointer !important;
-	box-shadow: 0 2px 8px rgba( 0, 0, 0, 0.3 ) !important;
+	box-shadow: var(--ri2-shadow) !important;
 	margin: 0 !important;
 	font: 600 12px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
 	line-height: 1.2 !important;
 	white-space: nowrap !important;
+	transition: box-shadow 0.15s ease !important;
 }
 
 .ri2-graphicbtn.is-visible {
@@ -993,13 +1026,14 @@
 }
 
 .ri2-graphicbtn:hover {
-	background: var( --ri2-accent-dark );
+	box-shadow: var( --ri2-shadow-hover ) !important;
 }
 
 .ri2-graphicbtn .dashicons {
-	font-size: 14px;
-	width: 14px;
-	height: 14px;
+	font-size: 15px;
+	width: 15px;
+	height: 15px;
+	color: var(--ri2-accent) !important;
 }
 
 /* Graphic chooser popup (icon/image/none) */
@@ -1007,8 +1041,9 @@
 	position: fixed !important;
 	z-index: 99992 !important;
 	background: #fff !important;
-	border-radius: 6px !important;
-	box-shadow: 0 4px 20px rgba( 0, 0, 0, 0.18 ) !important;
+	border: 1px solid var(--ri2-border) !important;
+	border-radius: 10px !important;
+	box-shadow: var(--ri2-shadow-lg) !important;
 	overflow: hidden !important;
 	min-width: 140px;
 	font: 13px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
@@ -1022,7 +1057,7 @@
 	padding: 10px 14px !important;
 	border: none !important;
 	background: #fff !important;
-	color: #333 !important;
+	color: var(--ri2-text) !important;
 	font-size: 13px !important;
 	cursor: pointer !important;
 	white-space: nowrap !important;
@@ -1031,12 +1066,12 @@
 }
 
 .ri2-graphicpop__item:hover {
-	background: #f0f0f0 !important;
+	background: var(--ri2-hover) !important;
 }
 
 .ri2-graphicpop__item .dashicons {
 	font-size: 16px !important;
 	width: 16px !important;
 	height: 16px !important;
-	color: var( --ri2-accent, #0073aa ) !important;
+	color: var(--ri2-accent) !important;
 }

@@ -354,7 +354,7 @@
 		addBtn = document.createElement( 'button' );
 		addBtn.type = 'button';
 		addBtn.className = 'ri2-carousel-addbtn ri2-ui';
-		addBtn.innerHTML = '<span class="dashicons dashicons-plus-alt2"></span> ' + ( RI.i18n.addSlide || 'Add Slide' );
+		addBtn.innerHTML = '<span class="dashicons dashicons-plus-alt"></span> ' + ( RI.i18n.addSlide || 'Add Slide' );
 		addBtn.addEventListener( 'click', function ( e ) {
 			e.preventDefault(); e.stopPropagation();
 			doAddSlide();

@@ -18,6 +18,7 @@
 
 	let addBtn = null;
 	let addBtnWidget = null;
+	let imgToolbar = null;
 	let imgBtns = [];
 	let leaveTimer = null;
 	let hoverMode = null;
@@ -71,23 +72,27 @@
 		if ( addBtn ) { addBtn.classList.remove( 'is-visible' ); }
 	}
 
-	/* --- Per-image buttons (Replace / Delete) --- */
+	/* --- Per-image toolbar (Replace / Delete) --- */
 	function ensureImgBtns() {
-		if ( imgBtns.length ) { return; }
+		if ( imgToolbar ) { return; }
+		imgToolbar = document.createElement( 'div' );
+		imgToolbar.className = 'ri2-gallery-actions ri2-ui';
+
 		const replace = document.createElement( 'button' );
 		replace.type = 'button';
-		replace.className = 'ri2-gallery-btn ri2-gallery-replace ri2-ui';
-		replace.innerHTML = '<span class="dashicons dashicons-image-rotate"></span>';
+		replace.className = 'ri2-gallery-actbtn ri2-ui';
+		replace.innerHTML = '<span class="dashicons dashicons-format-image"></span>';
 		replace.title = 'Replace';
 
 		const del = document.createElement( 'button' );
 		del.type = 'button';
-		del.className = 'ri2-gallery-btn ri2-gallery-delete ri2-ui';
-		del.innerHTML = '<span class="dashicons dashicons-no"></span>';
+		del.className = 'ri2-gallery-actbtn ri2-gallery-actbtn--delete ri2-ui';
+		del.innerHTML = '<span class="dashicons dashicons-trash"></span>';
 		del.title = 'Delete';
 
-		document.body.appendChild( replace );
-		document.body.appendChild( del );
+		imgToolbar.appendChild( replace );
+		imgToolbar.appendChild( del );
+		document.body.appendChild( imgToolbar );
 		imgBtns = [ replace, del ];
 	}
 
@@ -101,9 +106,9 @@
 		const replace = imgBtns[ 0 ];
 		const del = imgBtns[ 1 ];
 
-		replace.style.top = ( r.top + 4 ) + 'px';
-		replace.style.left = ( r.left + 4 ) + 'px';
-		replace.classList.add( 'is-visible' );
+		imgToolbar.style.top = ( r.top + 4 ) + 'px';
+		imgToolbar.style.left = ( r.left + 4 ) + 'px';
+		imgToolbar.classList.add( 'is-visible' );
 		replace.onclick = function ( e ) {
 			e.preventDefault();
 			e.stopPropagation();
@@ -111,9 +116,6 @@
 			doReplace( widget, ctx, index );
 		};
 
-		del.style.top = ( r.top + 36 ) + 'px';
-		del.style.left = ( r.left + 4 ) + 'px';
-		del.classList.add( 'is-visible' );
 		del.onclick = function ( e ) {
 			e.preventDefault();
 			e.stopPropagation();
@@ -123,7 +125,7 @@
 	}
 
 	function hideImgBtns() {
-		imgBtns.forEach( function ( b ) { b.classList.remove( 'is-visible' ); } );
+		if ( imgToolbar ) { imgToolbar.classList.remove( 'is-visible' ); }
 	}
 
 	function hideAll() {
@@ -267,17 +269,17 @@
 
 	document.addEventListener( 'mouseout', function ( e ) {
 		if ( ! RI.isActive() ) { return; }
-		if ( ! addBtnWidget && ! imgBtns.some( function ( b ) { return b.classList.contains( 'is-visible' ); } ) ) { return; }
+		if ( ! addBtnWidget && ! ( imgToolbar && imgToolbar.classList.contains( 'is-visible' ) ) ) { return; }
 
 		const to = e.relatedTarget;
 		if ( to && ( to === addBtn || ( addBtn && addBtn.contains( to ) ) ) ) { return; }
-		if ( to && imgBtns.some( function ( b ) { return to === b || b.contains( to ); } ) ) { return; }
+		if ( to && imgToolbar && ( to === imgToolbar || imgToolbar.contains( to ) ) ) { return; }
 		if ( addBtnWidget && to && addBtnWidget.contains( to ) ) { return; }
 
 		clearTimeout( leaveTimer );
 		leaveTimer = setTimeout( function () {
 			if ( addBtn && addBtn.matches( ':hover' ) ) { return; }
-			if ( imgBtns.some( function ( b ) { return b.matches( ':hover' ); } ) ) { return; }
+			if ( imgToolbar && imgToolbar.matches( ':hover' ) ) { return; }
 			hideAll();
 		}, 100 );
 	} );
