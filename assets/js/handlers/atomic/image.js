@@ -12,6 +12,7 @@
 
 	let btn = null;
 	let hoveredImg = null;
+	let leaveTimer = null;
 
 	function findImageField( res ) {
 		return ( res.fields || [] ).filter( function ( f ) { return 'image' === f.kind; } )[ 0 ];
@@ -40,6 +41,7 @@
 		btn.addEventListener( 'click', function ( e ) {
 			e.preventDefault();
 			e.stopPropagation();
+			clearTimeout( leaveTimer );
 			if ( hoveredImg ) {
 				const img = hoveredImg;
 				hideBtn();
@@ -57,6 +59,9 @@
 
 	function showBtn( img ) {
 		ensureBtn();
+		// Cancel any pending hide from a previous mouseout, otherwise it fires
+		// ~60ms later and hides the button we are showing right now.
+		clearTimeout( leaveTimer );
 		hoveredImg = img;
 		const r = img.getBoundingClientRect();
 		if ( r.width < 24 || r.height < 24 ) { hideBtn(); return; }
@@ -89,13 +94,15 @@
 		if ( ! hoveredImg ) { return; }
 		if ( e.relatedTarget && e.relatedTarget === btn ) { return; }
 		if ( btn && btn.contains( e.relatedTarget ) ) { return; }
-		setTimeout( function () {
-			if ( btn && ! btn.matches( ':hover' ) ) { hideBtn(); }
+		clearTimeout( leaveTimer );
+		leaveTimer = setTimeout( function () {
+			if ( btn && btn.matches( ':hover' ) ) { return; }
+			hideBtn();
 		}, 60 );
 	} );
 
-	window.addEventListener( 'scroll', function () { hideBtn(); }, true );
-	window.addEventListener( 'resize', function () { hideBtn(); } );
+	window.addEventListener( 'scroll', function () { clearTimeout( leaveTimer ); hideBtn(); }, true );
+	window.addEventListener( 'resize', function () { clearTimeout( leaveTimer ); hideBtn(); } );
 
 	/* --- Atomic e-image handler --- */
 	// Atomic e-image: the widget element IS the <img> (carries data-e-type/data-id).
