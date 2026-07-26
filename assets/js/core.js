@@ -433,6 +433,10 @@
 
 	function refreshWidget( widget ) {
 		const id = widgetId( widget );
+		// Capture the resolved type before replacement. Atomic widgets render
+		// with data-e-type="widget" (the generic Widget_Base type), so we need
+		// to restore the real atomic type (e.g. "e-image") on the new element.
+		const prevType = widgetType( widget );
 		delete fieldsCache[ id ];
 		return apiGet( 'render?post_id=' + cfg.postId + '&element_id=' + encodeURIComponent( id ) )
 			.then( function ( r ) {
@@ -441,15 +445,23 @@
 				tmp.innerHTML = r.html.trim();
 				const rendered = tmp.firstElementChild;
 				if ( ! rendered ) { return; }
-				// Ensure the rendered element has data-id so we can find it later.
+				// Ensure the rendered element has the attributes the frontend JS
+				// needs to discover it: data-id, data-e-type, data-widget_type.
 				if ( ! rendered.getAttribute( 'data-id' ) ) {
 					rendered.setAttribute( 'data-id', id );
 				}
+				// Elementor sets data-e-type to the generic "widget" for atomic
+				// widgets. Overwrite it with the real atomic type so the
+				// per-handler mouseover listeners and widgetType() work.
+				var rawEType = rendered.getAttribute( 'data-e-type' ) || '';
+				if ( prevType && ( ! rawEType || 'widget' === rawEType ) ) {
+					rendered.setAttribute( 'data-e-type', prevType );
+				}
 				if ( ! rendered.getAttribute( 'data-widget_type' ) ) {
-					const wt = rendered.getAttribute( 'data-e-type' ) || '';
+					var wt = rendered.getAttribute( 'data-e-type' ) || prevType;
 					if ( wt ) { rendered.setAttribute( 'data-widget_type', wt ); }
 				}
-				const parent = widget.parentNode;
+				var parent = widget.parentNode;
 				if ( ! parent ) { return; }
 				parent.replaceChild( rendered, widget );
 				if ( window.elementorFrontend && window.elementorFrontend.elementsHandler ) {

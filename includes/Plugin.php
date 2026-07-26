@@ -127,14 +127,31 @@ class Plugin {
 		if ( ! Document::is_atomic( $widget ) ) {
 			return $content;
 		}
-		$type = $widget->get_type();
+		// Atomic widgets override get_element_type() (e.g. "e-image") but
+		// inherit get_type() which returns the generic "widget".
+		$type = method_exists( $widget, 'get_element_type' ) ? $widget->get_element_type() : $widget->get_type();
 		$id   = $widget->get_id();
 		if ( ! $type || ! $id ) {
 			return $content;
 		}
 
-		if ( preg_match( '/^\s*<[^>]+\sdata-e-type=/i', $content ) ) {
+		// Only skip wrapping if the content already has a proper atomic
+		// data-e-type (starts with "e-"). Elementor sets data-e-type="widget"
+		// (the generic type) on atomic widget output, which is not sufficient
+		// for our frontend JS to identify the widget type.
+		if ( preg_match( '/^\s*<[^>]+\sdata-e-type="e-/i', $content ) ) {
 			return $content;
+		}
+
+		// If the content already has data-e-type="widget", inject the correct
+		// atomic type into the existing element instead of adding a wrapper.
+		if ( preg_match( '/^\s*<[^>]+\sdata-e-type="widget"/i', $content, $m ) ) {
+			return preg_replace(
+				'/data-e-type="widget"/i',
+				'data-e-type="' . esc_attr( $type ) . '"',
+				$content,
+				1
+			);
 		}
 
 		return sprintf(
