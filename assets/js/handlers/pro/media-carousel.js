@@ -560,62 +560,7 @@
 
 	/* --- Handler --- */
 	const handler = {
-		onClick: function ( event, widget, ctx ) {
-			// Find which slide was clicked. Duplicates map back to their real index.
-			var slideEl = event.target.closest && event.target.closest( '.swiper-slide' );
-			if ( ! slideEl ) { return; }
-
-			var slideIndex = slideIndexOf( slideEl, widget );
-			if ( slideIndex < 0 ) { return; }
-
-			ctx.getFields().then( function ( res ) {
-				var field = findRepeaterField( res );
-				if ( ! field ) {
-					ctx.toast( ctx.i18n.nothingEditable || 'Nothing editable here', 'error' );
-					return;
-				}
-
-				var carouselImg = slideEl.querySelector( '.elementor-carousel-image' );
-				if ( ! carouselImg || ! ( event.target === carouselImg || carouselImg.contains( event.target ) ) ) {
-					ctx.toast( ctx.i18n.nothingEditable || 'Nothing editable here', 'error' );
-					return;
-				}
-
-				var repItem = ( field.items || [] )[ slideIndex ];
-				var slideType = ( repItem && repItem.type ) || 'image';
-
-				if ( 'video' === slideType ) {
-					hideAll();
-					pauseSwiper( widget );
-					var currentUrl = ( repItem && repItem.video && repItem.video.url ) || '';
-					ctx.editLink( carouselImg, {
-						key: field.key,
-						itemIndex: slideIndex,
-						subField: 'video',
-						linkKey: 'video',
-						url: currentUrl,
-						targetBlank: false
-					} );
-				} else {
-					hideAll();
-					pauseSwiper( widget );
-					ctx.openMedia( {
-						onSelect: function ( attachment ) {
-							ctx.toast( ctx.i18n.saving || 'Saving…', 'saving' );
-							var newUrl = attachment.url || ( attachment.sizes && attachment.sizes.full && attachment.sizes.full.url ) || '';
-							if ( carouselImg && newUrl ) {
-								carouselImg.style.setProperty( 'background-image', "url('" + newUrl + "')", 'important' );
-							}
-							ctx.saveRepeaterItem( field.key, slideIndex, 'image', attachment.id )
-								.then( function () { ctx.toast( ctx.i18n.saved || 'Saved', 'ok' ); } )
-								.catch( function ( err ) { ctx.toast( ( err && err.message ) || ctx.i18n.saveFailed || 'Save failed', 'error' ); } );
-						}
-					} );
-				}
-			} ).catch( function () {
-				ctx.toast( ctx.i18n.nothingEditable || 'Nothing editable here', 'error' );
-			} );
-		},
+		onClick: function () {},
 		onHover: function () {},
 		onLeave: function () {}
 	};
