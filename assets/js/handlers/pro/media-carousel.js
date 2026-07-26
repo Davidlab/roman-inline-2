@@ -105,6 +105,23 @@
 		return real;
 	}
 
+	/**
+	 * All slide elements that render a given repeater index — the real slide plus
+	 * any loop-mode clones. Clones inherit `data-swiper-slide-index`, so an
+	 * optimistic DOM update must touch every one of them or the stale clone
+	 * reappears as soon as the carousel wraps around.
+	 */
+	function slidesForIndex( widget, slideIndex ) {
+		var all = widget.querySelectorAll( '.swiper-slide' );
+		var match = [];
+		for ( var i = 0; i < all.length; i++ ) {
+			if ( slideIndexOf( all[ i ], widget ) === slideIndex ) {
+				match.push( all[ i ] );
+			}
+		}
+		return match;
+	}
+
 	function createToolbar( slideIndex, slideEl, field ) {
 		var bar = document.createElement( 'div' );
 		bar.className = 'ri2-carousel-actions ri2-ui';
@@ -403,9 +420,21 @@
 				onSelect: function ( attachment ) {
 					ctx.toast( ctx.i18n.saving || 'Saving…', 'saving' );
 					var newUrl = attachment.url || ( attachment.sizes && attachment.sizes.full && attachment.sizes.full.url ) || '';
-					var carouselImg = slideEl.querySelector( '.elementor-carousel-image' );
-					if ( carouselImg && newUrl ) {
-						carouselImg.style.setProperty( 'background-image', "url('" + newUrl + "')", 'important' );
+					if ( newUrl ) {
+						// Patch the real slide *and* every loop-mode clone of it, otherwise
+						// the stale clone shows the old image when the carousel wraps.
+						var targets = slidesForIndex( widget, slideIndex );
+						if ( ! targets.length ) { targets = [ slideEl ]; }
+						targets.forEach( function ( el ) {
+							var img = el.querySelector( '.elementor-carousel-image' );
+							if ( ! img ) { return; }
+							img.style.setProperty( 'background-image', "url('" + newUrl + "')", 'important' );
+							// Swiper's lazy module re-applies data-background when the slide
+							// scrolls into view, so it has to point at the new image too.
+							if ( img.hasAttribute( 'data-background' ) ) {
+								img.setAttribute( 'data-background', newUrl );
+							}
+						} );
 					}
 					ctx.saveRepeaterItem( field.key, slideIndex, 'image', attachment.id )
 						.then( function () { ctx.toast( ctx.i18n.saved || 'Saved', 'ok' ); } )
