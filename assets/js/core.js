@@ -253,12 +253,13 @@
 		} );
 	}
 
-	function addRepeaterItem( id, key, kind ) {
+	function addRepeaterItem( id, key, kind, insertIndex ) {
 		return apiPost( 'add-repeater-item', {
-			post_id:    cfg.postId,
-			element_id: id,
-			key:        key,
-			kind:       kind || ''
+			post_id:      cfg.postId,
+			element_id:   id,
+			key:          key,
+			kind:         kind || '',
+			insert_index: insertIndex != null ? insertIndex : ''
 		} );
 	}
 
@@ -1241,7 +1242,7 @@
 			saveAttachmentMeta: saveAttachmentMeta,
 			saveRepeaterItem: function ( key, index, subField, value ) { return saveRepeaterItem( id, key, index, subField, value ); },
 			deleteRepeaterItem: function ( key, index ) { return deleteRepeaterItem( id, key, index ); },
-			addRepeaterItem:  function ( key, kind ) { return addRepeaterItem( id, key, kind ); },
+			addRepeaterItem:  function ( key, kind, insertIndex ) { return addRepeaterItem( id, key, kind, insertIndex ); },
 			refreshWidget: function () { return refreshWidget( widget ); },
 			toast:         toast,
 			showButton:    showButton,

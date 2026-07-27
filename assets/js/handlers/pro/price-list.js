@@ -23,6 +23,7 @@
 	const SELECTOR = '.elementor-widget-price-list[data-id]';
 
 	let toolbars = [];      // [{ bar, itemIndex, itemEl }]
+	let plusBtns = [];      // [{ btn, itemIndex, itemEl, position }]
 	let hoveredWidget = null;
 	let cachedField = null;
 	let rafId = null;
@@ -129,8 +130,18 @@
 		toolbars = [];
 	}
 
+	function clearPlusBtns() {
+		for ( var i = 0; i < plusBtns.length; i++ ) {
+			if ( plusBtns[ i ].btn && plusBtns[ i ].btn.parentNode ) {
+				plusBtns[ i ].btn.parentNode.removeChild( plusBtns[ i ].btn );
+			}
+		}
+		plusBtns = [];
+	}
+
 	function clearAll() {
 		clearToolbars();
+		clearPlusBtns();
 		stopRafLoop();
 	}
 
@@ -147,6 +158,9 @@
 			if ( widgetOf( el ) === widget ) { return true; }
 			for ( var i = 0; i < toolbars.length; i++ ) {
 				if ( toolbars[ i ].bar === el || toolbars[ i ].bar.contains( el ) ) { return true; }
+			}
+			for ( var j = 0; j < plusBtns.length; j++ ) {
+				if ( plusBtns[ j ].btn === el || plusBtns[ j ].btn.contains( el ) ) { return true; }
 			}
 		}
 		var r = widget.getBoundingClientRect();
@@ -167,6 +181,7 @@
 				}
 				if ( document.querySelector( '.ri2-editing' ) ) {
 					clearToolbars();
+					clearPlusBtns();
 				} else {
 					syncToolbars( widget, cachedField );
 				}
@@ -194,30 +209,134 @@
 			needed.push( { itemEl: items[ i ], itemIndex: i } );
 		}
 
-		// Remove toolbars for items no longer visible.
+		// Determine which item the mouse is hovering over.
+		var hoveredItemEl = null;
+		var elAtPoint = document.elementFromPoint( mouseX, mouseY );
+		if ( elAtPoint ) {
+			for ( var hi = 0; hi < seen.length; hi++ ) {
+				if ( seen[ hi ] === elAtPoint || seen[ hi ].contains( elAtPoint ) ) {
+					hoveredItemEl = seen[ hi ];
+					break;
+				}
+			}
+			// Also keep toolbar if mouse is over the toolbar itself.
+			if ( ! hoveredItemEl ) {
+				for ( var ti = 0; ti < toolbars.length; ti++ ) {
+					if ( toolbars[ ti ].bar === elAtPoint || toolbars[ ti ].bar.contains( elAtPoint ) ) {
+						hoveredItemEl = toolbars[ ti ].itemEl;
+						break;
+					}
+				}
+			}
+			// Also keep if mouse is over a plus button.
+			if ( ! hoveredItemEl ) {
+				for ( var pi = 0; pi < plusBtns.length; pi++ ) {
+					if ( plusBtns[ pi ].btn === elAtPoint || plusBtns[ pi ].btn.contains( elAtPoint ) ) {
+						hoveredItemEl = plusBtns[ pi ].itemEl;
+						break;
+					}
+				}
+			}
+		}
+
+		// Remove toolbars for items no longer visible or not hovered.
 		for ( var k = toolbars.length - 1; k >= 0; k-- ) {
 			var stillVisible = toolbars[ k ].itemEl && seen.indexOf( toolbars[ k ].itemEl ) >= 0;
-			if ( ! stillVisible ) {
+			var isHovered = toolbars[ k ].itemEl === hoveredItemEl;
+			if ( ! stillVisible || ! isHovered ) {
 				if ( toolbars[ k ].bar.parentNode ) { toolbars[ k ].bar.parentNode.removeChild( toolbars[ k ].bar ); }
 				toolbars.splice( k, 1 );
 			}
 		}
 
-		// Add toolbars for visible items that don't have one yet.
-		for ( var m = 0; m < needed.length; m++ ) {
-			var has = false;
-			for ( var n = 0; n < toolbars.length; n++ ) {
-				if ( toolbars[ n ].itemEl === needed[ m ].itemEl ) { has = true; break; }
+		// Remove plus buttons for items no longer visible or not hovered.
+		for ( var pk = plusBtns.length - 1; pk >= 0; pk-- ) {
+			var pStillVisible = plusBtns[ pk ].itemEl && seen.indexOf( plusBtns[ pk ].itemEl ) >= 0;
+			var pIsHovered = plusBtns[ pk ].itemEl === hoveredItemEl;
+			if ( ! pStillVisible || ! pIsHovered ) {
+				if ( plusBtns[ pk ].btn.parentNode ) { plusBtns[ pk ].btn.parentNode.removeChild( plusBtns[ pk ].btn ); }
+				plusBtns.splice( pk, 1 );
 			}
-			if ( has ) { continue; }
-			var bar = createToolbar( needed[ m ].itemIndex, needed[ m ].itemEl, field );
-			document.body.appendChild( bar );
-			toolbars.push( { bar: bar, itemIndex: needed[ m ].itemIndex, itemEl: needed[ m ].itemEl } );
 		}
 
-		// Reposition all toolbars.
+		// Add toolbar only for the hovered item.
+		if ( hoveredItemEl ) {
+			var hasToolbar = false;
+			for ( var n = 0; n < toolbars.length; n++ ) {
+				if ( toolbars[ n ].itemEl === hoveredItemEl ) { hasToolbar = true; break; }
+			}
+			if ( ! hasToolbar ) {
+				var hovIndex = -1;
+				for ( var ni = 0; ni < needed.length; ni++ ) {
+					if ( needed[ ni ].itemEl === hoveredItemEl ) { hovIndex = needed[ ni ].itemIndex; break; }
+				}
+				if ( hovIndex >= 0 ) {
+					var bar = createToolbar( hovIndex, hoveredItemEl, field );
+					document.body.appendChild( bar );
+					toolbars.push( { bar: bar, itemIndex: hovIndex, itemEl: hoveredItemEl } );
+				}
+			}
+
+			// Add plus buttons only for the hovered item.
+			var hovPlusIndex = -1;
+			for ( var hpi = 0; hpi < needed.length; hpi++ ) {
+				if ( needed[ hpi ].itemEl === hoveredItemEl ) { hovPlusIndex = needed[ hpi ].itemIndex; break; }
+			}
+			if ( hovPlusIndex >= 0 ) {
+				var hasPlusTop = false;
+				var hasPlusBottom = false;
+				for ( var pn = 0; pn < plusBtns.length; pn++ ) {
+					if ( plusBtns[ pn ].itemEl === hoveredItemEl && plusBtns[ pn ].position === 'top' ) { hasPlusTop = true; }
+					if ( plusBtns[ pn ].itemEl === hoveredItemEl && plusBtns[ pn ].position === 'bottom' ) { hasPlusBottom = true; }
+				}
+				if ( ! hasPlusTop ) {
+					var topBtn = createPlusBtn( hovPlusIndex, hoveredItemEl, field, 'top' );
+					document.body.appendChild( topBtn );
+					plusBtns.push( { btn: topBtn, itemIndex: hovPlusIndex, itemEl: hoveredItemEl, position: 'top' } );
+				}
+				if ( ! hasPlusBottom ) {
+					var botBtn = createPlusBtn( hovPlusIndex, hoveredItemEl, field, 'bottom' );
+					document.body.appendChild( botBtn );
+					plusBtns.push( { btn: botBtn, itemIndex: hovPlusIndex, itemEl: hoveredItemEl, position: 'bottom' } );
+				}
+			}
+		}
+
+		// Reposition all toolbars and plus buttons.
 		for ( var p = 0; p < toolbars.length; p++ ) {
 			positionToolbar( toolbars[ p ].bar, toolbars[ p ].itemEl );
+		}
+		for ( var pp = 0; pp < plusBtns.length; pp++ ) {
+			positionPlusBtn( plusBtns[ pp ].btn, plusBtns[ pp ].itemEl, plusBtns[ pp ].position );
+		}
+	}
+
+	function createPlusBtn( itemIndex, itemEl, field, position ) {
+		var btn = document.createElement( 'button' );
+		btn.type = 'button';
+		btn.className = 'ri2-plus-btn ri2-ui';
+		btn.innerHTML = '<span class="dashicons dashicons-plus-alt2"></span>';
+		btn.title = ( 'top' === position )
+			? ( RI.i18n.addItemBefore || 'Add Item Before' )
+			: ( RI.i18n.addItemAfter || 'Add Item After' );
+		btn.addEventListener( 'click', function ( e ) {
+			e.preventDefault(); e.stopPropagation();
+			closeAnyPopover();
+			var insertIndex = ( 'top' === position ) ? itemIndex : itemIndex + 1;
+			doAddItem( insertIndex );
+		} );
+		btn.addEventListener( 'mousedown', function ( e ) { e.preventDefault(); } );
+		return btn;
+	}
+
+	function positionPlusBtn( btn, itemEl, position ) {
+		var r = itemEl.getBoundingClientRect();
+		var btnW = btn.offsetWidth || 28;
+		btn.style.left = ( r.left + ( r.width - btnW ) / 2 ) + 'px';
+		if ( 'top' === position ) {
+			btn.style.top = ( r.top - 18 ) + 'px';
+		} else {
+			btn.style.top = ( r.bottom - 18 ) + 'px';
 		}
 	}
 
@@ -287,6 +406,17 @@
 			clearToolbars();
 			ctx.toast( ctx.i18n.saving || 'Saving…', 'saving' );
 			ctx.deleteRepeaterItem( field.key, itemIndex )
+				.then( function () { return ctx.refreshWidget(); } )
+				.then( function () { ctx.toast( ctx.i18n.saved || 'Saved', 'ok' ); } )
+				.catch( function ( err ) { ctx.toast( ( err && err.message ) || ctx.i18n.saveFailed || 'Save failed', 'error' ); } );
+		} );
+	}
+
+	function doAddItem( insertIndex ) {
+		getCtx( function ( ctx, widget, field ) {
+			clearAll();
+			ctx.toast( ctx.i18n.saving || 'Saving…', 'saving' );
+			ctx.addRepeaterItem( field.key, 'price-list', insertIndex )
 				.then( function () { return ctx.refreshWidget(); } )
 				.then( function () { ctx.toast( ctx.i18n.saved || 'Saved', 'ok' ); } )
 				.catch( function ( err ) { ctx.toast( ( err && err.message ) || ctx.i18n.saveFailed || 'Save failed', 'error' ); } );

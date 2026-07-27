@@ -432,10 +432,12 @@ class Rest_Controller {
 	}
 
 	public static function add_repeater_item( $request ) {
-		$post_id    = (int) $request->get_param( 'post_id' );
-		$element_id = (string) $request->get_param( 'element_id' );
-		$key        = (string) $request->get_param( 'key' );
-		$kind       = (string) $request->get_param( 'kind' );
+		$post_id      = (int) $request->get_param( 'post_id' );
+		$element_id   = (string) $request->get_param( 'element_id' );
+		$key          = (string) $request->get_param( 'key' );
+		$kind         = (string) $request->get_param( 'kind' );
+		$insert_index = $request->get_param( 'insert_index' );
+		$insert_index = ( null !== $insert_index ) ? (int) $insert_index : null;
 
 		$field = self::authorize_field( $post_id, $element_id, $key, [ 'repeater', 'icon-list', 'social-icons' ] );
 		if ( is_wp_error( $field ) ) {
@@ -443,7 +445,7 @@ class Rest_Controller {
 		}
 
 		$resolved_kind = $kind ?: $field['kind'];
-		$result = Saver::add_repeater_item( $post_id, $element_id, $key, $resolved_kind );
+		$result = Saver::add_repeater_item( $post_id, $element_id, $key, $resolved_kind, $insert_index );
 		return is_wp_error( $result ) ? $result : rest_ensure_response( $result );
 	}
 

@@ -945,14 +945,14 @@ class Saver {
 	 * @param string $kind      Field kind: 'social-icons', 'icon-list', 'repeater'.
 	 * @return array|\WP_Error  Returns ['success'=>true, 'index'=>N] where N is the new item index.
 	 */
-	public static function add_repeater_item( $post_id, $element_id, $key, $kind ) {
+	public static function add_repeater_item( $post_id, $element_id, $key, $kind, $insert_index = null ) {
 		$kind = (string) $kind;
 
 		$document = new Document( $post_id );
 
 		return $document->mutate_node(
 			$element_id,
-			function ( array &$node ) use ( $key, $kind ) {
+			function ( array &$node ) use ( $key, $kind, $insert_index ) {
 				if ( ! isset( $node['settings'] ) || ! is_array( $node['settings'] ) ) {
 					$node['settings'] = [];
 				}
@@ -963,9 +963,11 @@ class Saver {
 				$items = &$node['settings'][ $key ];
 
 				// Build a default item based on the repeater kind.
+				$new_item = [];
+
 				switch ( $kind ) {
 					case 'social-icons':
-						$items[] = [
+						$new_item = [
 							'social_icon' => [
 								'value'   => 'fas fa-share',
 								'library' => 'fa-solid',
@@ -979,7 +981,7 @@ class Saver {
 						break;
 
 					case 'icon-list':
-						$items[] = [
+						$new_item = [
 							'selected_icon' => [
 								'value'   => 'fas fa-circle',
 								'library' => 'fa-solid',
@@ -995,7 +997,7 @@ class Saver {
 
 					case 'media-carousel':
 						$placeholder = \Elementor\Utils::get_placeholder_image_src();
-						$items[] = [
+						$new_item = [
 							'type'               => 'image',
 							'image'              => [
 								'url' => $placeholder,
@@ -1004,13 +1006,36 @@ class Saver {
 						];
 						break;
 
+					case 'price-list':
+						$new_item = [
+							'title'              => 'New Item',
+							'item_description'   => 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
+							'price'              => '$9.99',
+							'image'              => [
+								'url' => '',
+								'id'  => '',
+							],
+							'link'               => [
+								'url'         => '',
+								'is_external' => '',
+								'nofollow'    => '',
+							],
+						];
+						break;
+
 					default:
 						// Generic repeater (e.g. slides) — empty item.
-						$items[] = [];
+						$new_item = [];
 						break;
 				}
 
-				$new_index = count( $items ) - 1;
+				if ( null !== $insert_index && $insert_index >= 0 && $insert_index <= count( $items ) ) {
+					array_splice( $items, $insert_index, 0, [ $new_item ] );
+					$new_index = $insert_index;
+				} else {
+					$items[] = $new_item;
+					$new_index = count( $items ) - 1;
+				}
 
 				unset( $items );
 
