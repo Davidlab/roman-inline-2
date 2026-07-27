@@ -87,59 +87,62 @@
 }
 
 /* Per-slide action toolbar for media carousel — compact horizontal icon buttons */
-.ri2-carousel-actions {
+.ri2-actions {
 	position: fixed !important;
 	z-index: 99989 !important;
 	display: flex !important;
 	flex-direction: row !important;
-	gap: 1px !important;
+	gap: 4px !important;
 	margin: 0 !important;
-	padding: 4px !important;
-	background: #fff !important;
-	border: 1px solid var(--ri2-border) !important;
-	border-radius: 8px !important;
-	box-shadow: var(--ri2-shadow-lg) !important;
+	padding: 0 !important;
+	background: transparent !important;
+	border: 0 !important;
+	border-radius: 0 !important;
+	box-shadow: none !important;
 	opacity: 0.8 !important;
 	transition: opacity 0.15s ease !important;
 }
-.ri2-carousel-actions:hover {
+.ri2-actions:hover {
 	opacity: 1 !important;
 }
-.ri2-carousel-actbtn {
+.ri2-actbtn {
 	display: flex !important;
 	align-items: center !important;
 	justify-content: center !important;
 	width: 28px !important;
 	height: 28px !important;
 	padding: 0 !important;
-	background: transparent !important;
-	color: var(--ri2-text) !important;
-	border: 0 !important;
-	border-radius: 6px !important;
+	background: #fff !important;
+	color: #3a3a3a !important;
+	border: 1px solid var(--ri2-border) !important;
+	border-radius: 50% !important;
 	cursor: pointer !important;
 	margin: 0 !important;
 	line-height: 1 !important;
-	transition: background 0.15s ease !important;
+	box-shadow: var(--ri2-shadow-lg) !important;
+	opacity: 0.9 !important;
+	transition: opacity 0.15s ease, background 0.15s ease !important;
 }
-.ri2-carousel-actbtn:hover {
+.ri2-actbtn:hover {
+	opacity: 1 !important;
 	background: var(--ri2-hover) !important;
 }
-.ri2-carousel-actbtn .dashicons {
+.ri2-actbtn .dashicons {
 	font-size: 15px;
 	width: 15px;
 	height: 15px;
 }
-.ri2-carousel-actbtn--delete {
+.ri2-actbtn--delete {
 	color: var(--ri2-err) !important;
 	background: rgba( 229, 72, 77, 0.08 ) !important;
 }
-.ri2-carousel-actbtn--delete:hover {
+.ri2-actbtn--delete:hover {
 	background: rgba( 229, 72, 77, 0.15 ) !important;
 }
-.ri2-carousel-actbtn--add {
-	color: var(--ri2-accent) !important;
+.ri2-actbtn--add {
+	color: #3a3a3a !important;
 }
-.ri2-carousel-actbtn--add:hover {
+.ri2-actbtn--add:hover {
 	background: rgba( 109, 74, 255, 0.08 ) !important;
 }
 .ri2-edit-icon {
@@ -181,7 +184,7 @@
 	border: 1px solid var(--ri2-border) !important;
 	border-radius: 50% !important;
 	background: #fff !important;
-	color: var(--ri2-accent) !important;
+	color: #3a3a3a !important;
 	cursor: pointer !important;
 	box-shadow: var(--ri2-shadow-lg) !important;
 	line-height: 1 !important;

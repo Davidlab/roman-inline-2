@@ -131,7 +131,7 @@
 
 	function createToolbar( slideIndex, slideEl, field ) {
 		var bar = document.createElement( 'div' );
-		bar.className = 'ri2-carousel-actions ri2-ui';
+		bar.className = 'ri2-actions ri2-ui';
 		bar.dataset.slideIndex = slideIndex;
 
 		var repItem = ( field.items || [] )[ slideIndex ];
@@ -141,7 +141,7 @@
 		if ( 'video' !== slideType ) {
 			var imgBtn = document.createElement( 'button' );
 			imgBtn.type = 'button';
-			imgBtn.className = 'ri2-carousel-actbtn ri2-carousel-actbtn--image';
+			imgBtn.className = 'ri2-actbtn ri2-actbtn--image';
 			imgBtn.innerHTML = '<span class="dashicons dashicons-format-image"></span>';
 			imgBtn.title = RI.i18n.changeImage || 'Change Image';
 			imgBtn.addEventListener( 'click', function ( e ) {
@@ -157,7 +157,7 @@
 		if ( 'video' === slideType ) {
 			var vidBtn = document.createElement( 'button' );
 			vidBtn.type = 'button';
-			vidBtn.className = 'ri2-carousel-actbtn ri2-carousel-actbtn--video';
+			vidBtn.className = 'ri2-actbtn ri2-actbtn--video';
 			vidBtn.innerHTML = '<span class="dashicons dashicons-video-alt3"></span>';
 			vidBtn.title = RI.i18n.changeVideo || 'Change Video';
 			vidBtn.addEventListener( 'click', function ( e ) {
@@ -176,7 +176,7 @@
 		// Edit Link button
 		var linkBtn = document.createElement( 'button' );
 		linkBtn.type = 'button';
-		linkBtn.className = 'ri2-carousel-actbtn ri2-carousel-actbtn--link';
+		linkBtn.className = 'ri2-actbtn ri2-actbtn--link';
 		linkBtn.innerHTML = '<span class="dashicons dashicons-admin-links"></span>';
 		linkBtn.title = RI.i18n.link || 'Link';
 		linkBtn.addEventListener( 'click', function ( e ) {
@@ -194,7 +194,7 @@
 		// Delete Slide button
 		var delBtn = document.createElement( 'button' );
 		delBtn.type = 'button';
-		delBtn.className = 'ri2-carousel-actbtn ri2-carousel-actbtn--delete';
+		delBtn.className = 'ri2-actbtn ri2-actbtn--delete';
 		delBtn.innerHTML = '<span class="dashicons dashicons-trash"></span>';
 		delBtn.title = RI.i18n.deleteSlide || 'Delete Slide';
 		delBtn.addEventListener( 'click', function ( e ) {

@@ -61,13 +61,13 @@
 	/* --- Per-item action toolbar --- */
 	function createToolbar( itemIndex, itemEl, field ) {
 		var bar = document.createElement( 'div' );
-		bar.className = 'ri2-carousel-actions ri2-ui';
+		bar.className = 'ri2-actions ri2-ui';
 		bar.dataset.itemIndex = itemIndex;
 
 		// Change Image button
 		var imgBtn = document.createElement( 'button' );
 		imgBtn.type = 'button';
-		imgBtn.className = 'ri2-carousel-actbtn ri2-carousel-actbtn--image';
+		imgBtn.className = 'ri2-actbtn ri2-actbtn--image';
 		imgBtn.innerHTML = '<span class="dashicons dashicons-format-image"></span>';
 		imgBtn.title = RI.i18n.changeImage || 'Change Image';
 		imgBtn.addEventListener( 'click', function ( e ) {
@@ -81,7 +81,7 @@
 		// Edit Link button
 		var linkBtn = document.createElement( 'button' );
 		linkBtn.type = 'button';
-		linkBtn.className = 'ri2-carousel-actbtn ri2-carousel-actbtn--link';
+		linkBtn.className = 'ri2-actbtn ri2-actbtn--link';
 		linkBtn.innerHTML = '<span class="dashicons dashicons-admin-links"></span>';
 		linkBtn.title = RI.i18n.link || 'Link';
 		linkBtn.addEventListener( 'click', function ( e ) {
@@ -96,10 +96,24 @@
 		linkBtn.addEventListener( 'mousedown', function ( e ) { e.preventDefault(); } );
 		bar.appendChild( linkBtn );
 
+		// Add Item button
+		var addBtn = document.createElement( 'button' );
+		addBtn.type = 'button';
+		addBtn.className = 'ri2-actbtn ri2-actbtn--add';
+		addBtn.innerHTML = '<span class="dashicons dashicons-plus-alt2"></span>';
+		addBtn.title = RI.i18n.addItemAfter || 'Add Item After';
+		addBtn.addEventListener( 'click', function ( e ) {
+			e.preventDefault(); e.stopPropagation();
+			closeAnyPopover();
+			doAddItem( itemIndex + 1 );
+		} );
+		addBtn.addEventListener( 'mousedown', function ( e ) { e.preventDefault(); } );
+		bar.appendChild( addBtn );
+
 		// Delete Item button
 		var delBtn = document.createElement( 'button' );
 		delBtn.type = 'button';
-		delBtn.className = 'ri2-carousel-actbtn ri2-carousel-actbtn--delete';
+		delBtn.className = 'ri2-actbtn ri2-actbtn--delete';
 		delBtn.innerHTML = '<span class="dashicons dashicons-trash"></span>';
 		delBtn.title = RI.i18n.deleteItem || 'Delete Item';
 		delBtn.addEventListener( 'click', function ( e ) {
@@ -117,8 +131,8 @@
 		var r = itemEl.getBoundingClientRect();
 		var barW = bar.offsetWidth || 120;
 		var barH = bar.offsetHeight || 36;
-		bar.style.top = ( r.bottom - barH - 4 ) + 'px';
-		bar.style.left = ( r.right - barW - 4 ) + 'px';
+		bar.style.top = ( r.bottom - barH / 2 ) + 'px';
+		bar.style.left = ( r.left + ( r.width - barW ) / 2 ) + 'px';
 	}
 
 	function clearToolbars() {
@@ -259,7 +273,7 @@
 			}
 		}
 
-		// Add toolbar only for the hovered item.
+		// Add toolbar and top plus button only for the hovered item.
 		if ( hoveredItemEl ) {
 			var hasToolbar = false;
 			for ( var n = 0; n < toolbars.length; n++ ) {
@@ -277,27 +291,20 @@
 				}
 			}
 
-			// Add plus buttons only for the hovered item.
-			var hovPlusIndex = -1;
-			for ( var hpi = 0; hpi < needed.length; hpi++ ) {
-				if ( needed[ hpi ].itemEl === hoveredItemEl ) { hovPlusIndex = needed[ hpi ].itemIndex; break; }
+			// Top plus button (insert before) for the hovered item.
+			var hasPlusTop = false;
+			for ( var pn = 0; pn < plusBtns.length; pn++ ) {
+				if ( plusBtns[ pn ].itemEl === hoveredItemEl && plusBtns[ pn ].position === 'top' ) { hasPlusTop = true; }
 			}
-			if ( hovPlusIndex >= 0 ) {
-				var hasPlusTop = false;
-				var hasPlusBottom = false;
-				for ( var pn = 0; pn < plusBtns.length; pn++ ) {
-					if ( plusBtns[ pn ].itemEl === hoveredItemEl && plusBtns[ pn ].position === 'top' ) { hasPlusTop = true; }
-					if ( plusBtns[ pn ].itemEl === hoveredItemEl && plusBtns[ pn ].position === 'bottom' ) { hasPlusBottom = true; }
+			if ( ! hasPlusTop ) {
+				var hovPlusIndex = -1;
+				for ( var hpi = 0; hpi < needed.length; hpi++ ) {
+					if ( needed[ hpi ].itemEl === hoveredItemEl ) { hovPlusIndex = needed[ hpi ].itemIndex; break; }
 				}
-				if ( ! hasPlusTop ) {
+				if ( hovPlusIndex >= 0 ) {
 					var topBtn = createPlusBtn( hovPlusIndex, hoveredItemEl, field, 'top' );
 					document.body.appendChild( topBtn );
 					plusBtns.push( { btn: topBtn, itemIndex: hovPlusIndex, itemEl: hoveredItemEl, position: 'top' } );
-				}
-				if ( ! hasPlusBottom ) {
-					var botBtn = createPlusBtn( hovPlusIndex, hoveredItemEl, field, 'bottom' );
-					document.body.appendChild( botBtn );
-					plusBtns.push( { btn: botBtn, itemIndex: hovPlusIndex, itemEl: hoveredItemEl, position: 'bottom' } );
 				}
 			}
 		}
