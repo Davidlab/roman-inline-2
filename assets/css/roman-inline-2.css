@@ -137,6 +137,32 @@
 .ri2-carousel-actbtn--add:hover {
 	background: rgba( 109, 74, 255, 0.08 ) !important;
 }
+.ri2-edit-icon {
+	position: fixed !important;
+	z-index: 99988 !important;
+	display: flex !important;
+	align-items: center !important;
+	justify-content: center !important;
+	width: 28px !important;
+	height: 28px !important;
+	padding: 0 !important;
+	margin: 0 !important;
+	border: 0 !important;
+	border-radius: 50% !important;
+	background: #fff !important;
+	color: var(--ri2-text) !important;
+	cursor: pointer !important;
+	box-shadow: var(--ri2-shadow-lg) !important;
+	line-height: 1 !important;
+}
+.ri2-edit-icon:hover {
+	background: var(--ri2-accent) !important;
+}
+.ri2-edit-icon .dashicons {
+	font-size: 15px;
+	width: 15px;
+	height: 15px;
+}
 
 /* Separate "Add Slide" button — positioned at top-right of carousel widget */
 .ri2-carousel-addbtn {

@@ -122,6 +122,13 @@
 		return match;
 	}
 
+	function closeAnyPopover() {
+		var lp = document.querySelector( '.ri2-linkpop' );
+		if ( lp && lp.parentNode ) { lp.parentNode.removeChild( lp ); }
+		var vp = document.querySelector( '.ri2-vidpop' );
+		if ( vp && vp.parentNode ) { vp.parentNode.removeChild( vp ); }
+	}
+
 	function createToolbar( slideIndex, slideEl, field ) {
 		var bar = document.createElement( 'div' );
 		bar.className = 'ri2-carousel-actions ri2-ui';
@@ -139,6 +146,7 @@
 			imgBtn.title = RI.i18n.changeImage || 'Change Image';
 			imgBtn.addEventListener( 'click', function ( e ) {
 				e.preventDefault(); e.stopPropagation();
+				closeAnyPopover();
 				doChangeImage( slideIndex, slideEl );
 			} );
 			imgBtn.addEventListener( 'mousedown', function ( e ) { e.preventDefault(); } );
@@ -154,6 +162,11 @@
 			vidBtn.title = RI.i18n.changeVideo || 'Change Video';
 			vidBtn.addEventListener( 'click', function ( e ) {
 				e.preventDefault(); e.stopPropagation();
+				if ( document.querySelector( '.ri2-vidpop' ) ) {
+					closeAnyPopover();
+					return;
+				}
+				closeAnyPopover();
 				doChangeVideo( slideIndex, slideEl );
 			} );
 			vidBtn.addEventListener( 'mousedown', function ( e ) { e.preventDefault(); } );
@@ -168,6 +181,11 @@
 		linkBtn.title = RI.i18n.link || 'Link';
 		linkBtn.addEventListener( 'click', function ( e ) {
 			e.preventDefault(); e.stopPropagation();
+			if ( document.querySelector( '.ri2-linkpop' ) ) {
+				closeAnyPopover();
+				return;
+			}
+			closeAnyPopover();
 			doEditLink( slideIndex, slideEl );
 		} );
 		linkBtn.addEventListener( 'mousedown', function ( e ) { e.preventDefault(); } );
@@ -181,6 +199,7 @@
 		delBtn.title = RI.i18n.deleteSlide || 'Delete Slide';
 		delBtn.addEventListener( 'click', function ( e ) {
 			e.preventDefault(); e.stopPropagation();
+			closeAnyPopover();
 			doDeleteSlide( slideIndex );
 		} );
 		delBtn.addEventListener( 'mousedown', function ( e ) { e.preventDefault(); } );
@@ -444,14 +463,32 @@
 		} );
 	}
 
+	function findToolbarForSlide( slideIndex ) {
+		for ( var i = 0; i < toolbars.length; i++ ) {
+			if ( toolbars[ i ].slideIndex === slideIndex ) {
+				var bar = toolbars[ i ].bar;
+				var r = bar.getBoundingClientRect();
+				// Return a fake node whose getBoundingClientRect returns the
+				// rect captured *before* clearToolbars() removes the bar from DOM.
+				return {
+					getBoundingClientRect: function () { return r; },
+					querySelector: function () { return null; },
+					tagName: 'DIV'
+				};
+			}
+		}
+		return null;
+	}
+
 	function doChangeVideo( slideIndex, slideEl ) {
+		var toolbarEl = findToolbarForSlide( slideIndex );
 		getCtx( function ( ctx, widget, field ) {
 			clearToolbars();
 			pauseSwiper( widget );
 			var repItem = ( field.items || [] )[ slideIndex ];
 			var currentUrl = ( repItem && repItem.video && repItem.video.url ) || '';
 			var carouselImg = slideEl.querySelector( '.elementor-carousel-image' );
-			ctx.editLink( carouselImg || slideEl, {
+			ctx.editLink( toolbarEl || carouselImg || slideEl, {
 				key: field.key,
 				itemIndex: slideIndex,
 				subField: 'video',
@@ -463,6 +500,7 @@
 	}
 
 	function doEditLink( slideIndex, slideEl ) {
+		var toolbarEl = findToolbarForSlide( slideIndex );
 		getCtx( function ( ctx, widget, field ) {
 			clearToolbars();
 			pauseSwiper( widget );
@@ -470,7 +508,7 @@
 			var currentUrl = ( repItem && repItem.image_link_to && repItem.image_link_to.url ) || '';
 			var currentBlank = !!( repItem && repItem.image_link_to && repItem.image_link_to.is_external );
 			var carouselImg = slideEl.querySelector( '.elementor-carousel-image' );
-			ctx.editLink( carouselImg || slideEl, {
+			ctx.editLink( toolbarEl || carouselImg || slideEl, {
 				key: field.key,
 				itemIndex: slideIndex,
 				subField: 'image_link_to',

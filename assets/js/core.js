@@ -712,8 +712,18 @@
 		if ( ! session ) { return; }
 		if ( e.target.closest( '.ri2-toolbar' ) ) { return; }
 		if ( e.target.closest( '.ri2-linkpop' ) ) { return; }
+		if ( e.target.closest( '.ri2-vidpop' ) ) { return; }
 		if ( session.node && session.node.contains( e.target ) ) { return; }
 		commitSession();
+	} );
+
+	// Close any open popover when clicking outside it.
+	document.addEventListener( 'mousedown', function ( e ) {
+		if ( e.target.closest( '.ri2-linkpop' ) ) { return; }
+		if ( e.target.closest( '.ri2-vidpop' ) ) { return; }
+		if ( e.target.closest( '.ri2-carousel-actions' ) ) { return; }
+		closeLinkPop();
+		closeVideoPopover();
 	} );
 
 	document.addEventListener( 'keydown', function ( e ) {
@@ -1081,6 +1091,7 @@
 					.then( function () {
 						linkField.value = url;
 						linkField.target_blank = blank;
+						delete fieldsCache[ id ];
 						toast( i18n.saved || 'Saved', 'ok' );
 						const a = node.querySelector( 'a' ) || ( node.tagName === 'A' ? node : null );
 						if ( a ) {
