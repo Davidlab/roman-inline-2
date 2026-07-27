@@ -26,7 +26,7 @@
 	const SELECTOR = '.elementor-widget-media-carousel[data-id]';
 
 	let toolbars = [];      // [{ bar, slideIndex, slideEl }]
-	let addBtn = null;
+	let plusBtns = [];      // [{ btn, slideIndex, slideEl, position }]
 	let hoveredWidget = null;
 	let cachedField = null;
 	let rafId = null;
@@ -59,14 +59,14 @@
 	 * case Swiper never runs loopCreate and the attribute is absent).
 	 */
 	function slideIndexOf( slide, widget ) {
-		var attr = slide.getAttribute( 'data-swiper-slide-index' );
+		const attr = slide.getAttribute( 'data-swiper-slide-index' );
 		if ( null !== attr && '' !== attr ) {
-			var n = parseInt( attr, 10 );
+			const n = parseInt( attr, 10 );
 			if ( ! isNaN( n ) ) { return n; }
 		}
 		if ( slide.classList.contains( 'swiper-slide-duplicate' ) ) { return -1; }
-		var realSlides = getRealSlides( widget );
-		for ( var i = 0; i < realSlides.length; i++ ) {
+		const realSlides = getRealSlides( widget );
+		for ( let i = 0; i < realSlides.length; i++ ) {
 			if ( realSlides[ i ] === slide ) { return i; }
 		}
 		return -1;
@@ -95,9 +95,9 @@
 
 	/* --- Per-slide action toolbars (appended inside each slide) --- */
 	function getRealSlides( widget ) {
-		var all = widget.querySelectorAll( '.swiper-slide' );
-		var real = [];
-		for ( var i = 0; i < all.length; i++ ) {
+		const all = widget.querySelectorAll( '.swiper-slide' );
+		const real = [];
+		for ( let i = 0; i < all.length; i++ ) {
 			if ( ! all[ i ].classList.contains( 'swiper-slide-duplicate' ) ) {
 				real.push( all[ i ] );
 			}
@@ -112,9 +112,9 @@
 	 * reappears as soon as the carousel wraps around.
 	 */
 	function slidesForIndex( widget, slideIndex ) {
-		var all = widget.querySelectorAll( '.swiper-slide' );
-		var match = [];
-		for ( var i = 0; i < all.length; i++ ) {
+		const all = widget.querySelectorAll( '.swiper-slide' );
+		const match = [];
+		for ( let i = 0; i < all.length; i++ ) {
 			if ( slideIndexOf( all[ i ], widget ) === slideIndex ) {
 				match.push( all[ i ] );
 			}
@@ -123,23 +123,23 @@
 	}
 
 	function closeAnyPopover() {
-		var lp = document.querySelector( '.ri2-linkpop' );
+		const lp = document.querySelector( '.ri2-linkpop' );
 		if ( lp && lp.parentNode ) { lp.parentNode.removeChild( lp ); }
-		var vp = document.querySelector( '.ri2-vidpop' );
+		const vp = document.querySelector( '.ri2-vidpop' );
 		if ( vp && vp.parentNode ) { vp.parentNode.removeChild( vp ); }
 	}
 
 	function createToolbar( slideIndex, slideEl, field ) {
-		var bar = document.createElement( 'div' );
+		const bar = document.createElement( 'div' );
 		bar.className = 'ri2-actions ri2-ui';
 		bar.dataset.slideIndex = slideIndex;
 
-		var repItem = ( field.items || [] )[ slideIndex ];
-		var slideType = ( repItem && repItem.type ) || 'image';
+		const repItem = ( field.items || [] )[ slideIndex ];
+		const slideType = ( repItem && repItem.type ) || 'image';
 
 		// Change Image button (image-type only)
 		if ( 'video' !== slideType ) {
-			var imgBtn = document.createElement( 'button' );
+			const imgBtn = document.createElement( 'button' );
 			imgBtn.type = 'button';
 			imgBtn.className = 'ri2-actbtn ri2-actbtn--image';
 			imgBtn.innerHTML = '<span class="dashicons dashicons-format-image"></span>';
@@ -155,7 +155,7 @@
 
 		// Change Video button (video-type only)
 		if ( 'video' === slideType ) {
-			var vidBtn = document.createElement( 'button' );
+			const vidBtn = document.createElement( 'button' );
 			vidBtn.type = 'button';
 			vidBtn.className = 'ri2-actbtn ri2-actbtn--video';
 			vidBtn.innerHTML = '<span class="dashicons dashicons-video-alt3"></span>';
@@ -174,7 +174,7 @@
 		}
 
 		// Edit Link button
-		var linkBtn = document.createElement( 'button' );
+		const linkBtn = document.createElement( 'button' );
 		linkBtn.type = 'button';
 		linkBtn.className = 'ri2-actbtn ri2-actbtn--link';
 		linkBtn.innerHTML = '<span class="dashicons dashicons-admin-links"></span>';
@@ -191,8 +191,22 @@
 		linkBtn.addEventListener( 'mousedown', function ( e ) { e.preventDefault(); } );
 		bar.appendChild( linkBtn );
 
+		// Add Slide button (add after)
+		const addBtn = document.createElement( 'button' );
+		addBtn.type = 'button';
+		addBtn.className = 'ri2-actbtn ri2-actbtn--add';
+		addBtn.innerHTML = '<span class="dashicons dashicons-plus-alt2"></span>';
+		addBtn.title = RI.i18n.addSlideAfter || 'Add Slide After';
+		addBtn.addEventListener( 'click', function ( e ) {
+			e.preventDefault(); e.stopPropagation();
+			closeAnyPopover();
+			doAddSlide( slideIndex + 1 );
+		} );
+		addBtn.addEventListener( 'mousedown', function ( e ) { e.preventDefault(); } );
+		bar.appendChild( addBtn );
+
 		// Delete Slide button
-		var delBtn = document.createElement( 'button' );
+		const delBtn = document.createElement( 'button' );
 		delBtn.type = 'button';
 		delBtn.className = 'ri2-actbtn ri2-actbtn--delete';
 		delBtn.innerHTML = '<span class="dashicons dashicons-trash"></span>';
@@ -209,21 +223,21 @@
 	}
 
 	function isSlideVisible( slideEl, widget ) {
-		var r = slideEl.getBoundingClientRect();
+		const r = slideEl.getBoundingClientRect();
 		if ( r.width < 24 || r.height < 24 ) { return false; }
-		var wr = widget.getBoundingClientRect();
+		const wr = widget.getBoundingClientRect();
 		if ( ! ( r.right > wr.left + 4 && r.left < wr.right - 4 ) ) { return false; }
 		// Guard against overlapping-slide effects (fade/cube/coverflow) where an
 		// inactive slide's box still geometrically intersects the widget but is
 		// actually hidden via opacity/visibility/display.
-		var cs = window.getComputedStyle( slideEl );
+		const cs = window.getComputedStyle( slideEl );
 		if ( parseFloat( cs.opacity ) <= 0.05 ) { return false; }
 		if ( 'hidden' === cs.visibility || 'none' === cs.display ) { return false; }
 		return true;
 	}
 
 	function showToolbars( widget, field ) {
-		clearToolbars();
+		clearAll();
 		cachedField = field;
 		startRafLoop( widget );
 	}
@@ -235,29 +249,25 @@
 		// layout box (e.g. Elementor's "outside" nav-arrow position setting),
 		// where a pure geometric bounding-box check would falsely report that
 		// the mouse has "left" the widget the moment it reaches such a control.
-		var el = document.elementFromPoint( mouseX, mouseY );
+		const el = document.elementFromPoint( mouseX, mouseY );
 		if ( el ) {
 			if ( widgetOf( el ) === widget ) { return true; }
-			for ( var i = 0; i < toolbars.length; i++ ) {
+			for ( let i = 0; i < toolbars.length; i++ ) {
 				if ( toolbars[ i ].bar === el || toolbars[ i ].bar.contains( el ) ) { return true; }
 			}
-			if ( addBtn && ( addBtn === el || addBtn.contains( el ) ) ) { return true; }
+			for ( let pb = 0; pb < plusBtns.length; pb++ ) {
+				if ( plusBtns[ pb ].btn === el || plusBtns[ pb ].btn.contains( el ) ) { return true; }
+			}
 		}
 		// Fallback: geometric bounding-box check (covers e.g. mouseX/mouseY still
 		// at their initial 0,0 default before any mousemove event has fired).
-		var r = widget.getBoundingClientRect();
+		const r = widget.getBoundingClientRect();
 		if ( mouseX >= r.left && mouseX <= r.right && mouseY >= r.top && mouseY <= r.bottom ) {
 			return true;
 		}
-		for ( var j = 0; j < toolbars.length; j++ ) {
-			var br = toolbars[ j ].bar.getBoundingClientRect();
+		for ( let j = 0; j < toolbars.length; j++ ) {
+			const br = toolbars[ j ].bar.getBoundingClientRect();
 			if ( mouseX >= br.left && mouseX <= br.right && mouseY >= br.top && mouseY <= br.bottom ) {
-				return true;
-			}
-		}
-		if ( addBtn ) {
-			var ar = addBtn.getBoundingClientRect();
-			if ( mouseX >= ar.left && mouseX <= ar.right && mouseY >= ar.top && mouseY <= ar.bottom ) {
 				return true;
 			}
 		}
@@ -305,59 +315,122 @@
 	function syncToolbars( widget, field ) {
 		// Determine which visible slides need toolbars. Duplicate slides created by
 		// loop mode are included — they are what's on screen once the loop wraps.
-		var allSlides = widget.querySelectorAll( '.swiper-slide' );
-		var needed = []; // { slideEl, slideIndex }
-		var seenSlides = [];
+		const allSlides = widget.querySelectorAll( '.swiper-slide' );
+		const needed = []; // { slideEl, slideIndex }
+		const seenSlides = [];
 
-		for ( var j = 0; j < allSlides.length; j++ ) {
-			var slide = allSlides[ j ];
+		for ( let j = 0; j < allSlides.length; j++ ) {
+			const slide = allSlides[ j ];
 			seenSlides.push( slide );
 			if ( ! isSlideVisible( slide, widget ) ) { continue; }
 
-			var slideIndex = slideIndexOf( slide, widget );
+			const slideIndex = slideIndexOf( slide, widget );
 			if ( slideIndex < 0 ) { continue; }
 
 			needed.push( { slideEl: slide, slideIndex: slideIndex } );
 		}
 
-		// Remove toolbars whose slide is gone or no longer visible.
-		for ( var k = toolbars.length - 1; k >= 0; k-- ) {
-			var t = toolbars[ k ];
-			var stillVisible = t.slideEl && isSlideVisible( t.slideEl, widget ) && seenSlides.indexOf( t.slideEl ) >= 0;
-			if ( ! stillVisible ) {
-				if ( t.bar.parentNode ) { t.bar.parentNode.removeChild( t.bar ); }
+		// Determine which slide the mouse is hovering over.
+		let hoveredSlideEl = null;
+		const elAtPoint = document.elementFromPoint( mouseX, mouseY );
+		if ( elAtPoint ) {
+			for ( let hi = 0; hi < seenSlides.length; hi++ ) {
+				if ( seenSlides[ hi ] === elAtPoint || seenSlides[ hi ].contains( elAtPoint ) ) {
+					hoveredSlideEl = seenSlides[ hi ];
+					break;
+				}
+			}
+			// Also keep toolbar if mouse is over the toolbar itself.
+			if ( ! hoveredSlideEl ) {
+				for ( let ti = 0; ti < toolbars.length; ti++ ) {
+					if ( toolbars[ ti ].bar === elAtPoint || toolbars[ ti ].bar.contains( elAtPoint ) ) {
+						hoveredSlideEl = toolbars[ ti ].slideEl;
+						break;
+					}
+				}
+			}
+			// Also keep if mouse is over a plus button.
+			if ( ! hoveredSlideEl ) {
+				for ( let pi = 0; pi < plusBtns.length; pi++ ) {
+					if ( plusBtns[ pi ].btn === elAtPoint || plusBtns[ pi ].btn.contains( elAtPoint ) ) {
+						hoveredSlideEl = plusBtns[ pi ].slideEl;
+						break;
+					}
+				}
+			}
+		}
+
+		// Remove toolbars for slides no longer visible or not hovered.
+		for ( let k = toolbars.length - 1; k >= 0; k-- ) {
+			const stillVisible = toolbars[ k ].slideEl && isSlideVisible( toolbars[ k ].slideEl, widget ) && seenSlides.indexOf( toolbars[ k ].slideEl ) >= 0;
+			const isHovered = toolbars[ k ].slideEl === hoveredSlideEl;
+			if ( ! stillVisible || ! isHovered ) {
+				if ( toolbars[ k ].bar.parentNode ) { toolbars[ k ].bar.parentNode.removeChild( toolbars[ k ].bar ); }
 				toolbars.splice( k, 1 );
 			}
 		}
 
-		// Add toolbars for visible slides that don't have one yet.
-		for ( var m = 0; m < needed.length; m++ ) {
-			var hasToolbar = false;
-			for ( var n = 0; n < toolbars.length; n++ ) {
-				if ( toolbars[ n ].slideEl === needed[ m ].slideEl ) {
-					hasToolbar = true;
-					break;
-				}
+		// Remove plus buttons for slides no longer visible or not hovered.
+		for ( let pk = plusBtns.length - 1; pk >= 0; pk-- ) {
+			const pStillVisible = plusBtns[ pk ].slideEl && seenSlides.indexOf( plusBtns[ pk ].slideEl ) >= 0;
+			const pIsHovered = plusBtns[ pk ].slideEl === hoveredSlideEl;
+			if ( ! pStillVisible || ! pIsHovered ) {
+				if ( plusBtns[ pk ].btn.parentNode ) { plusBtns[ pk ].btn.parentNode.removeChild( plusBtns[ pk ].btn ); }
+				plusBtns.splice( pk, 1 );
 			}
-			if ( hasToolbar ) { continue; }
-
-			var bar = createToolbar( needed[ m ].slideIndex, needed[ m ].slideEl, field );
-			document.body.appendChild( bar );
-			toolbars.push( { bar: bar, slideIndex: needed[ m ].slideIndex, slideEl: needed[ m ].slideEl } );
 		}
 
-		// Reposition all toolbars to match their slides.
-		for ( var p = 0; p < toolbars.length; p++ ) {
+		// Add toolbar and top plus button only for the hovered slide.
+		if ( hoveredSlideEl ) {
+			let hasToolbar = false;
+			for ( let n = 0; n < toolbars.length; n++ ) {
+				if ( toolbars[ n ].slideEl === hoveredSlideEl ) { hasToolbar = true; break; }
+			}
+			if ( ! hasToolbar ) {
+				let hovIndex = -1;
+				for ( let ni = 0; ni < needed.length; ni++ ) {
+					if ( needed[ ni ].slideEl === hoveredSlideEl ) { hovIndex = needed[ ni ].slideIndex; break; }
+				}
+				if ( hovIndex >= 0 ) {
+					const bar = createToolbar( hovIndex, hoveredSlideEl, field );
+					document.body.appendChild( bar );
+					toolbars.push( { bar: bar, slideIndex: hovIndex, slideEl: hoveredSlideEl } );
+				}
+			}
+
+			// Top plus button (insert before) for the hovered slide.
+			let hasPlusTop = false;
+			for ( let pn = 0; pn < plusBtns.length; pn++ ) {
+				if ( plusBtns[ pn ].slideEl === hoveredSlideEl && plusBtns[ pn ].position === 'top' ) { hasPlusTop = true; }
+			}
+			if ( ! hasPlusTop ) {
+				let hovPlusIndex = -1;
+				for ( let hpi = 0; hpi < needed.length; hpi++ ) {
+					if ( needed[ hpi ].slideEl === hoveredSlideEl ) { hovPlusIndex = needed[ hpi ].slideIndex; break; }
+				}
+				if ( hovPlusIndex >= 0 ) {
+					const topBtn = createPlusBtn( hovPlusIndex, hoveredSlideEl, field, 'top' );
+					document.body.appendChild( topBtn );
+					plusBtns.push( { btn: topBtn, slideIndex: hovPlusIndex, slideEl: hoveredSlideEl, position: 'top' } );
+				}
+			}
+		}
+
+		// Reposition all toolbars and plus buttons.
+		for ( let p = 0; p < toolbars.length; p++ ) {
 			positionToolbar( toolbars[ p ].bar, toolbars[ p ].slideEl, widget );
+		}
+		for ( let pp = 0; pp < plusBtns.length; pp++ ) {
+			positionPlusBtn( plusBtns[ pp ].btn, plusBtns[ pp ].slideEl, plusBtns[ pp ].position, widget );
 		}
 	}
 
 	function positionToolbar( bar, slideEl, widget ) {
-		var carouselImg = slideEl.querySelector( '.elementor-carousel-image' );
-		var target = carouselImg || slideEl;
-		var r = target.getBoundingClientRect();
-		var left = r.left + 6;
-		var top = r.top + 6;
+		const carouselImg = slideEl.querySelector( '.elementor-carousel-image' );
+		const target = carouselImg || slideEl;
+		const r = target.getBoundingClientRect();
+		const left = r.left + 6;
+		const top = r.top + 6;
 		bar.style.top = top + 'px';
 		bar.style.left = left + 'px';
 
@@ -365,18 +438,60 @@
 		// container's overflow:hidden clipping. Hide any toolbar that would paint
 		// outside the carousel viewport, otherwise a slide's toolbar stays visible
 		// for a moment as that slide scrolls out of view.
-		var clipEl = widget.querySelector( '.elementor-main-swiper' ) || widget;
-		var cr = clipEl.getBoundingClientRect();
-		var w = bar.offsetWidth || 0;
-		var h = bar.offsetHeight || 0;
-		var inside = left >= cr.left - 1 && ( left + w ) <= cr.right + 1 &&
+		const clipEl = widget.querySelector( '.elementor-main-swiper' ) || widget;
+		const cr = clipEl.getBoundingClientRect();
+		const w = bar.offsetWidth || 0;
+		const h = bar.offsetHeight || 0;
+		const inside = left >= cr.left - 1 && ( left + w ) <= cr.right + 1 &&
 			top >= cr.top - 1 && ( top + h ) <= cr.bottom + 1;
 		bar.style.visibility = inside ? 'visible' : 'hidden';
 	}
 
+	function createPlusBtn( slideIndex, slideEl, field, position ) {
+		const btn = document.createElement( 'button' );
+		btn.type = 'button';
+		btn.className = 'ri2-plus-btn ri2-ui';
+		btn.innerHTML = '<span class="dashicons dashicons-plus-alt2"></span>';
+		btn.title = ( 'top' === position )
+			? ( RI.i18n.addSlideBefore || 'Add Slide Before' )
+			: ( RI.i18n.addSlideAfter || 'Add Slide After' );
+		btn.addEventListener( 'click', function ( e ) {
+			e.preventDefault(); e.stopPropagation();
+			closeAnyPopover();
+			const insertIndex = ( 'top' === position ) ? slideIndex : slideIndex + 1;
+			doAddSlide( insertIndex );
+		} );
+		btn.addEventListener( 'mousedown', function ( e ) { e.preventDefault(); } );
+		return btn;
+	}
+
+	function positionPlusBtn( btn, slideEl, position, widget ) {
+		const carouselImg = slideEl.querySelector( '.elementor-carousel-image' );
+		const target = carouselImg || slideEl;
+		const r = target.getBoundingClientRect();
+		const btnW = btn.offsetWidth || 28;
+		const left = r.left + ( r.width - btnW ) / 2;
+		let top;
+		if ( 'top' === position ) {
+			top = r.top - 18;
+		} else {
+			top = r.bottom - 18;
+		}
+		btn.style.left = left + 'px';
+		btn.style.top = top + 'px';
+
+		// Hide plus button if it would paint outside the carousel viewport.
+		const clipEl = widget.querySelector( '.elementor-main-swiper' ) || widget;
+		const cr = clipEl.getBoundingClientRect();
+		const w = btn.offsetWidth || 0;
+		const h = btn.offsetHeight || 0;
+		const inside = left >= cr.left - 1 && ( left + w ) <= cr.right + 1 &&
+			top >= cr.top - 1 && ( top + h ) <= cr.bottom + 1;
+		btn.style.visibility = inside ? 'visible' : 'hidden';
+	}
+
 	function clearToolbars() {
-		stopRafLoop();
-		for ( var i = 0; i < toolbars.length; i++ ) {
+		for ( let i = 0; i < toolbars.length; i++ ) {
 			if ( toolbars[ i ].bar && toolbars[ i ].bar.parentNode ) {
 				toolbars[ i ].bar.parentNode.removeChild( toolbars[ i ].bar );
 			}
@@ -384,48 +499,33 @@
 		toolbars = [];
 	}
 
-	/* --- Separate "Add Slide" button for the carousel widget --- */
-	function ensureAddBtn() {
-		if ( addBtn ) { return; }
-		addBtn = document.createElement( 'button' );
-		addBtn.type = 'button';
-		addBtn.className = 'ri2-carousel-addbtn ri2-ui';
-		addBtn.innerHTML = '<span class="dashicons dashicons-plus-alt"></span> ' + ( RI.i18n.addSlide || 'Add Slide' );
-		addBtn.addEventListener( 'click', function ( e ) {
-			e.preventDefault(); e.stopPropagation();
-			doAddSlide();
-		} );
-		addBtn.addEventListener( 'mousedown', function ( e ) { e.preventDefault(); } );
-		document.body.appendChild( addBtn );
+	function clearPlusBtns() {
+		for ( let i = 0; i < plusBtns.length; i++ ) {
+			if ( plusBtns[ i ].btn && plusBtns[ i ].btn.parentNode ) {
+				plusBtns[ i ].btn.parentNode.removeChild( plusBtns[ i ].btn );
+			}
+		}
+		plusBtns = [];
 	}
 
-	function showAddBtn( widget ) {
-		ensureAddBtn();
-		var clipEl = widget.querySelector( '.elementor-main-swiper' ) || widget;
-		var r = clipEl.getBoundingClientRect();
-		if ( r.width < 24 ) { hideAddBtn(); return; }
-		addBtn.classList.add( 'is-visible' );
-		addBtn.style.top = r.top + 'px';
-		addBtn.style.left = ( r.right - addBtn.offsetWidth ) + 'px';
-	}
-
-	function hideAddBtn() {
-		if ( addBtn ) { addBtn.classList.remove( 'is-visible' ); }
+	function clearAll() {
+		clearToolbars();
+		clearPlusBtns();
+		stopRafLoop();
 	}
 
 	function hideAll() {
-		clearToolbars();
+		clearAll();
 		cachedField = null;
-		hideAddBtn();
 	}
 
 	/* --- Action handlers --- */
 	function getCtx( cb ) {
 		if ( ! hoveredWidget ) { return; }
-		var widget = hoveredWidget;
-		var ctx = RI.ctx( widget );
+		const widget = hoveredWidget;
+		const ctx = RI.ctx( widget );
 		ctx.getFields().then( function ( res ) {
-			var field = findRepeaterField( res );
+			const field = findRepeaterField( res );
 			if ( ! field ) { return; }
 			cb( ctx, widget, field );
 		} );
@@ -433,19 +533,19 @@
 
 	function doChangeImage( slideIndex, slideEl ) {
 		getCtx( function ( ctx, widget, field ) {
-			clearToolbars();
+			clearAll();
 			pauseSwiper( widget );
 			ctx.openMedia( {
 				onSelect: function ( attachment ) {
 					ctx.toast( ctx.i18n.saving || 'Saving…', 'saving' );
-					var newUrl = attachment.url || ( attachment.sizes && attachment.sizes.full && attachment.sizes.full.url ) || '';
+					const newUrl = attachment.url || ( attachment.sizes && attachment.sizes.full && attachment.sizes.full.url ) || '';
 					if ( newUrl ) {
 						// Patch the real slide *and* every loop-mode clone of it, otherwise
 						// the stale clone shows the old image when the carousel wraps.
-						var targets = slidesForIndex( widget, slideIndex );
+						let targets = slidesForIndex( widget, slideIndex );
 						if ( ! targets.length ) { targets = [ slideEl ]; }
 						targets.forEach( function ( el ) {
-							var img = el.querySelector( '.elementor-carousel-image' );
+							const img = el.querySelector( '.elementor-carousel-image' );
 							if ( ! img ) { return; }
 							img.style.setProperty( 'background-image', "url('" + newUrl + "')", 'important' );
 							// Swiper's lazy module re-applies data-background when the slide
@@ -464,10 +564,10 @@
 	}
 
 	function findToolbarForSlide( slideIndex ) {
-		for ( var i = 0; i < toolbars.length; i++ ) {
+		for ( let i = 0; i < toolbars.length; i++ ) {
 			if ( toolbars[ i ].slideIndex === slideIndex ) {
-				var bar = toolbars[ i ].bar;
-				var r = bar.getBoundingClientRect();
+				const bar = toolbars[ i ].bar;
+				const r = bar.getBoundingClientRect();
 				// Return a fake node whose getBoundingClientRect returns the
 				// rect captured *before* clearToolbars() removes the bar from DOM.
 				return {
@@ -481,13 +581,13 @@
 	}
 
 	function doChangeVideo( slideIndex, slideEl ) {
-		var toolbarEl = findToolbarForSlide( slideIndex );
+		const toolbarEl = findToolbarForSlide( slideIndex );
 		getCtx( function ( ctx, widget, field ) {
-			clearToolbars();
+			clearAll();
 			pauseSwiper( widget );
-			var repItem = ( field.items || [] )[ slideIndex ];
-			var currentUrl = ( repItem && repItem.video && repItem.video.url ) || '';
-			var carouselImg = slideEl.querySelector( '.elementor-carousel-image' );
+			const repItem = ( field.items || [] )[ slideIndex ];
+			const currentUrl = ( repItem && repItem.video && repItem.video.url ) || '';
+			const carouselImg = slideEl.querySelector( '.elementor-carousel-image' );
 			ctx.editLink( toolbarEl || carouselImg || slideEl, {
 				key: field.key,
 				itemIndex: slideIndex,
@@ -500,14 +600,14 @@
 	}
 
 	function doEditLink( slideIndex, slideEl ) {
-		var toolbarEl = findToolbarForSlide( slideIndex );
+		const toolbarEl = findToolbarForSlide( slideIndex );
 		getCtx( function ( ctx, widget, field ) {
-			clearToolbars();
+			clearAll();
 			pauseSwiper( widget );
-			var repItem = ( field.items || [] )[ slideIndex ];
-			var currentUrl = ( repItem && repItem.image_link_to && repItem.image_link_to.url ) || '';
-			var currentBlank = !!( repItem && repItem.image_link_to && repItem.image_link_to.is_external );
-			var carouselImg = slideEl.querySelector( '.elementor-carousel-image' );
+			const repItem = ( field.items || [] )[ slideIndex ];
+			const currentUrl = ( repItem && repItem.image_link_to && repItem.image_link_to.url ) || '';
+			const currentBlank = !!( repItem && repItem.image_link_to && repItem.image_link_to.is_external );
+			const carouselImg = slideEl.querySelector( '.elementor-carousel-image' );
 			ctx.editLink( toolbarEl || carouselImg || slideEl, {
 				key: field.key,
 				itemIndex: slideIndex,
@@ -521,7 +621,7 @@
 
 	function doDeleteSlide( slideIndex ) {
 		getCtx( function ( ctx, widget, field ) {
-			clearToolbars();
+			clearAll();
 			ctx.toast( ctx.i18n.saving || 'Saving…', 'saving' );
 			ctx.deleteRepeaterItem( field.key, slideIndex )
 				.then( function () { return ctx.refreshWidget(); } )
@@ -530,23 +630,23 @@
 		} );
 	}
 
-	function doAddSlide() {
+	function doAddSlide( insertIndex ) {
 		if ( ! hoveredWidget ) { return; }
-		var widget = hoveredWidget;
-		var ctx = RI.ctx( widget );
+		const widget = hoveredWidget;
+		const ctx = RI.ctx( widget );
 		hideAll();
 		ctx.toast( ctx.i18n.saving || 'Saving…', 'saving' );
 		ctx.getFields().then( function ( res ) {
-			var field = findRepeaterField( res );
+			const field = findRepeaterField( res );
 			if ( ! field ) { return; }
-			ctx.addRepeaterItem( field.key, 'media-carousel' )
+			ctx.addRepeaterItem( field.key, 'media-carousel', insertIndex )
 				.then( function () { return ctx.refreshWidget(); } )
 				.then( function () { ctx.toast( ctx.i18n.saved || 'Saved', 'ok' ); } )
 				.catch( function ( err ) { ctx.toast( ( err && err.message ) || ctx.i18n.saveFailed || 'Save failed', 'error' ); } );
 		} );
 	}
 
-	/* --- Hover: show per-slide toolbars + carousel-level Add Slide button --- */
+	/* --- Hover: show per-slide toolbars + plus buttons --- */
 	document.addEventListener( 'mouseover', function ( e ) {
 		if ( ! RI.isActive() ) { return; }
 		const widget = widgetOf( e.target );
@@ -562,10 +662,9 @@
 		RI.ctx( widgetRef ).getFields().then( function ( res ) {
 			if ( ! RI.isActive() ) { return; }
 			if ( hoveredWidget !== widgetRef ) { return; }
-			var field = findRepeaterField( res );
+			const field = findRepeaterField( res );
 			if ( field ) {
 				showToolbars( widgetRef, field );
-				showAddBtn( widgetRef );
 			}
 		} ).catch( function () {} );
 	} );
