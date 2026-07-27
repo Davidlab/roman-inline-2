@@ -191,20 +191,6 @@
 		linkBtn.addEventListener( 'mousedown', function ( e ) { e.preventDefault(); } );
 		bar.appendChild( linkBtn );
 
-		// Add Slide button (add after)
-		const addBtn = document.createElement( 'button' );
-		addBtn.type = 'button';
-		addBtn.className = 'ri2-actbtn ri2-actbtn--add';
-		addBtn.innerHTML = '<span class="dashicons dashicons-plus-alt2"></span>';
-		addBtn.title = RI.i18n.addSlideAfter || 'Add Slide After';
-		addBtn.addEventListener( 'click', function ( e ) {
-			e.preventDefault(); e.stopPropagation();
-			closeAnyPopover();
-			doAddSlide( slideIndex + 1 );
-		} );
-		addBtn.addEventListener( 'mousedown', function ( e ) { e.preventDefault(); } );
-		bar.appendChild( addBtn );
-
 		// Delete Slide button
 		const delBtn = document.createElement( 'button' );
 		delBtn.type = 'button';
@@ -398,20 +384,24 @@
 				}
 			}
 
-			// Top plus button (insert before) for the hovered slide.
-			let hasPlusTop = false;
-			for ( let pn = 0; pn < plusBtns.length; pn++ ) {
-				if ( plusBtns[ pn ].slideEl === hoveredSlideEl && plusBtns[ pn ].position === 'top' ) { hasPlusTop = true; }
-			}
-			if ( ! hasPlusTop ) {
-				let hovPlusIndex = -1;
-				for ( let hpi = 0; hpi < needed.length; hpi++ ) {
-					if ( needed[ hpi ].slideEl === hoveredSlideEl ) { hovPlusIndex = needed[ hpi ].slideIndex; break; }
+			// Plus buttons (insert before / after) for the hovered slide.
+			const positions = [ 'left', 'right' ];
+			for ( let posI = 0; posI < positions.length; posI++ ) {
+				const pos = positions[ posI ];
+				let hasPlus = false;
+				for ( let pn = 0; pn < plusBtns.length; pn++ ) {
+					if ( plusBtns[ pn ].slideEl === hoveredSlideEl && plusBtns[ pn ].position === pos ) { hasPlus = true; }
 				}
-				if ( hovPlusIndex >= 0 ) {
-					const topBtn = createPlusBtn( hovPlusIndex, hoveredSlideEl, field, 'top' );
-					document.body.appendChild( topBtn );
-					plusBtns.push( { btn: topBtn, slideIndex: hovPlusIndex, slideEl: hoveredSlideEl, position: 'top' } );
+				if ( ! hasPlus ) {
+					let hovPlusIndex = -1;
+					for ( let hpi = 0; hpi < needed.length; hpi++ ) {
+						if ( needed[ hpi ].slideEl === hoveredSlideEl ) { hovPlusIndex = needed[ hpi ].slideIndex; break; }
+					}
+					if ( hovPlusIndex >= 0 ) {
+						const plusBtn = createPlusBtn( hovPlusIndex, hoveredSlideEl, field, pos );
+						document.body.appendChild( plusBtn );
+						plusBtns.push( { btn: plusBtn, slideIndex: hovPlusIndex, slideEl: hoveredSlideEl, position: pos } );
+					}
 				}
 			}
 		}
@@ -452,13 +442,13 @@
 		btn.type = 'button';
 		btn.className = 'ri2-plus-btn ri2-ui';
 		btn.innerHTML = '<span class="dashicons dashicons-plus-alt2"></span>';
-		btn.title = ( 'top' === position )
+		btn.title = ( 'left' === position )
 			? ( RI.i18n.addSlideBefore || 'Add Slide Before' )
 			: ( RI.i18n.addSlideAfter || 'Add Slide After' );
 		btn.addEventListener( 'click', function ( e ) {
 			e.preventDefault(); e.stopPropagation();
 			closeAnyPopover();
-			const insertIndex = ( 'top' === position ) ? slideIndex : slideIndex + 1;
+			const insertIndex = ( 'left' === position ) ? slideIndex : slideIndex + 1;
 			doAddSlide( insertIndex );
 		} );
 		btn.addEventListener( 'mousedown', function ( e ) { e.preventDefault(); } );
@@ -470,24 +460,35 @@
 		const target = carouselImg || slideEl;
 		const r = target.getBoundingClientRect();
 		const btnW = btn.offsetWidth || 28;
-		const left = r.left + ( r.width - btnW ) / 2;
-		let top;
-		if ( 'top' === position ) {
-			top = r.top - 18;
+		const btnH = btn.offsetHeight || 28;
+		const top = r.top + ( r.height - btnH ) / 2;
+		let left;
+
+		if ( 'left' === position ) {
+			// Center between this slide and the previous slide.
+			const prev = slideEl.previousElementSibling;
+			if ( prev && prev.classList.contains( 'swiper-slide' ) ) {
+				const prevImg = prev.querySelector( '.elementor-carousel-image' ) || prev;
+				const pr = prevImg.getBoundingClientRect();
+				left = pr.right + ( r.left - pr.right ) / 2 - btnW / 2;
+			} else {
+				left = r.left - btnW / 2;
+			}
 		} else {
-			top = r.bottom - 18;
+			// Center between this slide and the next slide.
+			const next = slideEl.nextElementSibling;
+			if ( next && next.classList.contains( 'swiper-slide' ) ) {
+				const nextImg = next.querySelector( '.elementor-carousel-image' ) || next;
+				const nr = nextImg.getBoundingClientRect();
+				left = r.right + ( nr.left - r.right ) / 2 - btnW / 2;
+			} else {
+				left = r.right - btnW / 2;
+			}
 		}
+
 		btn.style.left = left + 'px';
 		btn.style.top = top + 'px';
-
-		// Hide plus button if it would paint outside the carousel viewport.
-		const clipEl = widget.querySelector( '.elementor-main-swiper' ) || widget;
-		const cr = clipEl.getBoundingClientRect();
-		const w = btn.offsetWidth || 0;
-		const h = btn.offsetHeight || 0;
-		const inside = left >= cr.left - 1 && ( left + w ) <= cr.right + 1 &&
-			top >= cr.top - 1 && ( top + h ) <= cr.bottom + 1;
-		btn.style.visibility = inside ? 'visible' : 'hidden';
+		btn.style.visibility = 'visible';
 	}
 
 	function clearToolbars() {
@@ -641,7 +642,25 @@
 			if ( ! field ) { return; }
 			ctx.addRepeaterItem( field.key, 'media-carousel', insertIndex )
 				.then( function () { return ctx.refreshWidget(); } )
-				.then( function () { ctx.toast( ctx.i18n.saved || 'Saved', 'ok' ); } )
+				.then( function () {
+					ctx.toast( ctx.i18n.saved || 'Saved', 'ok' );
+					// Navigate swiper to the newly inserted slide after re-init.
+					setTimeout( function () {
+						const s = getSwiper( widget );
+						if ( s ) {
+							if ( s.params.loop ) {
+								s.slideToLoop( insertIndex );
+							} else {
+								s.slideTo( insertIndex );
+							}
+						}
+						// Fallback: scroll the new slide into view.
+						const realSlides = getRealSlides( widget );
+						if ( realSlides[ insertIndex ] ) {
+							realSlides[ insertIndex ].scrollIntoView( { behavior: 'smooth', block: 'nearest', inline: 'center' } );
+						}
+					}, 200 );
+				} )
 				.catch( function ( err ) { ctx.toast( ( err && err.message ) || ctx.i18n.saveFailed || 'Save failed', 'error' ); } );
 		} );
 	}
