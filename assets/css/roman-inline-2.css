@@ -11,7 +11,7 @@
 	--ri2-shadow: 0 1px 2px rgba( 0, 0, 0, 0.2 ), 0 2px 8px rgba( 0, 0, 0, 0.15 );
 	--ri2-shadow-lg: 0 1px 2px rgba( 0, 0, 0, 0.2 ), 0 4px 12px rgba( 0, 0, 0, 0.2 );
 	--ri2-shadow-hover: 0 2px 4px rgba( 0, 0, 0, 0.25 ), 0 6px 16px rgba( 0, 0, 0, 0.2 );
-	--ri2-text: #3a3a3a;
+	--ri2-text: #666;
 	--ri2-text-muted: #666;
 	--ri2-border: rgba( 0, 0, 0, 0.08 );
 	--ri2-hover: rgba( 0, 0, 0, 0.04 );
@@ -83,7 +83,7 @@
 	font-size: 15px;
 	width: 15px;
 	height: 15px;
-	color: #3a3a3a !important;
+	color: var(--ri2-text) !important;
 }
 
 /* Per-slide action toolbar for media carousel — compact horizontal icon buttons */
@@ -99,7 +99,7 @@
 	border: 0 !important;
 	border-radius: 0 !important;
 	box-shadow: none !important;
-	opacity: 0.8 !important;
+	opacity: 1 !important;
 	transition: opacity 0.15s ease !important;
 }
 .ri2-actions:hover {
@@ -113,7 +113,7 @@
 	height: 28px !important;
 	padding: 0 !important;
 	background: #fff !important;
-	color: #3a3a3a !important;
+	color: var(--ri2-text) !important;
 	border: 1px solid var(--ri2-border) !important;
 	border-radius: 50% !important;
 	cursor: pointer !important;
@@ -125,7 +125,7 @@
 }
 .ri2-actbtn:hover {
 	opacity: 1 !important;
-	background: var(--ri2-hover) !important;
+	background: #f0f0f0 !important;
 }
 .ri2-actbtn .dashicons {
 	font-size: 15px;
@@ -136,13 +136,13 @@
 	color: var(--ri2-err) !important;
 }
 .ri2-actbtn--delete:hover {
-	background: rgba( 229, 72, 77, 0.1 ) !important;
+	background: #f0f0f0 !important;
 }
 .ri2-actbtn--add {
-	color: #3a3a3a !important;
+	color: var(--ri2-text) !important;
 }
 .ri2-actbtn--add:hover {
-	background: rgba( 109, 74, 255, 0.08 ) !important;
+	background: #f0f0f0 !important;
 }
 .ri2-edit-icon {
 	position: fixed !important;
@@ -157,7 +157,7 @@
 	border: 1px solid var(--ri2-border) !important;
 	border-radius: 50% !important;
 	background: #fff !important;
-	color: #3a3a3a !important;
+	color: var(--ri2-text) !important;
 	cursor: pointer !important;
 	box-shadow: var(--ri2-shadow-lg) !important;
 	line-height: 1 !important;
@@ -186,7 +186,7 @@
 	border: 1px solid var(--ri2-border) !important;
 	border-radius: 50% !important;
 	background: #fff !important;
-	color: #3a3a3a !important;
+	color: var(--ri2-text) !important;
 	cursor: pointer !important;
 	box-shadow: var(--ri2-shadow-lg) !important;
 	line-height: 1 !important;
@@ -195,7 +195,7 @@
 }
 .ri2-plus-btn:hover {
 	opacity: 1 !important;
-	background: var(--ri2-hover) !important;
+	background: #f0f0f0 !important;
 }
 .ri2-plus-btn .dashicons {
 	font-size: 15px;
@@ -233,7 +233,7 @@
 	font-size: 15px;
 	width: 15px;
 	height: 15px;
-	color: #3a3a3a !important;
+	color: var(--ri2-text) !important;
 }
 
 /* ------------------------------------------------------------------ */
@@ -307,7 +307,7 @@
 .ri2-toolbar__btn {
 	border: 0 !important;
 	background: transparent !important;
-	color: #3a3a3a !important;
+	color: var(--ri2-text) !important;
 	width: 30px !important;
 	height: 30px !important;
 	border-radius: 6px !important;
@@ -407,7 +407,7 @@
 }
 .ri2-floatbtn.is-visible { display: inline-flex; }
 .ri2-floatbtn:hover { box-shadow: var( --ri2-shadow-hover ) !important; }
-.ri2-floatbtn .dashicons { font-size: 15px; width: 15px; height: 15px; color: #3a3a3a !important; }
+.ri2-floatbtn .dashicons { font-size: 15px; width: 15px; height: 15px; color: var(--ri2-text) !important; }
 
 /* ------------------------------------------------------------------ */
 /* Video floating button                                              */
@@ -435,7 +435,7 @@
 }
 .ri2-vidbtn.is-visible { display: inline-flex; }
 .ri2-vidbtn:hover { box-shadow: var( --ri2-shadow-hover ) !important; }
-.ri2-vidbtn .dashicons { font-size: 15px; width: 15px; height: 15px; color: #3a3a3a !important; }
+.ri2-vidbtn .dashicons { font-size: 15px; width: 15px; height: 15px; color: var(--ri2-text) !important; }
 
 /* ------------------------------------------------------------------ */
 /* Video URL popover                                                  */
@@ -516,7 +516,7 @@
 	border-color: var(--ri2-accent) !important;
 	background: rgba( 109, 74, 255, 0.04 ) !important;
 }
-.ri2-srcpop__opt .dashicons { font-size: 18px !important; width: 18px !important; height: 18px !important; color: #3a3a3a !important; }
+.ri2-srcpop__opt .dashicons { font-size: 18px !important; width: 18px !important; height: 18px !important; color: var(--ri2-text) !important; }
 
 /* Keep our UI clickable above Elementor overlays. */
 .ri2-ui { box-sizing: border-box !important; }
@@ -536,7 +536,7 @@
 	border: 1px solid var(--ri2-border) !important;
 	border-radius: 50% !important;
 	background: #fff !important;
-	color: #3a3a3a !important;
+	color: var(--ri2-text) !important;
 	cursor: pointer !important;
 	font-size: 15px !important;
 	line-height: 1 !important;
@@ -558,7 +558,7 @@
 	font-size: 15px !important;
 	width: 15px !important;
 	height: 15px !important;
-	color: #3a3a3a !important;
+	color: var(--ri2-text) !important;
 }
 
 /* ------------------------------------------------------------------ */
@@ -591,7 +591,7 @@
 	height: 28px !important;
 	padding: 0 !important;
 	background: #fff !important;
-	color: #3a3a3a !important;
+	color: var(--ri2-text) !important;
 	border: 1px solid var(--ri2-border) !important;
 	border-radius: 50% !important;
 	cursor: pointer !important;
@@ -636,7 +636,7 @@
 	cursor: pointer !important;
 	font-size: 12px !important;
 	font-weight: 600 !important;
-	color: #3a3a3a !important;
+	color: var(--ri2-text) !important;
 	background: #fff !important;
 	opacity: 0 !important;
 	transition: opacity .15s ease, background .15s ease !important;
@@ -647,7 +647,7 @@
 	font-size: 14px !important;
 	width: 14px !important;
 	height: 14px !important;
-	color: #3a3a3a !important;
+	color: var(--ri2-text) !important;
 }
 
 .ri2-gallery-add-btn.is-visible {
@@ -746,7 +746,7 @@
 	height: 28px !important;
 	padding: 0 !important;
 	background: #fff !important;
-	color: #3a3a3a !important;
+	color: var(--ri2-text) !important;
 	border: 1px solid var(--ri2-border) !important;
 	border-radius: 50% !important;
 	cursor: pointer !important;
@@ -769,7 +769,7 @@
 	font-size: 15px;
 	width: 15px;
 	height: 15px;
-	color: #3a3a3a !important;
+	color: var(--ri2-text) !important;
 }
 
 /* Social icons — centered edit pencil overlay */
@@ -799,7 +799,7 @@
 }
 
 .ri2-edit-overlay .dashicons {
-	color: #3a3a3a !important;
+	color: var(--ri2-text) !important;
 	font-size: 15px;
 	width: 15px;
 	height: 15px;
@@ -831,7 +831,7 @@
 	padding: 10px 14px !important;
 	border: none !important;
 	background: #fff !important;
-	color: #3a3a3a !important;
+	color: var(--ri2-text) !important;
 	font-size: 13px !important;
 	cursor: pointer !important;
 	white-space: nowrap !important;
@@ -845,7 +845,7 @@
 	font-size: 16px !important;
 	width: 16px !important;
 	height: 16px !important;
-	color: #3a3a3a !important;
+	color: var(--ri2-text) !important;
 }
 
 .ri2-action-delete {
@@ -873,7 +873,7 @@
 	border-radius: 50% !important;
 	background: #fff !important;
 	cursor: pointer !important;
-	color: #3a3a3a !important;
+	color: var(--ri2-text) !important;
 	font-size: 15px !important;
 	padding: 0 !important;
 	box-shadow: var(--ri2-shadow-lg) !important;
@@ -1070,7 +1070,7 @@
 	font-size: 15px;
 	width: 15px;
 	height: 15px;
-	color: #3a3a3a !important;
+	color: var(--ri2-text) !important;
 }
 
 /* Floating graphic button for flip-box (change icon/image) */
@@ -1106,7 +1106,7 @@
 	font-size: 15px;
 	width: 15px;
 	height: 15px;
-	color: #3a3a3a !important;
+	color: var(--ri2-text) !important;
 }
 
 /* Graphic chooser popup (icon/image/none) */
@@ -1130,7 +1130,7 @@
 	padding: 10px 14px !important;
 	border: none !important;
 	background: #fff !important;
-	color: #3a3a3a !important;
+	color: var(--ri2-text) !important;
 	font-size: 13px !important;
 	cursor: pointer !important;
 	white-space: nowrap !important;
@@ -1146,5 +1146,5 @@
 	font-size: 16px !important;
 	width: 16px !important;
 	height: 16px !important;
-	color: #3a3a3a !important;
+	color: var(--ri2-text) !important;
 }
