@@ -210,9 +210,18 @@
 
 	function isSlideVisible( slideEl, widget ) {
 		const r = slideEl.getBoundingClientRect();
-		if ( r.width < 24 || r.height < 24 ) { return false; }
 		const wr = widget.getBoundingClientRect();
-		if ( ! ( r.right > wr.left + 4 && r.left < wr.right - 4 ) ) { return false; }
+		// For 3D transform effects (cube/coverflow), bounding rects can be
+		// unreliable, so relax the size/position checks and rely on opacity/
+		// visibility/display instead.
+		const s = getSwiper( widget );
+		const is3D = s && s.params && ( 'cube' === s.params.effect || 'coverflow' === s.params.effect );
+		if ( is3D ) {
+			if ( r.width < 1 || r.height < 1 ) { return false; }
+		} else {
+			if ( r.width < 24 || r.height < 24 ) { return false; }
+			if ( ! ( r.right > wr.left + 4 && r.left < wr.right - 4 ) ) { return false; }
+		}
 		// Guard against overlapping-slide effects (fade/cube/coverflow) where an
 		// inactive slide's box still geometrically intersects the widget but is
 		// actually hidden via opacity/visibility/display.
@@ -345,6 +354,21 @@
 				}
 			}
 		}
+		// Fallback for 3D effects (cube/coverflow): elementFromPoint may not
+		// hit the slide due to 3D transforms. Use swiper's active slide instead.
+		if ( ! hoveredSlideEl ) {
+			const s = getSwiper( widget );
+			if ( s && ( 'cube' === s.params.effect || 'coverflow' === s.params.effect ) ) {
+				// Check if mouse is within the widget bounds.
+				const wr = widget.getBoundingClientRect();
+				if ( mouseX >= wr.left && mouseX <= wr.right && mouseY >= wr.top && mouseY <= wr.bottom ) {
+					const activeIdx = s.activeIndex;
+					if ( s.slides && s.slides[ activeIdx ] ) {
+						hoveredSlideEl = s.slides[ activeIdx ];
+					}
+				}
+			}
+		}
 
 		// Remove toolbars for slides no longer visible or not hovered.
 		for ( let k = toolbars.length - 1; k >= 0; k-- ) {
@@ -465,25 +489,9 @@
 		let left;
 
 		if ( 'left' === position ) {
-			// Center between this slide and the previous slide.
-			const prev = slideEl.previousElementSibling;
-			if ( prev && prev.classList.contains( 'swiper-slide' ) ) {
-				const prevImg = prev.querySelector( '.elementor-carousel-image' ) || prev;
-				const pr = prevImg.getBoundingClientRect();
-				left = pr.right + ( r.left - pr.right ) / 2 - btnW / 2;
-			} else {
-				left = r.left - btnW / 2;
-			}
+			left = r.left + 4;
 		} else {
-			// Center between this slide and the next slide.
-			const next = slideEl.nextElementSibling;
-			if ( next && next.classList.contains( 'swiper-slide' ) ) {
-				const nextImg = next.querySelector( '.elementor-carousel-image' ) || next;
-				const nr = nextImg.getBoundingClientRect();
-				left = r.right + ( nr.left - r.right ) / 2 - btnW / 2;
-			} else {
-				left = r.right - btnW / 2;
-			}
+			left = r.right - btnW - 4;
 		}
 
 		btn.style.left = left + 'px';
@@ -642,11 +650,13 @@
 			if ( ! field ) { return; }
 			ctx.addRepeaterItem( field.key, 'media-carousel', insertIndex )
 				.then( function () { return ctx.refreshWidget(); } )
-				.then( function () {
+				.then( function ( newWidget ) {
 					ctx.toast( ctx.i18n.saved || 'Saved', 'ok' );
 					// Navigate swiper to the newly inserted slide after re-init.
+					// refreshWidget replaces the widget DOM, so use the returned element.
+					const target = newWidget || widget;
 					setTimeout( function () {
-						const s = getSwiper( widget );
+						const s = getSwiper( target );
 						if ( s ) {
 							if ( s.params.loop ) {
 								s.slideToLoop( insertIndex );
@@ -655,11 +665,11 @@
 							}
 						}
 						// Fallback: scroll the new slide into view.
-						const realSlides = getRealSlides( widget );
+						const realSlides = getRealSlides( target );
 						if ( realSlides[ insertIndex ] ) {
 							realSlides[ insertIndex ].scrollIntoView( { behavior: 'smooth', block: 'nearest', inline: 'center' } );
 						}
-					}, 200 );
+					}, 300 );
 				} )
 				.catch( function ( err ) { ctx.toast( ( err && err.message ) || ctx.i18n.saveFailed || 'Save failed', 'error' ); } );
 		} );
